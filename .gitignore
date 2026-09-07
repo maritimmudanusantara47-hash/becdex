@@ -1,0 +1,81 @@
+# ─── Folder yang dikecualikan dari repository ─────────────────────────────────
+
+# Folder referensi / template (bukan bagian dari proyek utama)
+becdex.com/
+free-nextjs-admin-dashboard-main/
+md/
+
+# File planning & dokumentasi internal (tidak masuk repo)
+TESTING_SCENARIOS.md
+TODO_FEATURES.md
+PROJECT_ONBOARDING.md
+TESTING_MIGRATION_GUIDE.md
+deployment.md
+becdex_local_export.sql
+becdexco_db_becdexlaravel.sql
+bisnisflow.md
+
+# ─── OS & Editor ──────────────────────────────────────────────────────────────
+
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+desktop.ini
+
+# JetBrains IDEs (PhpStorm, WebStorm, dll)
+.idea/
+*.iml
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# ─── Backend (Laravel) ────────────────────────────────────────────────────────
+
+Backend/.env
+Backend/.env.backup
+Backend/.env.testing.local
+Backend/vendor/
+Backend/node_modules/
+Backend/storage/logs/*.log
+Backend/storage/app/public/*
+!Backend/storage/app/public/.gitkeep
+Backend/bootstrap/cache/*.php
+!Backend/bootstrap/cache/.gitkeep
+Backend/public/storage
+Backend/public/hot
+Backend/cookies.txt
+Backend/test_xendit.php
+
+# ─── Frontend (Next.js) ───────────────────────────────────────────────────────
+
+Frontend/.env
+Frontend/.env.local
+Frontend/.env.development.local
+Frontend/.env.test.local
+Frontend/.env.production.local
+Frontend/node_modules/
+Frontend/.next/
+Frontend/out/
+Frontend/coverage/
+Frontend/.pnp
+Frontend/.pnp.*
+Frontend/.yarn/*
+!Frontend/.yarn/patches
+!Frontend/.yarn/plugins
+!Frontend/.yarn/releases
+!Frontend/.yarn/versions
+
+# ─── Testing ──────────────────────────────────────────────────────────────────
+
+# PHPUnit coverage output
+Backend/coverage/
+Backend/.phpunit.result.cache
+Backend/.phpunit.cache/
+
+# Vitest coverage output
+Frontend/coverage/
+becdex_local.sql

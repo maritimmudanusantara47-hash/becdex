@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+  axios.defaults.withCredentials = true;
+  axios.defaults.withXSRFToken = true;
+  axios.get('http://localhost:8000/sanctum/csrf-cookie').then(() => {
+    axios.post('http://localhost:8000/api/auth/login', {
+      email: 'admin@admin.com', password: 'admin123'
+    }).then(r => {
+      console.log("Login Success");
+      axios.delete('http://localhost:8000/api/auth/logout')
+        .then(r2 => console.log("Logout Success", r2.status))
+        .catch(e => console.error("Logout Error", e.response.status));
+    });
+  });
+</script>
+</body>
+</html>
