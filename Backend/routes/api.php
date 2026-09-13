@@ -54,13 +54,6 @@ Route::prefix('auth')->group(function () {
 });
 
 // Public informational endpoints
-Route::get('test-deploy', function () {
-    return response()->json([
-        'status' => 'success',
-        'message' => 'BECdex API Deployment from maritimmudanusantara47-hash successful!',
-        'timestamp' => now()->toIso8601String(),
-    ]);
-});
 Route::prefix('public')->group(function () {
     Route::get('verified-companies', [PublicController::class, 'verifiedCompanies'])->middleware('throttle:60,1');
     Route::get('indicators',         [PublicController::class, 'catalogIndicators'])->middleware('throttle:30,1');
