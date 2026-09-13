@@ -878,7 +878,7 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
                               <MessageSquare size={14} className="text-blue-500" />
                               Diskusi & Catatan Asesor
                             </label>
-                            <IndicatorChat submissionId={id as string} indicatorId={pi.indicator_id} />
+                            <IndicatorChat submissionId={id as string} indicatorId={pi.indicator_id} isAdmin={true} />
                           </div>
                         </div>
                       )}

@@ -111,4 +111,45 @@ class IndicatorCommentController extends Controller
             'data' => $comment->load('user:id,name'),
         ]);
     }
+
+    /**
+     * Hapus komentar indikator.
+     *
+     * @param Request $request
+     * @param string $submission_id
+     * @param string $indicator_id
+     * @param string $comment_id
+     * @return JsonResponse
+     */
+    public function destroy(Request $request, string $submission_id, string $indicator_id, string $comment_id): JsonResponse
+    {
+        // 1. Ambil data relasi SubmissionPerIndicator
+        $perIndicator = SubmissionPerIndicator::where('submission_id', $submission_id)
+            ->where('indicator_id', $indicator_id)
+            ->firstOrFail();
+
+        // 2. Ambil komentar berdasarkan ID
+        $comment = IndicatorComment::where('submission_per_indicator_id', $perIndicator->id)
+            ->where('id', $comment_id)
+            ->firstOrFail();
+
+        $user = Auth::user();
+
+        // 3. Otorisasi: Hanya pemilik pesan atau Super Admin yang boleh hapus
+        $isOwner    = (int) $comment->user_id === (int) $user->id;
+        $isSuperAdmin = $user->role_id === RoleId::SuperAdmin->value;
+
+        if (!$isOwner && !$isSuperAdmin) {
+            return response()->json([
+                'message' => 'Anda tidak memiliki hak akses untuk menghapus pesan ini.',
+            ], 403);
+        }
+
+        // 4. Hapus komentar
+        $comment->delete();
+
+        return response()->json([
+            'message' => 'Komentar berhasil dihapus.',
+        ]);
+    }
 }

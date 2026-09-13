@@ -112,6 +112,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/{id}/indicators/{indicator_id}/comments', [IndicatorCommentController::class, 'index']);
         Route::post('/{id}/indicators/{indicator_id}/comments', [IndicatorCommentController::class, 'store']);
         Route::put('/{id}/indicators/{indicator_id}/comments/{comment_id}', [IndicatorCommentController::class, 'update']);
+        Route::delete('/{id}/indicators/{indicator_id}/comments/{comment_id}', [IndicatorCommentController::class, 'destroy']);
     });
 
     // Notifications
@@ -150,6 +151,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('submissions/{id}/indicators/{indicator_id}/comments',  [IndicatorCommentController::class, 'index']);
             Route::post('submissions/{id}/indicators/{indicator_id}/comments', [IndicatorCommentController::class, 'store']);
             Route::put('submissions/{id}/indicators/{indicator_id}/comments/{comment_id}', [IndicatorCommentController::class, 'update']);
+            Route::delete('submissions/{id}/indicators/{indicator_id}/comments/{comment_id}', [IndicatorCommentController::class, 'destroy']);
 
             // Activity Logs
             Route::get('submissions/{id}/activity-logs', [ActivityLogController::class, 'index']);
