@@ -11,7 +11,6 @@ import { Loader2, ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import api from "@/lib/api";
 import { useTranslation } from "@/store/lang";
-import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 
 type RegisterFormData = {
   name: string;
@@ -261,11 +260,6 @@ export default function RegisterPage() {
           <Link href="/" className="absolute top-6 left-6 text-[#0d6efd] hover:text-blue-700 transition-colors">
             <ArrowLeft size={24} />
           </Link>
-
-          {/* Language Switcher */}
-          <div className="absolute top-6 right-6">
-            <LanguageSwitcher />
-          </div>
 
           <div className="text-center mb-4 mt-4">
             <Image
