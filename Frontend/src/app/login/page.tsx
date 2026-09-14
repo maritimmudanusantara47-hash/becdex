@@ -9,33 +9,37 @@ import { toast } from "sonner";
 import { Loader2, ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import Cookies from "js-cookie";
-import { useEffect } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import api, { setAuthToken } from "@/lib/api";
 import { useAuthStore } from "@/store/auth";
-import { useLangStore } from "@/store/lang";
+import { useTranslation } from "@/store/lang";
 import { useTheme } from "@/context/ThemeContext";
 import { isAnyAdmin } from "@/lib/roles";
 
 type ApiError = { response?: { data?: { message?: string } } };
 
-const loginSchema = z.object({
-  email: z.string().email("Format email tidak valid"),
-  password: z.string().min(1, "Password wajib diisi"),
-  remember: z.boolean().optional(),
-});
+const createLoginSchema = (t: Record<string, any>) =>
+  z.object({
+    email: z.string().email(t.val_email_invalid || "Format email tidak valid"),
+    password: z.string().min(1, t.val_password_required || "Password wajib diisi"),
+    remember: z.boolean().optional(),
+  });
 
-type LoginFormData = z.infer<typeof loginSchema>;
+type LoginFormData = z.infer<ReturnType<typeof createLoginSchema>>;
 
 export default function LoginPage() {
   const router = useRouter();
   const { user, isAuthenticated, setAuth } = useAuthStore();
-  const { setLocale } = useLangStore();
+  const { t, locale } = useTranslation();
   const { setTheme } = useTheme();
+
+  const loginSchema = useMemo(() => createLoginSchema(t), [t]);
 
   const {
     register,
     handleSubmit,
     setValue,
+    trigger,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -45,6 +49,16 @@ export default function LoginPage() {
       remember: false,
     },
   });
+
+  const errorsRef = useRef(errors);
+  errorsRef.current = errors;
+
+  // Re-trigger validation when locale changes if form already has errors
+  useEffect(() => {
+    if (Object.keys(errorsRef.current).length > 0) {
+      trigger();
+    }
+  }, [locale, trigger]);
 
   useEffect(() => {
     // Jika user sudah login dan cookie sesi aktif, redirect langsung ke dashboard/admin
@@ -62,7 +76,7 @@ export default function LoginPage() {
     if (loggedOut === "1") {
       sessionStorage.removeItem("logout_success");
       setTimeout(() => {
-        toast.success("Log out berhasil");
+        toast.success(t.auth_toast_logout_success || "Log out berhasil");
       }, 100);
     }
 
@@ -72,7 +86,7 @@ export default function LoginPage() {
       setValue("email", savedEmail);
       setValue("remember", true);
     }
-  }, [isAuthenticated, user, router, setValue]);
+  }, [isAuthenticated, user, router, setValue, t.auth_toast_logout_success]);
 
   const onSubmit = async (data: LoginFormData) => {
     try {
@@ -94,7 +108,6 @@ export default function LoginPage() {
       }
 
       setAuth(user);
-      setLocale("en");
       setTheme("light");
 
       // Set role cookie agar middleware bisa enforce role separation
@@ -111,7 +124,10 @@ export default function LoginPage() {
         localStorage.removeItem("becdex_remember");
       }
 
-      toast.success(`Selamat datang, ${user.name}!`);
+      const welcomeMsg = t.auth_toast_login_success
+        ? t.auth_toast_login_success.replace("{name}", user.name)
+        : `Selamat datang, ${user.name}!`;
+      toast.success(welcomeMsg);
 
       if (isAnyAdmin(user)) {
         router.push("/admin");
@@ -120,7 +136,10 @@ export default function LoginPage() {
       }
     } catch (error: unknown) {
       const err = error as ApiError;
-      const message = err.response?.data?.message || "Login gagal. Cek email dan password.";
+      const message =
+        err.response?.data?.message ||
+        t.auth_toast_login_failed ||
+        "Login gagal. Cek email dan password.";
       toast.error(message);
     }
   };
@@ -145,20 +164,24 @@ export default function LoginPage() {
               className="mx-auto object-contain mb-3"
             />
             <h4 className="text-black text-xl font-bold font-sans">
-              Blue Economy Company
+              {t.auth_login_title || "Blue Economy Company"}
             </h4>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <p className="text-center text-gray-700 text-sm">Please login to your BECdex account</p>
+            <p className="text-center text-gray-700 text-sm">
+              {t.auth_login_subtitle || "Please login to your BECdex account"}
+            </p>
 
             {/* Email */}
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Email</label>
+              <label className="block text-xs font-semibold text-gray-700 mb-1">
+                {t.auth_login_email_label || "Email"}
+              </label>
               <input
                 {...register("email")}
                 type="email"
-                placeholder="Enter your email here"
+                placeholder={t.auth_login_email_placeholder || "Enter your email"}
                 className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white outline-none focus:ring-2 focus:ring-[#0d6efd]/20 focus:border-[#0d6efd]"
               />
               {errors.email && (
@@ -168,11 +191,13 @@ export default function LoginPage() {
 
             {/* Password */}
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Password</label>
+              <label className="block text-xs font-semibold text-gray-700 mb-1">
+                {t.auth_login_password_label || "Password"}
+              </label>
               <input
                 {...register("password")}
                 type="password"
-                placeholder="Enter your password here"
+                placeholder={t.auth_login_password_placeholder || "Enter your password"}
                 className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white outline-none focus:ring-2 focus:ring-[#0d6efd]/20 focus:border-[#0d6efd]"
               />
               {errors.password && (
@@ -187,7 +212,9 @@ export default function LoginPage() {
                   {...register("remember")}
                   className="w-4 h-4 text-[#0d6efd] border-gray-300 rounded focus:ring-[#0d6efd]"
                 />
-                <span className="text-xs text-gray-600">Remember Me</span>
+                <span className="text-xs text-gray-600">
+                  {t.auth_login_remember_me || "Remember Me"}
+                </span>
               </label>
             </div>
 
@@ -196,30 +223,32 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-[#0d6efd] hover:bg-blue-700 text-white text-sm font-semibold py-2.5 rounded-lg transition-colors flex items-center justify-center"
+                className="w-full bg-[#0d6efd] hover:bg-blue-700 text-white text-sm font-semibold py-2.5 rounded-lg transition-colors flex items-center justify-center cursor-pointer"
               >
                 {isSubmitting ? (
                   <Loader2 size={18} className="animate-spin" />
                 ) : (
-                  "Log in"
+                  t.auth_login_btn_submit || "Log in"
                 )}
               </button>
             </div>
 
             <div className="text-center">
               <Link href="/forgot-password" className="text-xs text-gray-500 hover:underline">
-                Forgot Password
+                {t.auth_login_forgot_password || "Forgot Password"}
               </Link>
             </div>
 
             {/* Toggle to Register */}
             <div className="flex items-center justify-center gap-3 pt-4 border-t border-gray-200">
-              <p className="text-xs text-gray-700">{"Don't have an account?"}</p>
+              <p className="text-xs text-gray-700">
+                {t.auth_login_no_account || "Don't have an account?"}
+              </p>
               <Link
                 href="/register"
                 className="border border-[#0d6efd] text-[#0d6efd] hover:bg-blue-50 text-xs font-bold px-4 py-1.5 rounded-lg transition-colors"
               >
-                Create new
+                {t.auth_login_create_new || "Create new"}
               </Link>
             </div>
           </form>
@@ -238,10 +267,10 @@ export default function LoginPage() {
           />
           <div className="max-w-xs space-y-3">
             <h4 className="text-lg font-bold font-sans leading-snug">
-              Become a blue economy company now!
+              {t.auth_banner_title || "Become a blue economy company now!"}
             </h4>
             <p className="text-xs text-blue-100/90 leading-relaxed text-justify font-sans">
-              Blue Economy Company is a certified company in the maritime sectors, whose business meets 70% or more of 50 indicators of the Blue Economy Company Index (BECdex) to support the achievement of the Sustainable Development Goals (SDGs) in the coastal states.
+              {t.auth_banner_desc}
             </p>
           </div>
         </div>
@@ -250,3 +279,4 @@ export default function LoginPage() {
     </section>
   );
 }
+

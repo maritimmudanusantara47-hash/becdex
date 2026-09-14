@@ -953,6 +953,63 @@ const en = {
   dash_profile_sel_sector: "Select Business Sector",
   dash_sub_err_load: "Your Account is Currently Under Verification",
   dash_sub_err_desc: "Your account has been successfully approved to log in. Currently, the BECdex administrator is verifying your company profile so you can start creating and filling out certification submissions. Please wait a moment or contact our support team if you need further assistance.",
+
+  // Auth Pages (Login & Register)
+  auth_login_title: "Blue Economy Company",
+  auth_login_subtitle: "Please login to your BECdex account",
+  auth_login_email_label: "Email",
+  auth_login_email_placeholder: "Enter your email",
+  auth_login_password_label: "Password",
+  auth_login_password_placeholder: "Enter your password",
+  auth_login_remember_me: "Remember Me",
+  auth_login_btn_submit: "Log in",
+  auth_login_forgot_password: "Forgot Password",
+  auth_login_no_account: "Don't have an account?",
+  auth_login_create_new: "Create new",
+
+  auth_register_title: "Blue Economy Company",
+  auth_register_header_title: "Registration Form",
+  auth_register_company_name_placeholder: "Company Name",
+  auth_register_country_default: "Country",
+  auth_register_sector_default: "Blue Economic Sector",
+  auth_register_email_placeholder: "Email Address",
+  auth_register_password_placeholder: "Password",
+  auth_register_repeat_password_placeholder: "Repeat Password",
+  auth_register_pic_name_placeholder: "PIC Name",
+  auth_register_pic_email_placeholder: "PIC Email",
+  auth_register_pic_phone_placeholder: "PIC Phone",
+  auth_register_pic_position_placeholder: "PIC Position",
+  auth_register_terms_pre: "* Companies must meet the Blue Economy Company Index (BECdex)",
+  auth_register_terms_link: "Certification Agreement",
+  auth_register_terms_post: "and are willing to provide access or information needed by the Maritimepreneur International Certification Center (MICC) in certification activities.",
+  auth_register_terms_accept: "Accept",
+  auth_register_btn_submit: "Register",
+  auth_register_already_account: "Already have an account?",
+  auth_register_login_link: "Log in",
+
+  auth_banner_title: "Become a blue economy company now!",
+  auth_banner_desc: "Blue Economy Company is a certified company in the maritime sectors, whose business meets 70% or more of 50 indicators of the Blue Economy Company Index (BECdex) to support the achievement of the Sustainable Development Goals (SDGs) in the coastal states.",
+
+  // Auth Validation Messages
+  val_company_name_min: "Company Name must be at least 2 characters",
+  val_email_invalid: "Invalid email address",
+  val_country_required: "Country is required",
+  val_sector_required: "Sector is required",
+  val_password_min: "Password must be at least 8 characters",
+  val_password_required: "Password is required",
+  val_password_match: "Passwords do not match",
+  val_terms_required: "You must accept the Certification Agreement",
+  val_pic_name_required: "PIC Name is required",
+  val_pic_email_invalid: "Invalid PIC email",
+  val_pic_phone_required: "PIC Phone is required",
+  val_pic_position_required: "PIC Position is required",
+
+  // Auth Toast Messages
+  auth_toast_login_success: "Welcome, {name}!",
+  auth_toast_login_failed: "Login failed. Check your email and password.",
+  auth_toast_logout_success: "Logged out successfully",
+  auth_toast_register_success: "Registration successful! Please wait for admin to activate your account before logging in.",
+  auth_toast_register_failed: "Registration failed.",
 } as const;
 
 export default en;

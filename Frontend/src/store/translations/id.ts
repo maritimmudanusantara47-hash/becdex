@@ -953,6 +953,63 @@ const id = {
     dash_profile_sel_sector: "Pilih Sektor Usaha",
     dash_sub_err_load: "Akun Anda Sedang Dalam Proses Verifikasi",
     dash_sub_err_desc: "Akun Anda telah berhasil dikonfirmasi untuk masuk. Saat ini administrator BECdex sedang memverifikasi data perusahaan Anda agar dapat mulai membuat dan mengisi pengajuan sertifikasi (submission). Mohon tunggu beberapa saat atau hubungi tim bantuan jika memerlukan panduan lebih lanjut.",
+
+    // Auth Pages (Login & Register)
+    auth_login_title: "Blue Economy Company",
+    auth_login_subtitle: "Silakan masuk ke akun BECdex Anda",
+    auth_login_email_label: "Email",
+    auth_login_email_placeholder: "Masukkan email Anda",
+    auth_login_password_label: "Kata Sandi",
+    auth_login_password_placeholder: "Masukkan kata sandi Anda",
+    auth_login_remember_me: "Ingat Saya",
+    auth_login_btn_submit: "Masuk",
+    auth_login_forgot_password: "Lupa Kata Sandi?",
+    auth_login_no_account: "Belum memiliki akun?",
+    auth_login_create_new: "Daftar baru",
+
+    auth_register_title: "Blue Economy Company",
+    auth_register_header_title: "Formulir Pendaftaran",
+    auth_register_company_name_placeholder: "Nama Perusahaan",
+    auth_register_country_default: "Pilih Negara",
+    auth_register_sector_default: "Sektor Ekonomi Biru",
+    auth_register_email_placeholder: "Alamat Email",
+    auth_register_password_placeholder: "Kata Sandi",
+    auth_register_repeat_password_placeholder: "Ulangi Kata Sandi",
+    auth_register_pic_name_placeholder: "Nama PIC",
+    auth_register_pic_email_placeholder: "Email PIC",
+    auth_register_pic_phone_placeholder: "No. Telepon / WA PIC",
+    auth_register_pic_position_placeholder: "Jabatan PIC",
+    auth_register_terms_pre: "* Perusahaan wajib memenuhi",
+    auth_register_terms_link: "Perjanjian Sertifikasi",
+    auth_register_terms_post: "Indeks Perusahaan Ekonomi Biru (BECdex) dan bersedia memberikan akses atau informasi yang dibutuhkan oleh Maritimepreneur International Certification Center (MICC) dalam kegiatan sertifikasi.",
+    auth_register_terms_accept: "Setuju",
+    auth_register_btn_submit: "Daftar",
+    auth_register_already_account: "Sudah memiliki akun?",
+    auth_register_login_link: "Masuk",
+
+    auth_banner_title: "Menjadi perusahaan ekonomi biru sekarang!",
+    auth_banner_desc: "Blue Economy Company adalah perusahaan bersertifikat di sektor maritim, yang bisnisnya memenuhi 70% atau lebih dari 50 indikator Blue Economy Company Index (BECdex) untuk mendukung pencapaian Tujuan Pembangunan Berkelanjutan (SDGs) di wilayah pesisir.",
+
+    // Auth Validation Messages
+    val_company_name_min: "Nama Perusahaan minimal 2 karakter",
+    val_email_invalid: "Format email tidak valid",
+    val_country_required: "Negara wajib dipilih",
+    val_sector_required: "Sektor wajib dipilih",
+    val_password_min: "Kata sandi minimal 8 karakter",
+    val_password_required: "Kata sandi wajib diisi",
+    val_password_match: "Kata sandi tidak cocok",
+    val_terms_required: "Anda harus menyetujui Perjanjian Sertifikasi",
+    val_pic_name_required: "Nama PIC wajib diisi",
+    val_pic_email_invalid: "Format email PIC tidak valid",
+    val_pic_phone_required: "No. Telepon PIC wajib diisi",
+    val_pic_position_required: "Jabatan PIC wajib diisi",
+
+    // Auth Toast Messages
+    auth_toast_login_success: "Selamat datang, {name}!",
+    auth_toast_login_failed: "Login gagal. Cek email dan password.",
+    auth_toast_logout_success: "Log out berhasil",
+    auth_toast_register_success: "Registrasi berhasil! Silakan tunggu admin mengaktifkan akun Anda sebelum login.",
+    auth_toast_register_failed: "Registrasi gagal.",
 } as const;
 
 export default id;

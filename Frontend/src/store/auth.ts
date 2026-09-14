@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { User } from "@/types";
+import { useLangStore } from "./lang";
 
 interface AuthState {
   user: User | null;
@@ -18,6 +19,8 @@ export const useAuthStore = create<AuthState>()(
 
       setAuth: (user: User) => {
         set({ user, isAuthenticated: true });
+        // Sinkronkan bahasa sesuai preferensi akun yang login
+        useLangStore.getState().syncUserLocale(user.id);
       },
 
       setUser: (user: User) => {
@@ -26,6 +29,8 @@ export const useAuthStore = create<AuthState>()(
 
       logout: () => {
         set({ user: null, isAuthenticated: false });
+        // Kembalikan bahasa ke preferensi guest browser
+        useLangStore.getState().syncGuestLocale();
       },
     }),
     {
