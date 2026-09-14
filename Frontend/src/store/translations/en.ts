@@ -7,6 +7,65 @@ const en = {
   nav_download: "Download",
   nav_login: "Log In",
   nav_register: "Registration",
+  // Authentication
+  auth_login_subtitle: "Please login to your BECdex account",
+  auth_email_label: "Email",
+  auth_email_placeholder: "Enter your email",
+  auth_password_label: "Password",
+  auth_password_placeholder: "Enter your password",
+  auth_remember: "Remember Me",
+  auth_login_button: "Log in",
+  auth_forgot_password: "Forgot Password",
+  auth_no_account: "Don't have an account?",
+  auth_create_new: "Create new",
+
+  auth_register_title: "Registration Form",
+  auth_company_name_placeholder: "Company Name",
+  auth_email_address_placeholder: "Email Address",
+  auth_country_placeholder: "Country",
+  auth_sector_placeholder: "Blue Economic Sector",
+  auth_repeat_password_placeholder: "Repeat Password",
+  auth_pic_name_placeholder: "PIC Name",
+  auth_pic_email_placeholder: "PIC Email",
+  auth_pic_phone_placeholder: "PIC Phone",
+  auth_pic_position_placeholder: "PIC Position",
+
+  auth_terms_before_agreement:
+    "Companies must meet the Blue Economy Company Index (BECdex)",
+  auth_certification_agreement: "Certification Agreement",
+  auth_terms_after_agreement:
+    "and are willing to provide access or information needed by the Maritimepreneur International Certification Center (MICC) in certification activities.",
+  auth_accept: "Accept",
+  auth_register_button: "Register",
+  auth_already_account: "Already have an account?",
+  auth_login_link: "Log in",
+
+  auth_banner_title: "Become a blue economy company now!",
+  auth_banner_description:
+    "Blue Economy Company is a certified company in the maritime sectors, whose business meets 70% or more of 50 indicators of the Blue Economy Company Index (BECdex) to support the achievement of the Sustainable Development Goals (SDGs) in the coastal states.",
+
+  validation_email_invalid: "Invalid email address",
+  validation_login_password_required: "Password is required",
+  validation_company_name_min:
+    "Company Name must be at least 2 characters",
+  validation_country_required: "Country is required",
+  validation_sector_required: "Sector is required",
+  validation_password_min: "Password must be at least 8 characters",
+  validation_passwords_match: "Passwords do not match",
+  validation_pic_name_required: "PIC Name is required",
+  validation_pic_email_invalid: "Invalid email address",
+  validation_pic_phone_required: "PIC Phone is required",
+  validation_pic_position_required: "PIC Position is required",
+  validation_terms_required:
+    "You must accept the Certification Agreement",
+
+  auth_logout_success: "Logged out successfully",
+  auth_login_success: "Welcome, {name}!",
+  auth_login_error:
+    "Login failed. Check your email and password.",
+  auth_register_success:
+    "Registration successful! Please wait for an administrator to activate your account before logging in.",
+  auth_register_error: "Registration failed.",
   filter_all_categories: "All Categories",
   cat_standard: "Standard",
   cat_good: "Good",

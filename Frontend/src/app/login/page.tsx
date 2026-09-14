@@ -6,30 +6,38 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
 import Cookies from "js-cookie";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import api, { setAuthToken } from "@/lib/api";
 import { useAuthStore } from "@/store/auth";
-import { useLangStore } from "@/store/lang";
+import { useLangStore, useTranslation } from "@/store/lang";
 import { useTheme } from "@/context/ThemeContext";
 import { isAnyAdmin } from "@/lib/roles";
 
 type ApiError = { response?: { data?: { message?: string } } };
 
-const loginSchema = z.object({
-  email: z.string().email("Format email tidak valid"),
-  password: z.string().min(1, "Password wajib diisi"),
+type LoginTranslations = {
+  validation_email_invalid: string;
+  validation_login_password_required: string;
+};
+
+const createLoginSchema = (t: LoginTranslations) => z.object({
+  email: z.string().email(t.validation_email_invalid),
+  password: z.string().min(1, t.validation_login_password_required),
   remember: z.boolean().optional(),
 });
 
-type LoginFormData = z.infer<typeof loginSchema>;
+type LoginFormData = z.infer<ReturnType<typeof createLoginSchema>>;
 
 export default function LoginPage() {
   const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
+  const { locale, setLocale } = useLangStore();
+  const { t } = useTranslation();
+  const loginSchema = createLoginSchema(t);
   const { user, isAuthenticated, setAuth } = useAuthStore();
-  const { setLocale } = useLangStore();
   const { setTheme } = useTheme();
 
   const {
@@ -94,7 +102,6 @@ export default function LoginPage() {
       }
 
       setAuth(user);
-      setLocale("en");
       setTheme("light");
 
       // Set role cookie agar middleware bisa enforce role separation
@@ -136,6 +143,12 @@ export default function LoginPage() {
             <ArrowLeft size={24} />
           </Link>
 
+          <div className="absolute top-6 right-6 flex items-center gap-1 text-xs font-bold">
+            <button type="button" onClick={() => setLocale("id")} className={locale === "id" ? "text-[#0d6efd]" : "text-gray-400"}>ID</button>
+            <span className="text-gray-300">|</span>
+            <button type="button" onClick={() => setLocale("en")} className={locale === "en" ? "text-[#0d6efd]" : "text-gray-400"}>EN</button>
+          </div>
+
           <div className="text-center mb-6 mt-4">
             <Image
               src="/logo.webp"
@@ -150,15 +163,15 @@ export default function LoginPage() {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <p className="text-center text-gray-700 text-sm">Please login to your BECdex account</p>
+            <p className="text-center text-gray-700 text-sm">{t.auth_login_subtitle}</p>
 
             {/* Email */}
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Email</label>
+              <label className="block text-xs font-semibold text-gray-700 mb-1">{t.auth_email_label}</label>
               <input
                 {...register("email")}
                 type="email"
-                placeholder="Enter your email here"
+                placeholder={t.auth_email_placeholder}
                 className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white outline-none focus:ring-2 focus:ring-[#0d6efd]/20 focus:border-[#0d6efd]"
               />
               {errors.email && (
@@ -167,18 +180,20 @@ export default function LoginPage() {
             </div>
 
             {/* Password */}
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">Password</label>
+            <div className="relative">
               <input
-                {...register("password")}
-                type="password"
-                placeholder="Enter your password here"
-                className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white outline-none focus:ring-2 focus:ring-[#0d6efd]/20 focus:border-[#0d6efd]"
+              type={showPassword ? "text" : "password"}
+              className="w-full pr-10 ... (style yang ada)"
+              {...register("password")}
               />
-              {errors.password && (
-                <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>
-              )}
-            </div>
+              <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+                </div>
 
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-2 cursor-pointer">
@@ -187,7 +202,7 @@ export default function LoginPage() {
                   {...register("remember")}
                   className="w-4 h-4 text-[#0d6efd] border-gray-300 rounded focus:ring-[#0d6efd]"
                 />
-                <span className="text-xs text-gray-600">Remember Me</span>
+                <span className="text-xs text-gray-600">{t.auth_remember}</span>
               </label>
             </div>
 
@@ -201,25 +216,25 @@ export default function LoginPage() {
                 {isSubmitting ? (
                   <Loader2 size={18} className="animate-spin" />
                 ) : (
-                  "Log in"
+                  t.auth_login_button
                 )}
               </button>
             </div>
 
             <div className="text-center">
               <Link href="/forgot-password" className="text-xs text-gray-500 hover:underline">
-                Forgot Password
+                {t.auth_forgot_password}
               </Link>
             </div>
 
             {/* Toggle to Register */}
             <div className="flex items-center justify-center gap-3 pt-4 border-t border-gray-200">
-              <p className="text-xs text-gray-700">{"Don't have an account?"}</p>
+              <p className="text-xs text-gray-700">{t.auth_no_account}</p>
               <Link
                 href="/register"
                 className="border border-[#0d6efd] text-[#0d6efd] hover:bg-blue-50 text-xs font-bold px-4 py-1.5 rounded-lg transition-colors"
               >
-                Create new
+                {t.auth_create_new}
               </Link>
             </div>
           </form>
@@ -238,10 +253,10 @@ export default function LoginPage() {
           />
           <div className="max-w-xs space-y-3">
             <h4 className="text-lg font-bold font-sans leading-snug">
-              Become a blue economy company now!
+              {t.auth_banner_title}
             </h4>
             <p className="text-xs text-blue-100/90 leading-relaxed text-justify font-sans">
-              Blue Economy Company is a certified company in the maritime sectors, whose business meets 70% or more of 50 indicators of the Blue Economy Company Index (BECdex) to support the achievement of the Sustainable Development Goals (SDGs) in the coastal states.
+              {t.auth_banner_description}
             </p>
           </div>
         </div>

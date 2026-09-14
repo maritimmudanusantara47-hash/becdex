@@ -6,32 +6,48 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { useState } from "react";
 import Image from "next/image";
 import api from "@/lib/api";
+import { useLangStore, useTranslation } from "@/store/lang";
 
-const registerSchema = z
+type RegisterTranslations = {
+  validation_company_name_min: string;
+  validation_email_invalid: string;
+  validation_country_required: string;
+  validation_sector_required: string;
+  validation_password_min: string;
+  validation_pic_name_required: string;
+  validation_pic_email_invalid: string;
+  validation_pic_phone_required: string;
+  validation_pic_position_required: string;
+  validation_terms_required: string;
+  validation_passwords_match: string;
+};
+
+const createRegisterSchema = (t: RegisterTranslations) => z
   .object({
-    name: z.string().min(2, "Company Name must be at least 2 characters"),
-    email: z.string().email("Invalid email address"),
-    company_country: z.string().min(1, "Country is required"),
-    company_field_id: z.string().min(1, "Sector is required"),
-    password: z.string().min(8, "Password must be at least 8 characters"),
+    name: z.string().min(2, t.validation_company_name_min),
+    email: z.string().email(t.validation_email_invalid),
+    company_country: z.string().min(1, t.validation_country_required),
+    company_field_id: z.string().min(1, t.validation_sector_required),
+    password: z.string().min(8, t.validation_password_min),
     password_confirmation: z.string(),
-    pic_name: z.string().min(2, "PIC Name is required"),
-    pic_email: z.string().email("Invalid PIC email"),
-    pic_phone: z.string().min(8, "PIC Phone is required"),
-    pic_position: z.string().min(2, "PIC Position is required"),
+    pic_name: z.string().min(2, t.validation_pic_name_required),
+    pic_email: z.string().email(t.validation_pic_email_invalid),
+    pic_phone: z.string().min(8, t.validation_pic_phone_required),
+    pic_position: z.string().min(2, t.validation_pic_position_required),
     terms_accepted: z.boolean().refine((val) => val === true, {
-      message: "You must accept the Certification Agreement",
+      message: t.validation_terms_required,
     }),
   })
   .refine((data) => data.password === data.password_confirmation, {
-    message: "Passwords do not match",
+    message: t.validation_passwords_match,
     path: ["password_confirmation"],
   });
 
-type RegisterFormData = z.infer<typeof registerSchema>;
+type RegisterFormData = z.infer<ReturnType<typeof createRegisterSchema>>;
 
 const COUNTRIES = [
   { iso: "AL", name: "Albania" },
@@ -179,6 +195,11 @@ const SECTORS = [
 
 export default function RegisterPage() {
   const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false);
+  const { locale, setLocale } = useLangStore();
+  const { t } = useTranslation();
+  const registerSchema = createRegisterSchema(t);
 
   const {
     register,
@@ -208,7 +229,7 @@ export default function RegisterPage() {
         company_field_id: Number(data.company_field_id),
       };
       await api.post("/auth/register", payload);
-      toast.success("Registrasi berhasil! Silakan tunggu admin mengaktifkan akun Anda sebelum login.");
+      toast.success(t.auth_register_success);
       router.push("/login");
     } catch (error: unknown) {
       const err = error as { response?: { data?: { errors?: Record<string, string[]>; message?: string } } };
@@ -217,7 +238,7 @@ export default function RegisterPage() {
         const firstError = Object.values(errs)[0] as string[];
         toast.error(firstError[0]);
       } else {
-        toast.error(err.response?.data?.message || "Registrasi gagal.");
+        toast.error(err.response?.data?.message || t.auth_register_error);
       }
     }
   };
@@ -233,6 +254,12 @@ export default function RegisterPage() {
             <ArrowLeft size={24} />
           </Link>
 
+          <div className="absolute top-6 right-6 flex items-center gap-1 text-xs font-bold">
+            <button type="button" onClick={() => setLocale("id")} className={locale === "id" ? "text-[#0d6efd]" : "text-gray-400"}>ID</button>
+            <span className="text-gray-300">|</span>
+            <button type="button" onClick={() => setLocale("en")} className={locale === "en" ? "text-[#0d6efd]" : "text-gray-400"}>EN</button>
+          </div>
+
           <div className="text-center mb-4 mt-4">
             <Image
               src="/logo.webp"
@@ -247,7 +274,7 @@ export default function RegisterPage() {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 font-sans text-sm">
-            <p className="text-center text-gray-700 font-semibold mb-2">Registration Form</p>
+            <p className="text-center text-gray-700 font-semibold mb-2">{t.auth_register_title}</p>
 
             <div className="grid md:grid-cols-2 gap-3">
               {/* Company Name */}
@@ -255,7 +282,7 @@ export default function RegisterPage() {
                 <input
                   {...register("name")}
                   type="text"
-                  placeholder="Company Name"
+                  placeholder={t.auth_company_name_placeholder}
                   className="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 bg-white outline-none focus:ring-2 focus:ring-[#0d6efd]/20 focus:border-[#0d6efd]"
                 />
                 {errors.name && (
@@ -269,7 +296,7 @@ export default function RegisterPage() {
                   {...register("company_country")}
                   className="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 bg-white outline-none focus:ring-2 focus:ring-[#0d6efd]/20 focus:border-[#0d6efd] text-gray-700"
                 >
-                  <option value="">Country</option>
+                  <option value="">{t.auth_country_placeholder}</option>
                   {COUNTRIES.map((c) => (
                     <option key={c.iso} value={c.iso}>
                       {c.name}
@@ -286,7 +313,7 @@ export default function RegisterPage() {
                 <input
                   {...register("email")}
                   type="email"
-                  placeholder="Email Address"
+                  placeholder={t.auth_email_address_placeholder}
                   className="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 bg-white outline-none focus:ring-2 focus:ring-[#0d6efd]/20 focus:border-[#0d6efd]"
                 />
                 {errors.email && (
@@ -300,7 +327,7 @@ export default function RegisterPage() {
                   {...register("company_field_id")}
                   className="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 bg-white outline-none focus:ring-2 focus:ring-[#0d6efd]/20 focus:border-[#0d6efd] text-gray-700"
                 >
-                  <option value="">Blue Economic Sector</option>
+                  <option value="">{t.auth_sector_placeholder}</option>
                   {SECTORS.map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.name}
@@ -314,37 +341,51 @@ export default function RegisterPage() {
             </div>
 
             {/* Password */}
-            <div>
+            <div className="relative">
               <input
+                type={showPassword ? "text" : "password"}
+                className="w-full pr-10 ... (style yang ada)"
                 {...register("password")}
-                type="password"
-                placeholder="Password"
-                className="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 bg-white outline-none focus:ring-2 focus:ring-[#0d6efd]/20 focus:border-[#0d6efd]"
               />
-              {errors.password && (
-                <p className="text-red-500 text-[10px] mt-0.5">{errors.password.message}</p>
-              )}
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
             </div>
 
             {/* Repeat Password */}
-            <div>
+            <div className="relative">
               <input
-                {...register("password_confirmation")}
-                type="password"
-                placeholder="Repeat Password"
-                className="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 bg-white outline-none focus:ring-2 focus:ring-[#0d6efd]/20 focus:border-[#0d6efd]"
+              {...register("password_confirmation")}
+              type={showPasswordConfirmation ? "text" : "password"}
+              placeholder={t.auth_repeat_password_placeholder}
+              className="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 pr-10 bg-white outline-none focus:ring-2 focus:ring-[#0d6efd]/20 focus:border-[#0d6efd]"
               />
-              {errors.password_confirmation && (
-                <p className="text-red-500 text-[10px] mt-0.5">{errors.password_confirmation.message}</p>
-              )}
-            </div>
+              <button
+              type="button"
+              onClick={() =>
+                setShowPasswordConfirmation(!showPasswordConfirmation)
+              }
+              aria-label={
+                showPasswordConfirmation
+                ? "Sembunyikan password"
+                : "Tampilkan password"
+              }
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+              >
+                {showPasswordConfirmation ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+                </div>
 
             {/* PIC Name */}
             <div>
               <input
                 {...register("pic_name")}
                 type="text"
-                placeholder="PIC Name"
+                placeholder={t.auth_pic_name_placeholder}
                 className="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 bg-white outline-none focus:ring-2 focus:ring-[#0d6efd]/20 focus:border-[#0d6efd]"
               />
               {errors.pic_name && (
@@ -357,7 +398,7 @@ export default function RegisterPage() {
               <input
                 {...register("pic_email")}
                 type="email"
-                placeholder="PIC Email"
+                placeholder={t.auth_pic_email_placeholder}
                 className="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 bg-white outline-none focus:ring-2 focus:ring-[#0d6efd]/20 focus:border-[#0d6efd]"
               />
               {errors.pic_email && (
@@ -370,7 +411,7 @@ export default function RegisterPage() {
               <input
                 {...register("pic_phone")}
                 type="text"
-                placeholder="PIC Phone"
+                placeholder={t.auth_pic_phone_placeholder}
                 className="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 bg-white outline-none focus:ring-2 focus:ring-[#0d6efd]/20 focus:border-[#0d6efd]"
               />
               {errors.pic_phone && (
@@ -383,7 +424,7 @@ export default function RegisterPage() {
               <input
                 {...register("pic_position")}
                 type="text"
-                placeholder="PIC Position"
+                placeholder={t.auth_pic_position_placeholder}
                 className="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 bg-white outline-none focus:ring-2 focus:ring-[#0d6efd]/20 focus:border-[#0d6efd]"
               />
               {errors.pic_position && (
@@ -394,15 +435,16 @@ export default function RegisterPage() {
             {/* Terms and Conditions text */}
             <div className="text-gray-900 text-[12px] text-justify leading-normal space-y-2 border-t border-gray-200 pt-3 font-sans">
               <p>
-                <span className="text-red-500 font-bold">*</span> Companies must meet the Blue Economy Company Index (BECdex){" "}
+                <span className="text-red-500 font-bold">*</span>{" "}
+                {t.auth_terms_before_agreement}{" "}
                 <Link
                   href="/agreement.pdf"
                   target="_blank"
                   className="text-[#0d6efd] font-bold hover:underline"
                 >
-                  Certification Agreement
+                  {t.auth_certification_agreement}
                 </Link>{" "}
-                and are willing to provide access or information needed by the Maritimepreneur International Certification Center (MICC) in certification activities.
+                {t.auth_terms_after_agreement}
               </p>
 
               <div className="flex items-center justify-center gap-2 pt-1">
@@ -413,7 +455,7 @@ export default function RegisterPage() {
                   className="h-4 w-4 rounded border-gray-300 text-[#0d6efd] focus:ring-[#0d6efd]"
                 />
                 <label htmlFor="accept-terms" className="text-xs font-bold text-gray-700 cursor-pointer">
-                  Accept
+                  {t.auth_accept}
                 </label>
               </div>
               {errors.terms_accepted && (
@@ -431,19 +473,19 @@ export default function RegisterPage() {
                 {isSubmitting ? (
                   <Loader2 size={16} className="animate-spin" />
                 ) : (
-                  "Register"
+                  t.auth_register_button
                 )}
               </button>
             </div>
 
             {/* Already have account */}
             <div className="flex items-center justify-center gap-3 pt-3 border-t border-gray-200">
-              <p className="text-xs text-gray-700">Already have an account?</p>
+              <p className="text-xs text-gray-700">{t.auth_already_account}</p>
               <Link
                 href="/login"
                 className="border border-[#0d6efd] text-[#0d6efd] hover:bg-blue-50 text-xs font-bold px-4 py-1.5 rounded-lg transition-colors"
               >
-                Log in
+                {t.auth_login_link}
               </Link>
             </div>
           </form>
@@ -462,10 +504,10 @@ export default function RegisterPage() {
           />
           <div className="max-w-xs space-y-3">
             <h4 className="text-lg font-bold font-sans leading-snug">
-              Become a blue economy company now!
+              {t.auth_banner_title}
             </h4>
             <p className="text-xs text-blue-100/90 leading-relaxed text-justify font-sans">
-              Blue Economy Company is a certified company in the maritime sectors, whose business meets 70% or more of 50 indicators of the Blue Economy Company Index (BECdex) to support the achievement of the Sustainable Development Goals (SDGs) in the coastal states.
+              {t.auth_banner_description}
             </p>
           </div>
         </div>

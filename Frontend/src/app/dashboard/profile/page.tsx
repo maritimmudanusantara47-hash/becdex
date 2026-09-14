@@ -11,7 +11,7 @@ import { useAuthStore } from "@/store/auth";
 import api from "@/lib/api";
 import { User } from "@/types";
 
-import { Save, Loader2, Building, User as UserIcon, Mail, Phone, Briefcase, Camera, Globe, MapPin, AlignLeft, FileText, Download, Info, Key } from "lucide-react";
+import { Save, Loader2, Building, User as UserIcon, Mail, Phone, Briefcase, Camera, Globe, MapPin, AlignLeft, FileText, Download, Info, Key, Eye, EyeOff } from "lucide-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "@/store/lang";
 
@@ -24,6 +24,11 @@ export default function ProfilePage() {
 
   const [showLegalInfo, setShowLegalInfo] = useState(false);
   const [showOrgInfo, setShowOrgInfo] = useState(false);
+  const [visiblePasswords, setVisiblePasswords] = useState({
+    current: false,
+    new: false,
+    confirmation: false,
+  });
   const { t } = useTranslation();
 
   const [passwordForm, setPasswordForm] = useState({ current_password: "", password: "", password_confirmation: "" });
@@ -576,40 +581,80 @@ export default function ProfilePage() {
                 <label className="block text-xs font-extrabold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wide">
                   {t.dash_profile_pwd_current || "Kata Sandi Saat Ini"} <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="password"
-                  required
-                  value={passwordForm.current_password}
-                  onChange={(e) => setPasswordForm({ ...passwordForm, current_password: e.target.value })}
-                  placeholder="••••••••"
-                  className="w-full text-sm border border-slate-200/80 dark:border-slate-700 rounded-xl px-4 py-2.5 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-800 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:text-white"
-                />
+                <div className="relative">
+                  <input
+                    type={visiblePasswords.current ? "text" : "password"}
+                    required
+                    value={passwordForm.current_password}
+                    onChange={(e) =>
+                      setPasswordForm({
+                        ...passwordForm,
+                        current_password: e.target.value,
+                      })
+                    }
+                    placeholder="••••••••"
+                    className="w-full text-sm border border-slate-200/80 dark:border-slate-700 rounded-xl px-4 py-2.5 pr-12 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-800 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:text-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setVisiblePasswords({
+                        ...visiblePasswords,
+                        current: !visiblePasswords.current,
+                      })
+                    }
+                    aria-label="Tampilkan atau sembunyikan password"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                  >
+                    {visiblePasswords.current ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
               <div>
                 <label className="block text-xs font-extrabold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wide">
                   {t.dash_profile_pwd_new || "Kata Sandi Baru"} <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="password"
-                  required
-                  value={passwordForm.password}
-                  onChange={(e) => setPasswordForm({ ...passwordForm, password: e.target.value })}
-                  placeholder="••••••••"
-                  className="w-full text-sm border border-slate-200/80 dark:border-slate-700 rounded-xl px-4 py-2.5 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-800 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:text-white"
-                />
+                <div className="relative">
+                  <input
+                    type={visiblePasswords.new ? "text" : "password"}
+                    required
+                    value={passwordForm.password}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, password: e.target.value })}
+                    placeholder="••••••••"
+                    className="w-full text-sm border border-slate-200/80 dark:border-slate-700 rounded-xl px-4 py-2.5 pr-12 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-800 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:text-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setVisiblePasswords({ ...visiblePasswords, new: !visiblePasswords.new })}
+                    aria-label="Tampilkan atau sembunyikan password"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                  >
+                    {visiblePasswords.new ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
               <div>
                 <label className="block text-xs font-extrabold text-slate-700 dark:text-slate-300 mb-1.5 uppercase tracking-wide">
                   {t.dash_profile_pwd_confirm || "Konfirmasi Sandi Baru"} <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="password"
-                  required
-                  value={passwordForm.password_confirmation}
-                  onChange={(e) => setPasswordForm({ ...passwordForm, password_confirmation: e.target.value })}
-                  placeholder="••••••••"
-                  className="w-full text-sm border border-slate-200/80 dark:border-slate-700 rounded-xl px-4 py-2.5 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-800 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:text-white"
-                />
+                <div className="relative">
+                  <input
+                    type={visiblePasswords.confirmation ? "text" : "password"}
+                    required
+                    value={passwordForm.password_confirmation}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, password_confirmation: e.target.value })}
+                    placeholder="••••••••"
+                    className="w-full text-sm border border-slate-200/80 dark:border-slate-700 rounded-xl px-4 py-2.5 pr-12 bg-slate-50 dark:bg-slate-900 focus:bg-white dark:focus:bg-slate-800 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:text-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setVisiblePasswords({ ...visiblePasswords, confirmation: !visiblePasswords.confirmation })}
+                    aria-label="Tampilkan atau sembunyikan password"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                  >
+                    {visiblePasswords.confirmation ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
               </div>
             </div>
             <div className="flex justify-end pt-2">
