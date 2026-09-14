@@ -953,6 +953,58 @@ const en = {
   dash_profile_sel_sector: "Select Business Sector",
   dash_sub_err_load: "Your Account is Currently Under Verification",
   dash_sub_err_desc: "Your account has been successfully approved to log in. Currently, the BECdex administrator is verifying your company profile so you can start creating and filling out certification submissions. Please wait a moment or contact our support team if you need further assistance.",
+
+  // Auth & i18n (Login & Register)
+  auth_login_subtitle: "Please login to your BECdex account",
+  auth_email: "Email",
+  auth_email_placeholder: "Enter your email",
+  auth_password: "Password",
+  auth_password_placeholder: "Enter your password",
+  auth_remember_me: "Remember Me",
+  auth_login_btn: "Log in",
+  auth_forgot_password: "Forgot Password",
+  auth_no_account: "Don't have an account?",
+  auth_create_new: "Create new",
+  auth_banner_title: "Become a blue economy company now!",
+  auth_banner_desc: "Blue Economy Company is a certified company in the maritime sectors, whose business meets 70% or more of 50 indicators of the Blue Economy Company Index (BECdex) to support the achievement of the Sustainable Development Goals (SDGs) in the coastal states.",
+
+  auth_register_title: "Registration Form",
+  auth_company_name_placeholder: "Company Name",
+  auth_country_select: "Country",
+  auth_sector_select: "Blue Economic Sector",
+  auth_repeat_password_placeholder: "Repeat Password",
+  auth_pic_name_placeholder: "PIC Name",
+  auth_pic_email_placeholder: "PIC Email",
+  auth_pic_phone_placeholder: "PIC Phone",
+  auth_pic_position_placeholder: "PIC Position",
+  auth_terms_prefix: "Companies must meet the Blue Economy Company Index (BECdex)",
+  auth_terms_link: "Certification Agreement",
+  auth_terms_suffix: "and are willing to provide access or information needed by the Maritimepreneur International Certification Center (MICC) in certification activities.",
+  auth_terms_accept: "Accept",
+  auth_register_btn: "Register",
+  auth_already_have_account: "Already have an account?",
+
+  // Validation messages
+  val_company_name_min: "Company Name must be at least 2 characters",
+  val_email_invalid: "Invalid email address",
+  val_email_required: "Email is required",
+  val_country_required: "Country is required",
+  val_sector_required: "Sector is required",
+  val_password_min: "Password must be at least 8 characters",
+  val_password_required: "Password is required",
+  val_passwords_dont_match: "Passwords do not match",
+  val_pic_name_required: "PIC Name is required",
+  val_pic_email_invalid: "Invalid PIC email",
+  val_pic_phone_required: "PIC Phone is required",
+  val_pic_position_required: "PIC Position is required",
+  val_terms_required: "You must accept the Certification Agreement",
+
+  // Toasts
+  auth_toast_login_welcome: "Welcome, {name}!",
+  auth_toast_login_failed: "Login failed. Check email and password.",
+  auth_toast_logout_success: "Log out successful",
+  auth_toast_register_success: "Registration successful! Please wait for the admin to activate your account before logging in.",
+  auth_toast_register_failed: "Registration failed.",
 } as const;
 
 export default en;
