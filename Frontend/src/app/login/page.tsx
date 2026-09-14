@@ -15,7 +15,6 @@ import { useAuthStore } from "@/store/auth";
 import { useTranslation } from "@/store/lang";
 import { useTheme } from "@/context/ThemeContext";
 import { isAnyAdmin } from "@/lib/roles";
-import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 
 type ApiError = { response?: { data?: { message?: string } } };
 
@@ -147,11 +146,6 @@ export default function LoginPage() {
           <Link href="/" className="absolute top-6 left-6 text-[#0d6efd] hover:text-blue-700 transition-colors">
             <ArrowLeft size={24} />
           </Link>
-
-          {/* Language Switcher */}
-          <div className="absolute top-6 right-6">
-            <LanguageSwitcher />
-          </div>
 
           <div className="text-center mb-6 mt-4">
             <Image
