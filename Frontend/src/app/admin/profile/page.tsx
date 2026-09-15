@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { toast } from "sonner";
-import { Loader2, Save, UserCircle, KeyRound, Camera } from "lucide-react";
+import { Loader2, Save, UserCircle, KeyRound, Camera, Eye, EyeOff } from "lucide-react";
 import { useState, useRef } from "react";
 import { ActiveSessions } from "@/components/profile/ActiveSessions";
 
@@ -17,6 +17,8 @@ export default function AdminProfilePage() {
   const { user, setUser } = useAuthStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const getImageUrl = (imagePath: string | null | undefined) => {
     if (!imagePath) return "";
@@ -199,24 +201,46 @@ export default function AdminProfilePage() {
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
                 {t.dash_admin_profile_lbl_new_pass || "Password Baru"}
               </label>
-              <input
-                {...register("password")}
-                type="password"
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200/80 bg-slate-50/50 text-sm text-slate-800 focus:bg-white focus:border-rose-500 focus:ring-1 focus:ring-rose-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800/80 dark:text-white transition-all shadow-2xs"
-                placeholder={t.dash_admin_profile_placeholder_pass || "Minimal 8 karakter"}
-              />
+              <div className="relative">
+  <input
+    {...register("password")}
+    type={showNewPassword ? "text" : "password"}
+    className="w-full px-4 py-2.5 pr-12 rounded-xl border border-slate-200/80 bg-slate-50/50 text-sm text-slate-800 focus:bg-white focus:border-rose-500 focus:ring-1 focus:ring-rose-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800/80 dark:text-white transition-all shadow-2xs"
+    placeholder={t.dash_admin_profile_placeholder_pass || "Minimal 8 karakter"}
+  />
+
+  <button
+    type="button"
+    onClick={() => setShowNewPassword(!showNewPassword)}
+    aria-label={showNewPassword ? "Sembunyikan password baru" : "Tampilkan password baru"}
+    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 focus:outline-none"
+  >
+    {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+  </button>
+</div>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
                 {t.dash_admin_profile_lbl_conf_pass || "Konfirmasi Password Baru"}
               </label>
-              <input
-                {...register("password_confirmation")}
-                type="password"
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200/80 bg-slate-50/50 text-sm text-slate-800 focus:bg-white focus:border-rose-500 focus:ring-1 focus:ring-rose-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800/80 dark:text-white transition-all shadow-2xs"
-                placeholder={t.dash_admin_profile_placeholder_conf || "Ulangi password baru"}
-              />
+              <div className="relative">
+  <input
+    {...register("password_confirmation")}
+    type={showConfirmPassword ? "text" : "password"}
+    className="w-full px-4 py-2.5 pr-12 rounded-xl border border-slate-200/80 bg-slate-50/50 text-sm text-slate-800 focus:bg-white focus:border-rose-500 focus:ring-1 focus:ring-rose-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800/80 dark:text-white transition-all shadow-2xs"
+    placeholder={t.dash_admin_profile_placeholder_conf || "Ulangi password baru"}
+  />
+
+  <button
+    type="button"
+    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+    aria-label={showConfirmPassword ? "Sembunyikan konfirmasi password" : "Tampilkan konfirmasi password"}
+    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 focus:outline-none"
+  >
+    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+  </button>
+</div>
             </div>
           </div>
 
