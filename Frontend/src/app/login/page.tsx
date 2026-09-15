@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
 import Cookies from "js-cookie";
 import { useEffect, useMemo } from "react";
@@ -15,6 +15,7 @@ import { useAuthStore } from "@/store/auth";
 import { useTranslation } from "@/store/lang";
 import { useTheme } from "@/context/ThemeContext";
 import { isAnyAdmin } from "@/lib/roles";
+import { useState } from "react";
 
 type ApiError = { response?: { data?: { message?: string } } };
 
@@ -29,6 +30,7 @@ export default function LoginPage() {
   const { user, isAuthenticated, setAuth } = useAuthStore();
   const { t } = useTranslation();
   const { setTheme } = useTheme();
+  const [showPassword, setShowPassword] = useState(false);
 
   const loginSchema = useMemo(
     () =>
@@ -182,20 +184,38 @@ export default function LoginPage() {
             </div>
 
             {/* Password */}
-            <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">
-                {t.auth_password || "Password"}
-              </label>
-              <input
-                {...register("password")}
-                type="password"
-                placeholder={t.auth_password_placeholder || "Enter your password"}
-                className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white outline-none focus:ring-2 focus:ring-[#0d6efd]/20 focus:border-[#0d6efd]"
-              />
-              {errors.password && (
-                <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>
-              )}
-            </div>
+            {/* Password */}
+<div>
+  <label className="block text-xs font-semibold text-gray-700 mb-1">
+    {t.auth_password || "Password"}
+  </label>
+
+  <div className="relative">
+    <input
+      {...register("password")}
+      type={showPassword ? "text" : "password"}
+      placeholder={t.auth_password_placeholder || "Enter your password"}
+      className="w-full text-sm border border-gray-300 rounded-lg px-3 py-2 pr-10 bg-white outline-none focus:ring-2 focus:ring-[#0d6efd]/20 focus:border-[#0d6efd]"
+    />
+
+    <button
+      type="button"
+      onClick={() => setShowPassword(!showPassword)}
+      aria-label={showPassword ? "Hide password" : "Show password"}
+      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+    >
+      {showPassword ? (
+        <EyeOff className="h-5 w-5" />
+      ) : (
+        <Eye className="h-5 w-5" />
+      )}
+    </button>
+  </div>
+
+  {errors.password && (
+    <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>
+  )}
+</div>
 
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-2 cursor-pointer">
