@@ -1005,6 +1005,38 @@ const en = {
   auth_toast_logout_success: "Log out successful",
   auth_toast_register_success: "Registration successful! Please wait for the admin to activate your account before logging in.",
   auth_toast_register_failed: "Registration failed.",
+
+  // Forgot Password
+  auth_forgot_title: "Forgot Password",
+  auth_forgot_subtitle: "Enter your email address to receive password reset instructions",
+  auth_forgot_email_placeholder: "name@company.com",
+  auth_forgot_submit_btn: "Send Reset Link",
+  auth_forgot_remember_prompt: "Remember your password?",
+  auth_forgot_back_to_login: "Log in",
+  auth_forgot_success_title: "Email Sent!",
+  auth_forgot_success_desc: "Password reset instructions have been sent to your email. Please check your inbox (and spam folder).",
+  auth_forgot_ready_signin: "Ready to sign in?",
+  auth_forgot_banner_title: "Account recovery",
+  auth_forgot_banner_desc: "Enter your registered email address and we will send you a secure link to reset your password. Your BECdex account data and certification progress will remain safe.",
+  auth_forgot_success_banner_title: "Check your inbox",
+  auth_forgot_success_banner_desc: "We have sent a password reset link to your email address. Follow the instructions in the email to create a new password for your BECdex account.",
+  auth_forgot_toast_failed: "Failed to send reset email.",
+
+  // Reset Password
+  auth_reset_title: "Reset Password",
+  auth_reset_subtitle: "Create a new password for {email}",
+  auth_reset_new_password_label: "New Password",
+  auth_reset_new_password_placeholder: "Enter new password",
+  auth_reset_confirm_password_label: "Confirm New Password",
+  auth_reset_confirm_password_placeholder: "Repeat new password",
+  auth_reset_submit_btn: "Save New Password",
+  auth_reset_banner_title: "Secure your account",
+  auth_reset_banner_desc: "Choose a strong password to protect your BECdex account. A secure password helps safeguard your company data, certification progress, and assessment records.",
+  auth_reset_toast_invalid_token: "Password reset link is invalid or has expired.",
+  auth_reset_toast_success: "Password successfully changed. Please log in with your new password.",
+  auth_reset_toast_failed: "Failed to reset password.",
+  auth_reset_aria_show_pw: "Show password",
+  auth_reset_aria_hide_pw: "Hide password",
 } as const;
 
 export default en;

@@ -1005,6 +1005,38 @@ const id = {
   auth_toast_logout_success: "Log out berhasil",
   auth_toast_register_success: "Registrasi berhasil! Silakan tunggu admin mengaktifkan akun Anda sebelum login.",
   auth_toast_register_failed: "Registrasi gagal.",
+
+  // Forgot Password
+  auth_forgot_title: "Lupa Kata Sandi",
+  auth_forgot_subtitle: "Masukkan email Anda untuk menerima instruksi reset kata sandi",
+  auth_forgot_email_placeholder: "contoh@perusahaan.com",
+  auth_forgot_submit_btn: "Kirim Tautan Reset",
+  auth_forgot_remember_prompt: "Ingat kata sandi Anda?",
+  auth_forgot_back_to_login: "Masuk",
+  auth_forgot_success_title: "Email Terkirim!",
+  auth_forgot_success_desc: "Instruksi reset kata sandi telah dikirim ke email Anda. Silakan periksa kotak masuk (dan folder spam).",
+  auth_forgot_ready_signin: "Siap untuk masuk?",
+  auth_forgot_banner_title: "Pemulihan akun",
+  auth_forgot_banner_desc: "Masukkan alamat email Anda yang terdaftar dan kami akan mengirimkan tautan aman untuk mereset kata sandi Anda. Data akun dan progres sertifikasi BECdex Anda akan tetap aman.",
+  auth_forgot_success_banner_title: "Periksa kotak masuk Anda",
+  auth_forgot_success_banner_desc: "Kami telah mengirimkan tautan reset kata sandi ke alamat email Anda. Ikuti petunjuk di dalam email untuk membuat kata sandi baru bagi akun BECdex Anda.",
+  auth_forgot_toast_failed: "Gagal mengirim email reset.",
+
+  // Reset Password
+  auth_reset_title: "Reset Kata Sandi",
+  auth_reset_subtitle: "Buat kata sandi baru untuk {email}",
+  auth_reset_new_password_label: "Kata Sandi Baru",
+  auth_reset_new_password_placeholder: "Masukkan kata sandi baru",
+  auth_reset_confirm_password_label: "Konfirmasi Kata Sandi Baru",
+  auth_reset_confirm_password_placeholder: "Ulangi kata sandi baru",
+  auth_reset_submit_btn: "Simpan Kata Sandi Baru",
+  auth_reset_banner_title: "Amankan akun Anda",
+  auth_reset_banner_desc: "Pilih kata sandi yang kuat untuk melindungi akun BECdex Anda. Kata sandi yang aman membantu melindungi data perusahaan, progres sertifikasi, dan riwayat penilaian Anda.",
+  auth_reset_toast_invalid_token: "Tautan reset kata sandi tidak valid atau kedaluwarsa.",
+  auth_reset_toast_success: "Kata sandi berhasil diubah. Silakan masuk dengan kata sandi baru.",
+  auth_reset_toast_failed: "Gagal mereset kata sandi.",
+  auth_reset_aria_show_pw: "Tampilkan kata sandi",
+  auth_reset_aria_hide_pw: "Sembunyikan kata sandi",
 } as const;
 
 export default id;
