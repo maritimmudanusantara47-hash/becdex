@@ -203,7 +203,7 @@ export default function LandingPage() {
 
             <div className="pt-6">
               <Link
-                href="#assessment-standards"
+                href="/about"
                 className="inline-flex items-center justify-center px-8 py-3 bg-[#4154f1] text-white font-semibold rounded shadow-md hover:bg-[#3445d4] transition-colors">
                 Learn More &rarr;
               </Link>
