@@ -46,29 +46,40 @@ export function UserModal({
   ];
 
   useEffect(() => {
+    setShowPassword(false);
     if (editData) {
-      setTimeout(() => {
-        setForm({
-          name: editData.name || "",
-          email: editData.email || "",
-          password: "",
-          role_id: editData.role?.id || 2,
-          is_active: editData.is_active ?? 1,
-        });
-      }, 0);
+      setForm({
+        name: editData.name || "",
+        email: editData.email || "",
+        password: "",
+        role_id: editData.role?.id || 2,
+        is_active: editData.is_active ?? 1,
+      });
     } else {
-      setTimeout(() => {
-        setForm({ name: "", email: "", password: "", role_id: 2, is_active: 1 });
-      }, 0);
+      setForm({ name: "", email: "", password: "", role_id: 2, is_active: 1 });
     }
   }, [editData, isOpen]);
 
   const mutation = useMutation({
     mutationFn: async () => {
+      const payload: Record<string, unknown> = {
+        name: form.name.trim(),
+        email: form.email.trim(),
+        role_id: form.role_id,
+        is_active: form.is_active,
+      };
+
+      // Hanya kirim field password jika diisi oleh admin (atau saat buat user baru)
+      if (form.password && form.password.trim().length > 0) {
+        payload.password = form.password;
+      } else if (!isEditing) {
+        payload.password = form.password;
+      }
+
       if (isEditing && editData?.id) {
-        await api.put(`/admin/users/${editData.id}`, form);
+        await api.put(`/admin/users/${editData.id}`, payload);
       } else {
-        await api.post("/admin/users", form);
+        await api.post("/admin/users", payload);
       }
     },
     onSuccess: () => {
@@ -97,17 +108,38 @@ export function UserModal({
         </div>
 
         <form
+          autoComplete="off"
           onSubmit={(e) => {
             e.preventDefault();
             mutation.mutate();
           }}
           className="p-6 space-y-4"
         >
+          {/* Hidden dummy fields to prevent aggressive browser autofill */}
+          <input
+            type="text"
+            name="prevent_autofill_user"
+            className="hidden"
+            tabIndex={-1}
+            aria-hidden="true"
+            autoComplete="off"
+          />
+          <input
+            type="password"
+            name="prevent_autofill_pass"
+            className="hidden"
+            tabIndex={-1}
+            aria-hidden="true"
+            autoComplete="new-password"
+          />
+
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Nama Lengkap</label>
             <input
               required
               type="text"
+              name="admin_user_fullname"
+              autoComplete="off"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-blue-500 focus:outline-none"
@@ -120,6 +152,8 @@ export function UserModal({
             <input
               required
               type="email"
+              name="admin_user_email"
+              autoComplete="off"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-blue-500 focus:outline-none"
@@ -131,26 +165,35 @@ export function UserModal({
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
               Password {isEditing && <span className="text-slate-400 font-normal">(Kosongkan jika tidak ingin mengubah)</span>}
             </label>
-          <div className="relative">
-  <input
-    required={!isEditing}
-    type={showPassword ? "text" : "password"}
-    value={form.password}
-    onChange={(e) => setForm({ ...form, password: e.target.value })}
-    className="w-full px-3.5 py-2.5 pr-11 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-blue-500 focus:outline-none"
-    placeholder="Minimal 8 karakter"
-    minLength={8}
-  />
+            <div className="relative">
+              <input
+                required={!isEditing}
+                type={showPassword ? "text" : "password"}
+                name="admin_user_new_password"
+                id="admin_user_new_password"
+                autoComplete="new-password"
+                data-lpignore="true"
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                className="w-full px-3.5 py-2.5 pr-11 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-blue-500 focus:outline-none"
+                placeholder={isEditing ? "Kosongkan jika tidak ingin mengubah password" : "Minimal 8 karakter"}
+                minLength={form.password ? 8 : (isEditing ? undefined : 8)}
+              />
 
-  <button
-    type="button"
-    onClick={() => setShowPassword(!showPassword)}
-    aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
-    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 focus:outline-none"
-  >
-    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-  </button>
-</div>
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 focus:outline-none cursor-pointer"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+            {isEditing && (
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                Biarkan kosong jika tidak ingin mengubah password user. Jika diisi (min. 8 karakter), user dapat langsung login menggunakan password baru ini.
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
