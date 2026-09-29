@@ -82,7 +82,9 @@ function DocumentUploadZone({
     },
     onError: (error: unknown) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      toast.error((error as any).response?.data?.message || "Upload gagal.");
+      const res = (error as any).response?.data;
+      const firstError = res?.errors ? (Object.values(res.errors).flat()[0] as string) : null;
+      toast.error(firstError || res?.message || "Upload gagal.");
     },
   });
 
