@@ -59,7 +59,7 @@ export default function ProfilePage() {
     updatePasswordMutation.mutate(passwordForm);
   };
 
-  const { data: lookupsData } = useQuery({
+  const { data: lookupsData, isLoading: isLoadingLookups } = useQuery({
     queryKey: ["lookups"],
     queryFn: async () => {
       const res = await api.get("/public/lookups");
@@ -87,9 +87,9 @@ export default function ProfilePage() {
     values: {
       name: profile?.name ?? "",
       brand_name: profile?.company?.brand_name ?? "",
-      company_phone: profile?.company?.phone ?? "",
+      company_phone: profile?.company?.phone || profile?.company?.pic_phone || "",
       company_country: profile?.company?.country ?? "",
-      company_field_id: profile?.company?.company_field_id ?? "",
+      company_field_id: profile?.company?.company_field_id ? String(profile.company.company_field_id) : "",
       description: profile?.company?.description ?? "",
       address: profile?.company?.address ?? "",
       website: profile?.company?.website ?? "",
@@ -175,7 +175,7 @@ export default function ProfilePage() {
     }
   };
 
-  if (isLoading) {
+  if (isLoading || isLoadingLookups) {
     return (
       <AppLayout title={t.dash_profile_title || "Profil Perusahaan"}>
         <LoadingSpinner />
@@ -341,13 +341,7 @@ export default function ProfilePage() {
                 <input type="email" value={profile?.email ?? ""} disabled className="w-full px-4 py-3 rounded-xl border border-slate-200/60 dark:border-slate-800 bg-slate-100/80 dark:bg-slate-800/40 text-slate-400 text-sm font-medium cursor-not-allowed" />
               </div>
 
-              <div>
-                <label className="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                  <Phone size={13} className="text-blue-500" />
-                  <span>{t.dash_profile_phone || "Nomor Telepon Akun"}</span>
-                </label>
-                <input type="email" value={profile?.email ?? ""} disabled className="w-full px-4 py-3 rounded-xl border border-slate-200/60 dark:border-slate-800 bg-slate-100/80 dark:bg-slate-800/40 text-slate-400 text-sm font-medium cursor-not-allowed" />
-              </div>
+
 
               <div>
                 <label className="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">

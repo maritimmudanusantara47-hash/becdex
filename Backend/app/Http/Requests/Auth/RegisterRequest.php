@@ -27,7 +27,7 @@ class RegisterRequest extends FormRequest
 
             // Data perusahaan tambahan
             'company_phone'    => ['nullable', 'string', 'max:50'],
-            'company_country'  => ['nullable', 'string', 'size:2'],
+            'company_country'  => ['nullable', 'string', 'max:3'],
             'company_field_id' => ['nullable', 'integer', 'exists:company_fields,id'],
 
             // Terms & Conditions

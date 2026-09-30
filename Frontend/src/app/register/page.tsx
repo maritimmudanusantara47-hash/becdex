@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -173,6 +174,15 @@ export default function RegisterPage() {
   const router = useRouter();
   const { t } = useTranslation();
 
+  const { data: lookupsData } = useQuery({
+    queryKey: ["lookups"],
+    queryFn: async () => {
+      const res = await api.get("/public/lookups");
+      return res.data;
+    },
+  });
+  const lookups = lookupsData?.data || { countries: [], company_fields: [] };
+
   const [showPassword, setShowPassword] = useState(false);
   const [showRepeatPassword, setShowRepeatPassword] = useState(false);
 
@@ -302,8 +312,8 @@ export default function RegisterPage() {
                   className="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 bg-white outline-none focus:ring-2 focus:ring-[#0d6efd]/20 focus:border-[#0d6efd] text-gray-700"
                 >
                   <option value="">{t.auth_country_select || "Country"}</option>
-                  {COUNTRIES.map((c) => (
-                    <option key={c.iso} value={c.iso}>
+                  {lookups.countries.map((c: { id: number; iso: string; name: string }) => (
+                    <option key={c.id} value={c.iso}>
                       {c.name}
                     </option>
                   ))}
@@ -333,7 +343,7 @@ export default function RegisterPage() {
                   className="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 bg-white outline-none focus:ring-2 focus:ring-[#0d6efd]/20 focus:border-[#0d6efd] text-gray-700"
                 >
                   <option value="">{t.auth_sector_select || "Blue Economic Sector"}</option>
-                  {SECTORS.map((s) => (
+                  {lookups.company_fields.map((s: { id: number; name: string }) => (
                     <option key={s.id} value={s.id}>
                       {s.name}
                     </option>

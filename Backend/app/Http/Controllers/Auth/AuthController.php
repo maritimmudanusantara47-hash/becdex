@@ -31,7 +31,7 @@ class AuthController extends Controller
 
         CompanyDetail::create([
             'user_id'          => $user->id,
-            'company_phone'    => $request->company_phone,
+            'company_phone'    => $request->company_phone ?? $request->pic_phone,
             'company_country'  => $request->company_country,
             'company_field_id' => $request->company_field_id,
             'pic_name'         => $request->pic_name,
