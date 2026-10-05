@@ -19,7 +19,27 @@ class IndicatorCommentController extends Controller
             ->where('indicator_id', $indicator_id)
             ->firstOrFail();
 
-        $comments = $perIndicator->comments()->with('user:id,name')->orderBy('created_at', 'asc')->get();
+        $currentUser = Auth::user();
+        $isCompany = $currentUser && $currentUser->role_id === RoleId::Company->value;
+
+        $comments = $perIndicator->comments()
+            ->with(['user' => function ($query) {
+                $query->select('id', 'name', 'role_id');
+            }])
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        $comments->transform(function ($comment) use ($isCompany) {
+            $isAssessor = $comment->user && $comment->user->role_id !== RoleId::Company->value;
+            $comment->is_assessor = $isAssessor;
+
+            // Jika yang mengakses adalah pihak perusahaan, samarkan nama asli asesor menjadi 'Asesor' untuk perlindungan privasi
+            if ($isAssessor && $isCompany) {
+                $comment->user->name = 'Asesor';
+            }
+
+            return $comment;
+        });
 
         return response()->json(['data' => $comments]);
     }
@@ -60,7 +80,17 @@ class IndicatorCommentController extends Controller
             }
         }
 
-        return response()->json(['message' => 'Comment added', 'data' => $comment->load('user:id,name')]);
+        $comment->load(['user' => function ($query) {
+            $query->select('id', 'name', 'role_id');
+        }]);
+
+        $isAssessor = $comment->user && $comment->user->role_id !== RoleId::Company->value;
+        $comment->is_assessor = $isAssessor;
+        if ($isAssessor && $user->role_id === RoleId::Company->value) {
+            $comment->user->name = 'Asesor';
+        }
+
+        return response()->json(['message' => 'Comment added', 'data' => $comment]);
     }
 
     /**
@@ -106,9 +136,19 @@ class IndicatorCommentController extends Controller
             'message' => $request->message,
         ]);
 
+        $comment->load(['user' => function ($query) {
+            $query->select('id', 'name', 'role_id');
+        }]);
+
+        $isAssessor = $comment->user && $comment->user->role_id !== RoleId::Company->value;
+        $comment->is_assessor = $isAssessor;
+        if ($isAssessor && $user->role_id === RoleId::Company->value) {
+            $comment->user->name = 'Asesor';
+        }
+
         return response()->json([
             'message' => 'Komentar berhasil diperbarui',
-            'data' => $comment->load('user:id,name'),
+            'data' => $comment,
         ]);
     }
 

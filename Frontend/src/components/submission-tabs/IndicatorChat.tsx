@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
 import { formatDate } from '@/lib/utils';
-import { Send, Pencil, X, Check, Loader2, Trash2 } from 'lucide-react';
+import { Send, Pencil, X, Check, Loader2, Trash2, ShieldCheck } from 'lucide-react';
 import { useAuthStore } from '@/store/auth';
 import { isSuperAdmin } from '@/lib/roles';
 
@@ -126,15 +126,42 @@ export function IndicatorChat({ submissionId, indicatorId, isAdmin = false }: In
             const isConfirmingDelete = confirmDeleteId === c.id;
             const isEdited = c.updated_at && c.created_at && c.updated_at !== c.created_at;
 
+            // Identifikasi apakah pesan dikirim oleh Asesor / Tim Penilai
+            const isAssessor = Boolean(
+              c.is_assessor ||
+              (c.user?.role_id && c.user?.role_id !== 2) ||
+              c.user?.name === 'Asesor'
+            );
+
+            // Tampilkan nama dengan proteksi privasi: nama personal asesor dirahasiakan
+            let displayName = '';
+            if (isAssessor) {
+              displayName = isMe ? 'Asesor (Anda)' : 'Asesor';
+            } else {
+              displayName = isMe ? 'Anda' : (c.user?.name || 'Perusahaan');
+            }
+
             return (
               <div key={c.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 ${isMe ? 'bg-blue-600 text-white rounded-tr-sm' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700 rounded-tl-sm shadow-sm'}`}>
                   {/* Header: nama, waktu, tombol aksi */}
                   <div className="flex items-center justify-between gap-3 mb-1.5">
-                    <div className="flex items-center gap-2">
-                      <span className={`text-[10px] font-bold ${isMe ? 'text-blue-100' : 'text-slate-500 dark:text-slate-400'}`}>
-                        {c.user?.name || 'User'}
-                      </span>
+                    <div className="flex items-center gap-1.5">
+                      {isAssessor ? (
+                        <span
+                          className={`inline-flex items-center gap-1 text-[10px] font-bold ${
+                            isMe ? 'text-blue-100' : 'text-blue-600 dark:text-blue-400'
+                          }`}
+                          title={user && isSuperAdmin(user) && c.user?.name && c.user?.name !== 'Asesor' ? `Akun: ${c.user.name}` : undefined}
+                        >
+                          <ShieldCheck size={12} className={isMe ? 'text-blue-200' : 'text-blue-600 dark:text-blue-400'} />
+                          {displayName}
+                        </span>
+                      ) : (
+                        <span className={`text-[10px] font-bold ${isMe ? 'text-blue-100' : 'text-slate-600 dark:text-slate-300'}`}>
+                          {displayName}
+                        </span>
+                      )}
                       <span className={`text-[9px] ${isMe ? 'text-blue-200/80' : 'text-slate-400/80'}`}>
                         {formatDate(c.created_at)}
                       </span>
