@@ -95,6 +95,12 @@ export default function LandingPage() {
       title:
         "Chairperson of WiLAT Indonesia",
     },
+    {
+      photo: "/expert/gatot-prabantoro.png",
+      name: "Dr. Gatot Prabantoro",
+      title:
+        "Manajer Pendidikan dan Pengembangan Kewirausahaan, Indonesia Blue Economy Center",
+    },
   ];
   const EXPERTS_PER_VIEW = 5;
   const GAP_PX = 24;
