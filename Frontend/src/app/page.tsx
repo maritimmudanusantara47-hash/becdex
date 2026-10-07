@@ -100,6 +100,7 @@ export default function LandingPage() {
       name: "Dr. Gatot Prabantoro",
       title:
         "Manajer Pendidikan dan Pengembangan Kewirausahaan, Indonesia Blue Economy Center",
+      customStyle: { transform: "scale(1.6) translateY(-8%)", transformOrigin: "top center" },
     },
   ];
   const EXPERTS_PER_VIEW = 5;
