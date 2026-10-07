@@ -190,7 +190,7 @@ class CertificateAdminController extends Controller
         ])->findOrFail($id);
 
         // 1. Background image dari template aktif, fallback ke background kategori sertifikat
-        $activeTemplate = CertificateTemplate::where('is_active', true)->first();
+        $activeTemplate = CertificateTemplate::where('is_active', true)->first() ?: CertificateTemplate::latest()->first();
         $bgPath = null;
 
         if ($activeTemplate && $activeTemplate->background_path) {

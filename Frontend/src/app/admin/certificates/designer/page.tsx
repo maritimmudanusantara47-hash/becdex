@@ -38,8 +38,10 @@ const DEFAULT_CONFIG: TemplateConfig = {
 
 interface Template {
   id: number;
+  name?: string;
   background_path?: string;
   config?: TemplateConfig;
+  is_active?: boolean;
 }
 
 export default function CertificateDesignerPage() {
@@ -147,14 +149,32 @@ export default function CertificateDesignerPage() {
   };
 
   const handlePreview = async () => {
-    if (!activeTemplate) {
-      toast.error(t.dash_admin_cert_designer_toast_save_first || "Harap simpan desain terlebih dahulu untuk melihat pratinjau PDF.");
-      return;
-    }
-    
+    const toastId = toast.loading(t.dash_admin_cert_designer_toast_loading_pdf || "Memuat pratinjau PDF...");
     try {
-      const toastId = toast.loading(t.dash_admin_cert_designer_toast_loading_pdf || "Memuat pratinjau PDF...");
-      const response = await api.get(`/admin/certificate-templates/${activeTemplate.id}/preview`, {
+      let currentTemplateId = activeTemplate?.id;
+
+      // Auto-save if not yet created or to ensure latest changes are saved before preview
+      const formData = new FormData();
+      formData.append("name", activeTemplate?.name || "Default Certificate Design");
+      formData.append("config", JSON.stringify(config));
+      formData.append("is_active", "1");
+
+      if (activeTemplate) {
+        formData.append("_method", "PUT");
+        const res = await api.post(`/admin/certificate-templates/${activeTemplate.id}`, formData, {
+          headers: { "Content-Type": "multipart/form-data" }
+        });
+        setActiveTemplate(res.data.data);
+        currentTemplateId = res.data.data.id;
+      } else {
+        const res = await api.post("/admin/certificate-templates", formData, {
+          headers: { "Content-Type": "multipart/form-data" }
+        });
+        setActiveTemplate(res.data.data);
+        currentTemplateId = res.data.data.id;
+      }
+
+      const response = await api.get(`/admin/certificate-templates/${currentTemplateId}/preview`, {
         responseType: 'blob'
       });
       
@@ -164,7 +184,7 @@ export default function CertificateDesignerPage() {
       toast.dismiss(toastId);
     } catch (err) {
       console.error(err);
-      toast.dismiss();
+      toast.dismiss(toastId);
       toast.error(t.dash_admin_cert_designer_toast_pdf_error || "Gagal memuat pratinjau PDF.");
     }
   };
@@ -228,6 +248,7 @@ export default function CertificateDesignerPage() {
                   width: key === 'qr_code' ? `${(style.fontSize / 794) * 100}cqw` : (style.width === 'auto' ? 'max-content' : style.width),
                   height: key === 'qr_code' ? `${(style.fontSize / 794) * 100}cqw` : 'auto',
                   lineHeight: 1.2,
+                  whiteSpace: (style.width === 'auto' || !style.width) ? 'nowrap' : 'normal',
                   margin: 0,
                   padding: 0
                 }}

@@ -233,7 +233,7 @@ class SubmissionController extends Controller
         }
 
         // 1. Fetch active certificate template for layout and custom background
-        $activeTemplate = \App\Models\CertificateTemplate::where('is_active', true)->first();
+        $activeTemplate = \App\Models\CertificateTemplate::where('is_active', true)->first() ?: \App\Models\CertificateTemplate::latest()->first();
 
         $bgPath = null;
         

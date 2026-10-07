@@ -8,12 +8,16 @@
             size: A4 portrait;
             margin: 0;
         }
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
         body {
             font-family: 'Helvetica', sans-serif;
             color: #000;
             position: relative;
-            margin: 0;
-            padding: 0;
         }
         .dynamic-bg {
             position: absolute;
@@ -317,6 +321,20 @@
     @endif
 
     @foreach($config as $key => $style)
+        @php
+            $isQr = ($key === 'qr_code');
+            $w = $style['width'] ?? 'auto';
+            if ($isQr) {
+                $widthCss = ($style['fontSize'] ?? 80) . 'px';
+                $heightCss = ($style['fontSize'] ?? 80) . 'px';
+            } elseif ($w === 'auto') {
+                $widthCss = 'auto';
+                $heightCss = 'auto';
+            } else {
+                $widthCss = $w;
+                $heightCss = 'auto';
+            }
+        @endphp
         <div class="dynamic-element" style="
             left: {{ $style['x'] ?? 0 }}%;
             top: {{ $style['y'] ?? 0 }}%;
@@ -325,7 +343,9 @@
             text-align: {{ $style['textAlign'] ?? 'left' }};
             font-family: {{ $style['fontFamily'] ?? 'Helvetica, sans-serif' }};
             font-weight: {{ $style['fontWeight'] ?? 'normal' }};
-            width: {{ $style['width'] ?? 'auto' }};
+            width: {{ $widthCss }};
+            height: {{ $heightCss }};
+            white-space: {{ $w === 'auto' ? 'nowrap' : 'normal' }};
         ">
             @if($key === 'company_name')
                 {{ $company_name ?? '' }}
@@ -349,9 +369,9 @@
                 {{ $becdex_score ?? '' }}
             @elseif($key === 'qr_code')
                 @if(isset($qr_base64) && !empty($qr_base64) && strlen($qr_base64) > 50)
-                    <img src="{{ $qr_base64 }}" style="width: {{ $style['fontSize'] ?? 80 }}px; height: {{ $style['fontSize'] ?? 80 }}px;" />
+                    <img src="{{ $qr_base64 }}" style="width: 100%; height: 100%; display: block;" />
                 @else
-                    <span style="display:inline-block; width: {{ $style['fontSize'] ?? 80 }}px; text-align: center;">[QR]</span>
+                    <span style="display:inline-block; width: 100%; height: 100%; line-height: {{ $style['fontSize'] ?? 80 }}px; text-align: center;">[QR]</span>
                 @endif
             @else
                 {{ $style['text'] ?? '' }}

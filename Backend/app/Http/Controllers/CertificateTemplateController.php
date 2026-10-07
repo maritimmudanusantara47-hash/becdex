@@ -21,12 +21,13 @@ class CertificateTemplateController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'background_image' => 'nullable|image|mimes:jpeg,png,jpg|max:5120', // 5MB max
-            'config' => 'nullable|string',
+            'config' => 'nullable',
+            'is_active' => 'nullable',
         ]);
 
         $data = $request->only(['name']);
         if ($request->filled('config')) {
-            $data['config'] = json_decode($request->config, true);
+            $data['config'] = is_array($request->config) ? $request->config : json_decode($request->config, true);
         }
 
         if ($request->hasFile('background_image')) {
@@ -34,9 +35,15 @@ class CertificateTemplateController extends Controller
             $data['background_path'] = $path;
         }
 
-        // Check if this is the first template, make it active
-        if (CertificateTemplate::count() === 0) {
+        $isActive = $request->has('is_active')
+            ? filter_var($request->is_active, FILTER_VALIDATE_BOOLEAN)
+            : (CertificateTemplate::count() === 0);
+
+        if ($isActive) {
+            CertificateTemplate::query()->update(['is_active' => false]);
             $data['is_active'] = true;
+        } else {
+            $data['is_active'] = false;
         }
 
         $template = CertificateTemplate::create($data);
@@ -57,12 +64,13 @@ class CertificateTemplateController extends Controller
         $request->validate([
             'name' => 'sometimes|required|string|max:255',
             'background_image' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
-            'config' => 'nullable|string',
+            'config' => 'nullable',
+            'is_active' => 'nullable',
         ]);
 
         $data = $request->only(['name']);
         if ($request->filled('config')) {
-            $data['config'] = json_decode($request->config, true);
+            $data['config'] = is_array($request->config) ? $request->config : json_decode($request->config, true);
         }
 
         if ($request->hasFile('background_image')) {
@@ -72,6 +80,18 @@ class CertificateTemplateController extends Controller
             }
             $path = $request->file('background_image')->store('certificates', 'public');
             $data['background_path'] = $path;
+        }
+
+        if ($request->has('is_active')) {
+            $isActive = filter_var($request->is_active, FILTER_VALIDATE_BOOLEAN);
+            if ($isActive) {
+                CertificateTemplate::where('id', '!=', $id)->update(['is_active' => false]);
+                $data['is_active'] = true;
+            } else {
+                $data['is_active'] = false;
+            }
+        } elseif (CertificateTemplate::where('is_active', true)->count() === 0) {
+            $data['is_active'] = true;
         }
 
         $template->update($data);
@@ -130,6 +150,21 @@ class CertificateTemplateController extends Controller
             $bgImageBase64 = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($bgPath));
         }
 
+        $qrBase64 = '';
+        try {
+            $qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" . urlencode("https://becdex.com/verified-companies");
+            $arrContextOptions = [
+                "ssl" => [
+                    "verify_peer" => false,
+                    "verify_peer_name" => false,
+                ],
+            ];
+            $qrData = @file_get_contents($qrApiUrl, false, stream_context_create($arrContextOptions));
+            if ($qrData) {
+                $qrBase64 = 'data:image/png;base64,' . base64_encode($qrData);
+            }
+        } catch (\Exception $e) {}
+
         $data = [
             'mmic_code' => 'BICCID002072026',
             'company_name' => 'PT Eco Karya Teknologi (Crustea Indonesia)',
@@ -143,9 +178,9 @@ class CertificateTemplateController extends Controller
             'published_date_en' => '29 August 2026',
             'valid_until_en' => '28 August 2029',
             'director_name' => 'Kaisar Akhir',
-            'qr_base64' => 'https://becdex.com', // Dummy QR
+            'qr_base64' => $qrBase64,
             'bg_image_base64' => $bgImageBase64,
-            'config' => $template->config ?? [],
+            'config' => (!empty($template->config) && is_array($template->config)) ? $template->config : CertificateTemplate::getDefaultConfig(),
             'is_preview' => true
         ];
 
