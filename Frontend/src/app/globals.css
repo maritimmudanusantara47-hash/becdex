@@ -809,3 +809,48 @@
   box-shadow: 0 4px 15px rgba(1, 41, 112, 0.2);
 }
 
+/* ============================================================
+   PRINT MEDIA STYLES - Direct Certificate & Clean Print View
+   ============================================================ */
+@page {
+  size: A4 portrait;
+  margin: 0;
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    height: 100% !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  aside,
+  header,
+  footer,
+  nav,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  .lg\:ml-72\.5,
+  .lg\:ml-22\.5 {
+    margin-left: 0 !important;
+  }
+}
+
