@@ -90,7 +90,7 @@ export default function SubmissionDetailPage() {
   return (
     <AppLayout title={t.dash_sub_detail_title || "Detail Submission"}>
       {/* Navigation & Breadcrumb */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 print:hidden">
         <Link
           href="/dashboard"
           className="inline-flex items-center gap-2 text-slate-500 hover:text-blue-700 dark:text-slate-400 dark:hover:text-white text-xs font-bold transition-colors bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 px-3.5 py-2 rounded-xl shadow-2xs"
@@ -107,7 +107,7 @@ export default function SubmissionDetailPage() {
       </div>
 
       {/* TailAdmin Premium Header Card */}
-      <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-900 p-6 shadow-2xs transition-colors">
+      <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-900 p-6 shadow-2xs transition-colors print:hidden">
         <div className="absolute right-0 top-0 w-64 h-full bg-linear-to-l from-blue-50/50 via-transparent to-transparent dark:from-blue-950/20 pointer-events-none" />
 
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
@@ -362,9 +362,9 @@ export default function SubmissionDetailPage() {
       )}
 
       {/* Tabs Card Wrapper */}
-      <div className="rounded-2xl border border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-900 shadow-2xs overflow-hidden transition-colors">
+      <div className="rounded-2xl border border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-900 shadow-2xs overflow-hidden transition-colors print:border-none print:shadow-none print:rounded-none print:bg-transparent print:p-0 print:m-0">
         {/* Navigation Tab Bar */}
-        <div className="border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 px-2 sm:px-4">
+        <div className="border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 px-2 sm:px-4 print:hidden">
           <nav className="flex overflow-x-auto no-scrollbar gap-1">
             {TABS.map((tab) => {
               const Icon = tab.icon;
@@ -396,7 +396,7 @@ export default function SubmissionDetailPage() {
         </div>
 
         {/* Tab Content Section */}
-        <div className="p-5 md:p-8">
+        <div className="p-5 md:p-8 print:p-0 print:m-0">
           {activeTab === "assessment" && (
             <AssessmentTab submission={submission} onUpdate={refetch} onGoToScore={() => setActiveTab("score")} />
           )}
