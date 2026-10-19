@@ -121,6 +121,12 @@ export function DocumentsTab({ submission }: Props) {
                     <span className="text-sm md:text-base font-extrabold text-slate-800 dark:text-white truncate tracking-tight">
                       {pi.indicator.name}
                     </span>
+                    {(pi.indicator.is_mandatory || pi.indicator.questions?.some((q) => q.is_mandatory)) && (
+                      <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 font-extrabold text-[10px] border border-rose-300 dark:border-rose-800 shadow-2xs">
+                        <span className="text-rose-500 font-bold">★</span>
+                        <span>Wajib</span>
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {isRevision && (

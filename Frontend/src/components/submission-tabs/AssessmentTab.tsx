@@ -824,8 +824,16 @@ export function AssessmentTab({ submission, onUpdate, onGoToScore }: Props) {
                                             ? pi.indicator.name_id ||
                                               pi.indicator.name
                                             : pi.indicator.name}
-                                          {pi.indicator.is_mandatory && (
-                                            <span className="text-red-500 font-extrabold text-sm" title="Mandatory Indicator">*</span>
+                                          {(pi.indicator.is_mandatory ||
+                                            pi.indicator.questions?.some(
+                                              (q) => q.is_mandatory
+                                            )) && (
+                                            <span
+                                              className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 font-extrabold text-[10px] border border-rose-300 dark:border-rose-800 shadow-2xs"
+                                              title="Mandatory Indicator"
+                                            >
+                                              ★ {locale === "en" ? "Mandatory" : "Wajib"}
+                                            </span>
                                           )}
                                           {(pi.indicator.description ||
                                             pi.indicator.description_en ||

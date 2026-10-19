@@ -26,7 +26,7 @@ import { canIssueCertificate, canVerifySubmissions, isSuperAdmin } from "@/lib/r
 import { useAdminRouteGuard } from "@/hooks/useAdminRouteGuard";
 
 interface IndicatorDoc { id: number; file_url: string; original_name: string; upload_phase?: number; }
-interface IndicatorQuestion { id: number; text: string; text_en?: string | null; }
+interface IndicatorQuestion { id: number; text: string; text_en?: string | null; is_mandatory?: boolean; }
 
 interface PerIndicatorItem {
   id: number;
@@ -44,6 +44,7 @@ interface PerIndicatorItem {
     verification_method_en?: string | null;
     regulation?: string | null;
     regulation_en?: string | null;
+    is_mandatory?: boolean;
     principle: { name: string; name_id?: string | null; outcome: { name: string; name_id?: string | null; aspect: { name: string; name_id?: string | null } } };
     questions: IndicatorQuestion[];
   };
@@ -186,6 +187,7 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
     evidence?: string | null;
     verification_method?: string | null;
     regulation?: string | null;
+    is_mandatory?: boolean;
   } | null>(null);
 
   const approveMutation = useMutation({
@@ -253,6 +255,17 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
       }
     }
     return map;
+  }, [submission?.per_indicators]);
+
+  const mandatoryStats = useMemo(() => {
+    const list = submission?.per_indicators ?? [];
+    const total = list.filter((pi) => pi.indicator.is_mandatory || pi.indicator.questions?.some((q: IndicatorQuestion) => q.is_mandatory)).length;
+    const verified = list.filter(
+      (pi) =>
+        (pi.indicator.is_mandatory || pi.indicator.questions?.some((q: IndicatorQuestion) => q.is_mandatory)) &&
+        Number(pi.status.id) === 4
+    ).length;
+    return { total, verified };
   }, [submission?.per_indicators]);
 
   const uploadedIndicatorsCount = useMemo(() => {
@@ -560,6 +573,14 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
             </p>
           </div>
           <div className="flex items-center gap-3">
+            {mandatoryStats.total > 0 && (
+              <span className="text-xs font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 px-2.5 py-1.5 rounded-lg border border-rose-200/80 dark:border-rose-800 flex items-center gap-1.5 shadow-2xs">
+                <span className="text-rose-500 font-extrabold">★</span>
+                <span>
+                  {mandatoryStats.verified}/{mandatoryStats.total} {locale === 'en' ? 'Mandatory Verified' : 'Wajib Diverifikasi'}
+                </span>
+              </span>
+            )}
             <button
               onClick={() => setShowScoringGuide(true)}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
@@ -623,6 +644,12 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
                             <span className="shrink-0 text-xs text-blue-600 dark:text-blue-400 font-extrabold font-mono bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-md border border-blue-200/60 dark:border-blue-800">
                               {t.dash_admin_sub_id_indicator || "Indikator"} {indicatorNumberMap.get(pi.indicator_id) ?? "—"}
                             </span>
+                            {(pi.indicator.is_mandatory || pi.indicator.questions?.some((q: IndicatorQuestion) => q.is_mandatory)) && (
+                              <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 font-extrabold text-[10px] border border-rose-300 dark:border-rose-800 shadow-2xs">
+                                <span className="text-rose-500 font-bold">★</span>
+                                <span>{locale === 'en' ? 'Mandatory' : 'Wajib'}</span>
+                              </span>
+                            )}
                             <span className="truncate">{locale === 'id' ? (pi.indicator.name_id || pi.indicator.name) : pi.indicator.name}</span>
                             {(pi.indicator.description || pi.indicator.evidence || pi.indicator.regulation) && (
                               <span
@@ -637,6 +664,7 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
                                     evidence: locale === 'en' ? (pi.indicator.evidence_en || pi.indicator.evidence) : (pi.indicator.evidence || pi.indicator.evidence_en),
                                     verification_method: locale === 'en' ? (pi.indicator.verification_method_en || pi.indicator.verification_method) : (pi.indicator.verification_method || pi.indicator.verification_method_en),
                                     regulation: locale === 'en' ? (pi.indicator.regulation_en || pi.indicator.regulation) : (pi.indicator.regulation || pi.indicator.regulation_en),
+                                    is_mandatory: !!(pi.indicator.is_mandatory || pi.indicator.questions?.some((q: IndicatorQuestion) => q.is_mandatory)),
                                   });
                                 }}
                                 onKeyDown={(e) => {
@@ -648,6 +676,7 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
                                       evidence: locale === 'en' ? (pi.indicator.evidence_en || pi.indicator.evidence) : (pi.indicator.evidence || pi.indicator.evidence_en),
                                       verification_method: locale === 'en' ? (pi.indicator.verification_method_en || pi.indicator.verification_method) : (pi.indicator.verification_method || pi.indicator.verification_method_en),
                                       regulation: locale === 'en' ? (pi.indicator.regulation_en || pi.indicator.regulation) : (pi.indicator.regulation || pi.indicator.regulation_en),
+                                      is_mandatory: !!(pi.indicator.is_mandatory || pi.indicator.questions?.some((q: IndicatorQuestion) => q.is_mandatory)),
                                     });
                                   }
                                 }}
@@ -818,6 +847,13 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
                                     className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs border-b border-slate-100 dark:border-slate-800 pb-3 last:border-0 last:pb-0"
                                   >
                                     <div className="flex-1 min-w-0">
+                                      {(q.is_mandatory || pi.indicator.is_mandatory) && (
+                                        <div className="mb-1.5">
+                                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 font-extrabold text-[10px] border border-rose-300 dark:border-rose-800">
+                                            ★ {locale === 'en' ? 'Mandatory Requirement' : 'Pertanyaan Wajib'}
+                                          </span>
+                                        </div>
+                                      )}
                                       <p 
                                         className="text-slate-800 dark:text-slate-200 font-semibold leading-snug whitespace-pre-line"
                                         dangerouslySetInnerHTML={{ __html: (locale === 'en' ? (q.text_en || q.text) : (q.text || q.text_en)) ?? "" }}
@@ -1247,9 +1283,16 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
                   <Info size={20} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-extrabold text-base text-slate-900 dark:text-white leading-tight">
-                    {infoModalIndicator.name}
-                  </h3>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="font-extrabold text-base text-slate-900 dark:text-white leading-tight">
+                      {infoModalIndicator.name}
+                    </h3>
+                    {infoModalIndicator.is_mandatory && (
+                      <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 font-extrabold text-[10px] border border-rose-300 dark:border-rose-800 shadow-2xs">
+                        ★ {locale === 'en' ? 'Mandatory Indicator' : 'Indikator Wajib'}
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 mt-0.5 uppercase tracking-wider">
                     {t.assessment_modal_title || "Syarat & Bukti Indikator"}
                   </p>
