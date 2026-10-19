@@ -441,7 +441,7 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
             {!isCertified ? (
               <>
                 {/* cert button: hanya tampil untuk Super Admin & Certificate Admin */}
-                {Number(submission.status.id) === 3 && (
+                {[2, 3, 4, 6].includes(Number(submission.status.id)) && (
                   <div className="flex w-full gap-2">
                     {submission.survey && canIssueCertificate(user) && (
                       <button
@@ -487,7 +487,7 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
                     )}
                   </div>
                 )}
-                {submission.status.id === 8 && (
+                {Number(submission.status.id) === 8 && (
                   <button
                     onClick={() => setShowSurveyModal(true)}
                     className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-blue-600/80 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 font-bold text-xs transition-all cursor-pointer"
@@ -496,7 +496,7 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
                     <span>{t.dash_admin_sub_id_btn_survey || "Jadwal Survei"}</span>
                   </button>
                 )}
-                {submission.status.id === 7 && (
+                {Number(submission.status.id) === 7 && (
                   <div className="flex w-full gap-2">
                     {canIssueCertificate(user) && (
                       <button

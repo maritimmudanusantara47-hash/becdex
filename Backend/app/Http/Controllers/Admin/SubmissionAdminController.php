@@ -519,8 +519,8 @@ class SubmissionAdminController extends Controller
     {
         $submission = Submission::findOrFail($id);
 
-        if ($submission->submission_status_id != 3) {
-            return response()->json(['message' => 'Hanya submission dengan status Under Verification yang bisa diluluskan.'], 400);
+        if (!in_array($submission->submission_status_id, [2, 3, 4, 6])) {
+            return response()->json(['message' => 'Hanya submission dalam tahap verifikasi/pengajuan yang bisa diluluskan.'], 400);
         }
 
         if ($submission->valid_score < 70 || $submission->getUploadedIndicatorsCount() < 35) {
