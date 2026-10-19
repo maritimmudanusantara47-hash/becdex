@@ -4,19 +4,12 @@ import { useTranslation } from "@/store/lang";
 import { PublicHeader } from "@/components/layouts/PublicHeader";
 import { PublicFooter } from "@/components/layouts/PublicFooter";
 import Image from "next/image";
-import { useState, useEffect } from "react";
 
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 
 export default function DownloadPage() {
   const { t } = useTranslation();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setMounted(true), 0);
-    return () => clearTimeout(timer);
-  }, []);
 
   const { data: dynamicFiles } = useQuery({
     queryKey: ["public-downloads"],
@@ -24,10 +17,7 @@ export default function DownloadPage() {
       const res = await api.get("/public/downloads");
       return res.data.data as { id: number; title: string; file_url: string }[];
     },
-    enabled: mounted,
   });
-
-  if (!mounted) return null;
 
   const staticFiles = [
     { title: "Certification Agreement", file_url: "/agreement.pdf" },

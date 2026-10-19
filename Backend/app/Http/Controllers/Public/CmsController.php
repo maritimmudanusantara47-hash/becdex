@@ -7,24 +7,29 @@ use Illuminate\Http\Request;
 
 use Illuminate\Http\JsonResponse;
 use App\Models\CmsContent;
+use Illuminate\Support\Facades\Cache;
 
 class CmsController extends Controller
 {
     public function index(): JsonResponse
     {
-        $contents = CmsContent::all();
-        
-        $en = [];
-        $id = [];
+        $data = Cache::remember('public_cms_contents', 3600, function () {
+            $contents = CmsContent::all();
+            
+            $en = [];
+            $id = [];
 
-        foreach ($contents as $content) {
-            $en[$content->key] = $content->value_en;
-            $id[$content->key] = $content->value_id;
-        }
+            foreach ($contents as $content) {
+                $en[$content->key] = $content->value_en;
+                $id[$content->key] = $content->value_id;
+            }
 
-        return response()->json([
-            'en' => $en,
-            'id' => $id,
-        ]);
+            return [
+                'en' => $en,
+                'id' => $id,
+            ];
+        });
+
+        return response()->json($data);
     }
 }

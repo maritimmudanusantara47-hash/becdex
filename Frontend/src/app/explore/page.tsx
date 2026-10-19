@@ -5,18 +5,9 @@ import { PublicHeader } from "@/components/layouts/PublicHeader";
 import { PublicFooter } from "@/components/layouts/PublicFooter";
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect } from "react";
 
 export default function ExplorePage() {
   const { t } = useTranslation();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setMounted(true), 0);
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (!mounted) return null;
 
   return (
     <div className="min-h-screen bg-white">

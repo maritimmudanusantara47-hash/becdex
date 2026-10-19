@@ -3,17 +3,29 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useTranslation } from "@/store/lang";
-import { Phone, Mail, MapPin, Clock, HelpCircle, X } from "lucide-react";
+import {
+  Phone,
+  Mail,
+  MapPin,
+  Clock,
+  HelpCircle,
+  X,
+  Loader2,
+  ShieldCheck,
+  Droplets,
+  Users,
+  MessageSquareQuote,
+  BadgeCheck,
+  Globe,
+} from "lucide-react";
 import Image from "next/image";
 import { PublicHeader } from "@/components/layouts/PublicHeader";
 import { PublicFooter } from "@/components/layouts/PublicFooter";
 import api from "@/lib/api";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
 
 export default function LandingPage() {
   const { t, locale } = useTranslation();
-  const [mounted, setMounted] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
   const [expertSlide, setExpertSlide] = useState(0);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -108,17 +120,13 @@ export default function LandingPage() {
   const maxExpertSlide = experts.length - EXPERTS_PER_VIEW;
 
   useEffect(() => {
-    const timer = setTimeout(() => setMounted(true), 0);
     const interval = setInterval(() => {
       setActiveSlide((prev) => (prev + 1) % 3);
     }, 4000);
     return () => {
-      clearTimeout(timer);
       clearInterval(interval);
     };
   }, []);
-
-  if (!mounted) return null;
 
   const slides = ["/becdex1.webp", "/becdex2.webp", "/becdex3.webp"];
 
@@ -222,13 +230,19 @@ export default function LandingPage() {
             {/* Slideshow (Borderless, no chevrons, no dots) */}
             <div className="relative w-full overflow-hidden max-w-125">
               <div className="relative w-full aspect-[1.3] overflow-hidden">
-                <Image
-                  src={slides[activeSlide]}
-                  alt={`Slide ${activeSlide + 1}`}
-                  fill
-                  className="object-contain transition-opacity duration-500 scale-105"
-                  priority
-                />
+                {slides.map((slide, idx) => (
+                  <Image
+                    key={slide}
+                    src={slide}
+                    alt={`Slide ${idx + 1}`}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 500px"
+                    className={`object-contain transition-opacity duration-700 scale-105 ${
+                      activeSlide === idx ? "opacity-100" : "opacity-0 pointer-events-none"
+                    }`}
+                    priority={idx === 0}
+                  />
+                ))}
               </div>
             </div>
 
@@ -241,6 +255,7 @@ export default function LandingPage() {
                 height={300}
                 className="mx-auto"
                 style={{ width: "95%", height: "auto" }}
+                priority
               />
               <p className="text-gray-500 text-xs mt-4">
                 {t.hero_info}{" "}
@@ -270,24 +285,24 @@ export default function LandingPage() {
             <div className="assess-cards assess-cards-3">
               {[
                 {
-                  icon: "bi-shield-check",
+                  icon: <ShieldCheck size={24} />,
                   title: t.assess_s1_c1_title,
                   desc: t.assess_s1_c1_desc,
                 },
                 {
-                  icon: "bi-water",
+                  icon: <Droplets size={24} />,
                   title: t.assess_s1_c2_title,
                   desc: t.assess_s1_c2_desc,
                 },
                 {
-                  icon: "bi-people-fill",
+                  icon: <Users size={24} />,
                   title: t.assess_s1_c3_title,
                   desc: t.assess_s1_c3_desc,
                 },
               ].map((card, idx) => (
                 <div key={idx} className="assess-card">
                   <div className="assess-card-icon">
-                    <i className={`bi ${card.icon}`} />
+                    {card.icon}
                   </div>
                   <div>
                     <h4 className="assess-card-title">{card.title}</h4>
@@ -306,19 +321,19 @@ export default function LandingPage() {
             <div className="assess-cards assess-cards-2">
               {[
                 {
-                  icon: "bi-geo-alt-fill",
+                  icon: <MapPin size={24} />,
                   title: t.assess_s2_c1_title,
                   desc: t.assess_s2_c1_desc,
                 },
                 {
-                  icon: "bi-chat-quote-fill",
+                  icon: <MessageSquareQuote size={24} />,
                   title: t.assess_s2_c2_title,
                   desc: t.assess_s2_c2_desc,
                 },
               ].map((card, idx) => (
                 <div key={idx} className="assess-card">
                   <div className="assess-card-icon">
-                    <i className={`bi ${card.icon}`} />
+                    {card.icon}
                   </div>
                   <div>
                     <h4 className="assess-card-title">{card.title}</h4>
@@ -364,6 +379,8 @@ export default function LandingPage() {
                         alt={expert.name}
                         width={240}
                         height={300}
+                        sizes="240px"
+                        loading="lazy"
                         className="expert-slide-photo"
                         style={expert.customStyle || {}}
                       />
@@ -413,19 +430,19 @@ export default function LandingPage() {
               <div className="recognition-features">
                 {[
                   {
-                    icon: "bi-patch-check",
+                    icon: <BadgeCheck size={22} />,
                     title: t.rec_f1_title,
                     desc: t.rec_f1_desc,
                   },
                   {
-                    icon: "bi-globe2",
+                    icon: <Globe size={22} />,
                     title: t.rec_f2_title,
                     desc: t.rec_f2_desc,
                   },
                 ].map((feat, idx) => (
                   <div key={idx} className="rec-feature">
                     <div className="rec-feat-icon">
-                      <i className={`bi ${feat.icon}`} />
+                      {feat.icon}
                     </div>
                     <div>
                       <h4 className="rec-feat-title">{feat.title}</h4>
@@ -445,6 +462,8 @@ export default function LandingPage() {
                 alt="BECdex Recognition"
                 width={600}
                 height={480}
+                sizes="(max-width: 1024px) 100vw, 600px"
+                loading="lazy"
                 className="recognition-img"
               />
             </div>

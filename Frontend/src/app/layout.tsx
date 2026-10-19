@@ -61,12 +61,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id" className={`${nunito.variable} h-full antialiased`}>
-      <head>
-        <link
-          rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-        />
-      </head>
       <body suppressHydrationWarning className="min-h-full font-(--font-nunito)">
 
         <Providers>{children}</Providers>

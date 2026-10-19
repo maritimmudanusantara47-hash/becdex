@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { PublicHeader } from "@/components/layouts/PublicHeader";
@@ -15,14 +14,6 @@ interface Country {
 }
 
 export default function StatesPage() {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setTimeout(() => {
-      setMounted(true);
-    }, 0);
-  }, []);
-
   const { data: lookupsData, isLoading } = useQuery({
     queryKey: ["public-lookups"],
     queryFn: async () => {
@@ -32,8 +23,6 @@ export default function StatesPage() {
   });
 
   const countries: Country[] = lookupsData?.countries || [];
-
-  if (!mounted) return null;
 
   return (
     <div className="min-h-screen bg-[#f6f9ff] flex flex-col">
@@ -82,6 +71,7 @@ export default function StatesPage() {
                   src="/2147.webp" 
                   alt="Coastal States Map Illustration" 
                   fill
+                  sizes="(max-width: 1024px) 100vw, 500px"
                   className="object-contain"
                 />
               </div>

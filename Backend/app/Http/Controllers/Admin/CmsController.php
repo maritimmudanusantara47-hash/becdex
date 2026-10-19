@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Models\CmsContent;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 
 class CmsController extends Controller
 {
@@ -37,6 +38,8 @@ class CmsController extends Controller
             }
         }
 
+        Cache::forget('public_cms_contents');
+
         return response()->json(['message' => 'Content updated successfully']);
     }
 
@@ -64,6 +67,8 @@ class CmsController extends Controller
             $content->value_en = $path; // Store path in value_en for images
             $content->value_id = $path; // Same path for both by default
             $content->save();
+
+            Cache::forget('public_cms_contents');
 
             return response()->json([
                 'message' => 'Image uploaded successfully',

@@ -48,7 +48,7 @@ export function PublicHeader() {
       <div className="container-custom flex items-center justify-between">
         {/* Brand (Left side) */}
         <Link href="/" className="flex items-center gap-2 select-none">
-          <Image src="/logo.webp" alt="BECdex Logo" width={34} height={34} className="object-contain" />
+          <Image src="/logo.webp" alt="BECdex Logo" width={34} height={34} priority className="object-contain" />
           <span className="font-extrabold text-[#012970] text-3xl tracking-tight">BECdex</span>
         </Link>
 

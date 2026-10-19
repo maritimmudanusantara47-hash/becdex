@@ -20,14 +20,20 @@ class PublicController extends Controller
      */
     public function verifiedCompanies(Request $request): JsonResponse
     {
-        $search  = $request->query('search', '');
+        $search  = trim((string) $request->query('search', ''));
+        $page    = (int) $request->query('page', 1);
         $perPage = 20;
 
-        // Fetch langsung dari database agar selalu real-time
-        $data = $this->fetchVerifiedCompanies($search, $perPage);
+        // Cache page 1 tanpa pencarian selama 60 detik untuk mempercepat Time Behaviour publik
+        if ($search === '' && $page <= 1) {
+            $data = Cache::remember('verified_companies_p1', 60, function () use ($search, $perPage) {
+                return $this->fetchVerifiedCompanies($search, $perPage);
+            });
+        } else {
+            $data = $this->fetchVerifiedCompanies($search, $perPage);
+        }
 
         return response()->json($data);
-
     }
 
     private function fetchVerifiedCompanies(string $search, int $perPage): array
