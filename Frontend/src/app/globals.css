@@ -855,18 +855,51 @@
   }
 
   /* Support for multi-page On-Site Checklist print sheets */
+  body:has(#print-checklist-portal-root) > *:not(#print-checklist-portal-root) {
+    display: none !important;
+  }
+
+  body:has(#print-checklist-portal-root) {
+    background: #ffffff !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  #print-checklist-portal-root {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    overflow: visible !important;
+  }
+
+  #print-checklist-portal-root > div {
+    max-width: none !important;
+    max-height: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    overflow: visible !important;
+  }
+
   #on-site-checklist-sheet {
     display: block !important;
     width: 100% !important;
     max-width: none !important;
+    min-height: 0 !important;
     margin: 0 !important;
-    padding: 8mm 6mm !important;
+    padding: 0 !important;
     box-shadow: none !important;
     border: none !important;
   }
 
   #on-site-checklist-sheet table {
     border-collapse: collapse !important;
+    table-layout: fixed !important;
+    width: 100% !important;
   }
 
   #on-site-checklist-sheet tr {
@@ -874,8 +907,13 @@
     break-inside: avoid !important;
   }
 
-  .break-inside-avoid,
-  .page-break-avoid {
+  .aspect-banner,
+  .principle-banner {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
+
+  .break-inside-avoid {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }

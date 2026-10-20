@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { SubmissionDetail, PerIndicator } from "@/types";
 import { Printer, X, ShieldCheck, CheckSquare, Building2, MapPin, Calendar, Users, FileText, Award, Star } from "lucide-react";
 import Image from "next/image";
@@ -22,9 +23,15 @@ export default function PrintChecklistModal({
   const [lang, setLang] = useState<"id" | "en">("id");
   const [showSelfScores, setShowSelfScores] = useState<boolean>(true);
   const [filterMandatoryOnly, setFilterMandatoryOnly] = useState<boolean>(false);
+  const [mounted, setMounted] = useState<boolean>(false);
   const printAreaRef = useRef<HTMLDivElement>(null);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
+  if (!isOpen || !mounted) return null;
 
   const company = submission.user?.company;
   const assessors = assignedAssessors.length > 0 
@@ -74,7 +81,120 @@ export default function PrintChecklistModal({
   }
 
   const handlePrint = () => {
-    window.print();
+    const printArea = document.getElementById("on-site-checklist-sheet");
+    if (!printArea) {
+      window.print();
+      return;
+    }
+
+    // Hapus iframe print lama jika ada
+    const existingIframe = document.getElementById("becdex-print-frame");
+    if (existingIframe) {
+      existingIframe.remove();
+    }
+
+    // Buat iframe khusus cetak agar HANYA dokumen checklist yang dicetak (terisolasi dari halaman admin)
+    const iframe = document.createElement("iframe");
+    iframe.id = "becdex-print-frame";
+    iframe.style.position = "fixed";
+    iframe.style.right = "0";
+    iframe.style.bottom = "0";
+    iframe.style.width = "0";
+    iframe.style.height = "0";
+    iframe.style.border = "none";
+    iframe.style.opacity = "0";
+    iframe.style.pointerEvents = "none";
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow?.document;
+    if (!doc) {
+      window.print();
+      return;
+    }
+
+    // Salin seluruh stylesheet dari aplikasi utama (Tailwind, Google Fonts, dll.)
+    const styleTags = Array.from(document.querySelectorAll("link[rel='stylesheet'], style"))
+      .map((el) => el.outerHTML)
+      .join("\n");
+
+    const printHtml = `
+      <!DOCTYPE html>
+      <html lang="${lang}">
+        <head>
+          <meta charset="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>Checklist_Audit_Lapangan_BECDEX_${submission.id}</title>
+          ${styleTags}
+          <style>
+            @page {
+              size: A4 portrait;
+              margin: 8mm 6mm;
+            }
+            * {
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+              box-sizing: border-box;
+            }
+            html, body {
+              background: #ffffff !important;
+              color: #000000 !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            }
+            #on-site-checklist-sheet {
+              display: block !important;
+              width: 100% !important;
+              max-width: none !important;
+              min-height: 0 !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              box-shadow: none !important;
+              border: none !important;
+            }
+            table {
+              table-layout: fixed !important;
+              width: 100% !important;
+              border-collapse: collapse !important;
+            }
+            tr {
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
+            }
+            .aspect-banner, .principle-banner {
+              page-break-after: avoid !important;
+              break-after: avoid !important;
+            }
+            .break-inside-avoid {
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
+            }
+          </style>
+        </head>
+        <body>
+          ${printArea.outerHTML}
+        </body>
+      </html>
+    `;
+
+    doc.open();
+    doc.write(printHtml);
+    doc.close();
+
+    // Berikan jeda sejenak agar iframe selesai render lalu panggil dialog cetak
+    setTimeout(() => {
+      try {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+      } catch (err) {
+        console.error("Gagal print via iframe, menggunakan fallback:", err);
+        window.print();
+      } finally {
+        setTimeout(() => {
+          iframe.remove();
+        }, 3000);
+      }
+    }, 400);
   };
 
   const surveyDateFormatted = submission.survey?.scheduled_at
@@ -86,8 +206,8 @@ export default function PrintChecklistModal({
       })
     : null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-2 sm:p-4 overflow-y-auto print:p-0 print:bg-white print:static print:overflow-visible">
+  const modalContent = (
+    <div id="print-checklist-portal-root" className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-2 sm:p-4 overflow-y-auto print:p-0 print:bg-white print:static print:overflow-visible">
       
       {/* Modal Container */}
       <div className="bg-white dark:bg-slate-900 w-full max-w-6xl max-h-[92vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-slate-200 dark:border-slate-800 print:border-none print:shadow-none print:max-w-none print:max-h-none print:w-full print:rounded-none">
@@ -184,8 +304,7 @@ export default function PrintChecklistModal({
           <div 
             id="on-site-checklist-sheet"
             ref={printAreaRef}
-            className="max-w-[210mm] mx-auto bg-white text-black p-8 sm:p-10 rounded-xl shadow-lg border border-slate-200 font-sans print:shadow-none print:border-none print:p-0 print:max-w-none print:w-full print:rounded-none"
-            style={{ minHeight: "297mm" }}
+            className="w-full max-w-[210mm] mx-auto bg-white text-black p-6 sm:p-8 rounded-xl shadow-lg border border-slate-200 font-sans print:shadow-none print:border-none print:p-0 print:m-0 print:max-w-none print:w-full print:rounded-none print:min-h-0"
           >
             {/* Header Surat Resmi */}
             <div className="border-b-2 border-black pb-4 mb-5">
@@ -335,33 +454,53 @@ export default function PrintChecklistModal({
               </div>
 
               {Array.from(grouped.entries()).map(([aspectName, principleMap]) => (
-                <div key={aspectName} className="mb-5 page-break-avoid">
+                <div key={aspectName} className="mb-4">
                   
                   {/* Aspect Title Banner */}
-                  <div className="bg-gray-800 text-white font-extrabold text-[11px] px-3 py-1 uppercase tracking-wider border border-black flex items-center justify-between print:bg-gray-200 print:text-black">
+                  <div className="aspect-banner bg-gray-800 text-white font-extrabold text-[11px] px-3 py-1 uppercase tracking-wider border border-black flex items-center justify-between print:bg-gray-200 print:text-black">
                     <span>{aspectName}</span>
                   </div>
 
                   {Array.from(principleMap.entries()).map(([principleName, indicators]) => (
-                    <div key={principleName} className="mb-4">
+                    <div key={principleName} className="-mt-px">
                       
                       {/* Principle Sub-header */}
-                      <div className="bg-gray-100 font-bold text-[10.5px] px-3 py-1 border-x border-b border-black text-black">
+                      <div className="principle-banner bg-gray-100 font-bold text-[10px] px-3 py-1 border-x border-b border-black text-black">
                         {principleName}
                       </div>
 
                       {/* Main Table for this principle */}
-                      <table className="w-full text-left border-collapse border border-black text-[10px]">
+                      <table className="w-full text-left border-collapse border border-black text-[10px] table-fixed -mt-px mb-3">
+                        <colgroup>
+                          {showSelfScores ? (
+                            <>
+                              <col className="w-[5%]" />
+                              <col className="w-[32%]" />
+                              <col className="w-[27%]" />
+                              <col className="w-[8%]" />
+                              <col className="w-[13%]" />
+                              <col className="w-[15%]" />
+                            </>
+                          ) : (
+                            <>
+                              <col className="w-[5%]" />
+                              <col className="w-[36%]" />
+                              <col className="w-[30%]" />
+                              <col className="w-[14%]" />
+                              <col className="w-[15%]" />
+                            </>
+                          )}
+                        </colgroup>
                         <thead>
                           <tr className="bg-gray-200 text-black font-extrabold text-center uppercase tracking-tight">
-                            <th className="border border-black px-1.5 py-1.5 w-8">No</th>
-                            <th className="border border-black px-2 py-1.5 w-[38%]">Indikator & Deskripsi</th>
-                            <th className="border border-black px-2 py-1.5 w-[24%]">Bukti Wajib & Regulasi</th>
+                            <th className="border border-black px-1 py-1.5 text-center">No</th>
+                            <th className="border border-black px-2 py-1.5 text-left">Indikator & Deskripsi</th>
+                            <th className="border border-black px-2 py-1.5 text-left">Bukti Wajib & Regulasi</th>
                             {showSelfScores && (
-                              <th className="border border-black px-1 py-1.5 w-[10%] text-center">Klaim Mandiri</th>
+                              <th className="border border-black px-1 py-1.5 text-center">Klaim Mandiri</th>
                             )}
-                            <th className="border border-black px-1 py-1.5 w-[14%] text-center">Checklist Lapangan</th>
-                            <th className="border border-black px-2 py-1.5 w-[14%]">Catatan Temuan</th>
+                            <th className="border border-black px-1 py-1.5 text-center">Checklist Lapangan</th>
+                            <th className="border border-black px-2 py-1.5 text-left">Catatan Temuan</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -392,20 +531,20 @@ export default function PrintChecklistModal({
                             return (
                               <tr key={pi.id} className="border-b border-black align-top break-inside-avoid">
                                 {/* Nomor Indikator */}
-                                <td className="border border-black px-1.5 py-2 text-center font-bold font-mono">
+                                <td className="border border-black px-1 py-2 text-center font-bold font-mono break-words">
                                   <div className="font-bold text-xs">{indNumber}</div>
                                   {isMandatory && (
-                                    <div className="text-[8.5px] leading-tight text-black font-bold mt-0.5 tracking-tight" title="Indikator Wajib">
+                                    <div className="text-[8px] leading-tight text-black font-bold mt-0.5 tracking-tight" title="Indikator Wajib">
                                       [WAJIB]
                                     </div>
                                   )}
                                 </td>
 
                                 {/* Nama Indikator & Pertanyaan */}
-                                <td className="border border-black px-2 py-2">
+                                <td className="border border-black px-2 py-2 break-words overflow-hidden">
                                   <div className="flex items-start gap-1.5 mb-1.5">
-                                    <div className="flex-1">
-                                      <span className="font-bold text-[10.5px] block leading-tight text-black">
+                                    <div className="flex-1 min-w-0">
+                                      <span className="font-bold text-[10.5px] block leading-tight text-black break-words">
                                         {indicatorName}
                                       </span>
                                     </div>
@@ -422,8 +561,8 @@ export default function PrintChecklistModal({
                                       {questions.map((q, qIdx) => {
                                         const isQuestionMandatory = !!(q.is_mandatory || pi.indicator?.is_mandatory);
                                         return (
-                                          <div key={q.id} className="pl-2 border-l-2 border-gray-300">
-                                            <p className="leading-snug">
+                                          <div key={q.id} className="pl-2 border-l-2 border-gray-300 break-words">
+                                            <p className="leading-snug break-words">
                                               {questions.length > 1 ? `${String.fromCharCode(97 + qIdx)}. ` : ""}{q.text}
                                               {isQuestionMandatory && (
                                                 <span className="ml-1 text-[7.5px] font-bold text-black uppercase">
@@ -439,18 +578,18 @@ export default function PrintChecklistModal({
                                 </td>
 
                                 {/* Bukti Dokumen & Regulasi */}
-                                <td className="border border-black px-2 py-2 text-[9px] leading-tight">
+                                <td className="border border-black px-2 py-2 text-[9px] leading-tight break-words overflow-hidden">
                                   <div className="space-y-1">
                                     <div>
                                       <span className="font-bold block text-[8.5px] text-black">
                                         {isMandatory ? (lang === "id" ? "Bukti Wajib Lapangan:" : "Required Evidence:") : (lang === "id" ? "Bukti Verifikasi:" : "Verification Evidence:")}
                                       </span>
-                                      <p className="text-black italic">{evidenceText}</p>
+                                      <p className="text-black italic break-words">{evidenceText}</p>
                                     </div>
                                     {regulationText && (
                                       <div>
                                         <span className="font-bold text-gray-700 block">Dasar Regulasi:</span>
-                                        <p className="text-gray-900">{regulationText}</p>
+                                        <p className="text-gray-900 break-words">{regulationText}</p>
                                       </div>
                                     )}
                                     {docs.length > 0 && (
@@ -458,7 +597,7 @@ export default function PrintChecklistModal({
                                         <span className="font-bold text-black block text-[8.5px]">
                                           Dokumen Diunggah ({docs.length}):
                                         </span>
-                                        <p className="text-gray-800 font-mono text-[8px] truncate">
+                                        <p className="text-gray-800 font-mono text-[8px] break-all">
                                           {docs.map((d) => d.original_name).join(", ")}
                                         </p>
                                       </div>
@@ -468,7 +607,7 @@ export default function PrintChecklistModal({
 
                                 {/* Klaim Mandiri */}
                                 {showSelfScores && (
-                                  <td className="border border-black px-1 py-2 text-center text-[9px]">
+                                  <td className="border border-black px-1 py-2 text-center text-[9px] break-words">
                                     {questionAnswers.map((qa, idx) => {
                                       const val = qa.answer?.value;
                                       return (
@@ -494,18 +633,18 @@ export default function PrintChecklistModal({
                                 {/* Checklist Manual Lapangan */}
                                 <td className="border border-black px-1.5 py-2 text-[9px]">
                                   <div className="space-y-1.5 font-mono">
-                                    <label className="flex items-center gap-1.5 cursor-pointer">
+                                    <div className="flex items-center gap-1.5">
                                       <span className="w-3.5 h-3.5 border border-black inline-block shrink-0" />
                                       <span className="font-bold">SESUAI</span>
-                                    </label>
-                                    <label className="flex items-center gap-1.5 cursor-pointer">
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
                                       <span className="w-3.5 h-3.5 border border-black inline-block shrink-0" />
                                       <span className="font-bold text-gray-800">REVISI</span>
-                                    </label>
-                                    <label className="flex items-center gap-1.5 cursor-pointer">
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
                                       <span className="w-3.5 h-3.5 border border-black inline-block shrink-0" />
                                       <span className="font-bold text-gray-800">TIDAK</span>
-                                    </label>
+                                    </div>
                                   </div>
                                 </td>
 
@@ -607,4 +746,6 @@ export default function PrintChecklistModal({
 
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
