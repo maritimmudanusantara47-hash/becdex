@@ -8,18 +8,24 @@ use App\Http\Requests\Admin\IssueCertificateRequest;
 use App\Http\Resources\SubmissionResource;
 use App\Http\Resources\UserResource;
 use App\Models\CertificateUser;
+use App\Models\CertificateTemplate;
 use App\Models\Submission;
 use App\Models\SubmissionPerIndicator;
 use App\Models\FieldSurvey;
 use App\Models\ActivityLog;
+use App\Models\User;
 use App\Notifications\SystemNotification;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use App\Mail\SubmissionStatusMail;
 use App\Mail\CertificateIssuedMail;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Answer;
 use App\Services\CertificateNumberService;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -136,7 +142,7 @@ class SubmissionAdminController extends Controller
         if ($request->status_id == 5) { // Declined (Need Revision)
             $message = 'Ada indikator yang perlu diperbaiki/direvisi. Silakan cek detail kuesioner Anda.';
             if ($submission->user) {
-                $submission->user->notify(new \App\Notifications\SystemNotification(
+                $submission->user->notify(new SystemNotification(
                     'Revisi Dokumen Diperlukan',
                     $message,
                     '/dashboard/submissions/' . $submission->id
@@ -145,7 +151,7 @@ class SubmissionAdminController extends Controller
         } else if ($request->status_id == 6) { // Invalid (Permanently Failed)
             $message = 'Ada indikator yang dinilai gagal (Invalid) dan tidak memenuhi standar.';
             if ($submission->user) {
-                $submission->user->notify(new \App\Notifications\SystemNotification(
+                $submission->user->notify(new SystemNotification(
                     'Indikator Invalid',
                     $message,
                     '/dashboard/submissions/' . $submission->id
@@ -258,7 +264,7 @@ class SubmissionAdminController extends Controller
             ], 422);
         }
 
-        $publishedAt = \Carbon\Carbon::parse($request->published_at);
+        $publishedAt = Carbon::parse($request->published_at);
         $validUntil  = $publishedAt->copy()->addYears(3);
 
         // Auto-generate nomor sertifikat (BICC format) jika tidak diisi manual
@@ -298,7 +304,7 @@ class SubmissionAdminController extends Controller
 
         if ($submission->user) {
             // Kirim notifikasi ke Super Admin untuk approval sertifikat
-            $superAdmins = \App\Models\User::whereIn('role_id', RoleId::superAdminRoleIds())->get();
+            $superAdmins = User::whereIn('role_id', RoleId::superAdminRoleIds())->get();
             foreach ($superAdmins as $admin) {
                 $admin->notify(new SystemNotification(
                     'Sertifikat Menunggu Persetujuan',
@@ -319,7 +325,7 @@ class SubmissionAdminController extends Controller
                 $submission->load(['user.companyDetail.companyField', 'certificateUser.certificate']);
                 $certUser = $submission->certificateUser;
                 
-                $activeTemplate = \App\Models\CertificateTemplate::where('is_active', true)->first();
+                $activeTemplate = CertificateTemplate::where('is_active', true)->first();
 
                 $bgPath = null;
                 if ($activeTemplate && $activeTemplate->background_path) {
@@ -381,10 +387,10 @@ class SubmissionAdminController extends Controller
                     'published_date_en' => $certUser->published_at ? $certUser->published_at->locale('en')->translatedFormat('d F Y') : '',
                     'valid_until_en'    => $certUser->valid_until ? $certUser->valid_until->locale('en')->translatedFormat('d F Y') : '',
                     'director_name'   => $certUser->direktur ?? 'Rahmat Ihsan, S.H.',
-                    'config'          => $activeTemplate ? $activeTemplate->config : \App\Models\CertificateTemplate::getDefaultConfig(),
+                    'config'          => $activeTemplate ? $activeTemplate->config : CertificateTemplate::getDefaultConfig(),
                 ];
 
-                $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.certificate', $data);
+                $pdf = Pdf::loadView('pdf.certificate', $data);
                 $pdf->setPaper('a4', 'portrait');
                 $pdfContent = $pdf->output();
 
@@ -424,7 +430,7 @@ class SubmissionAdminController extends Controller
         $fromSurvey = $submission->submission_status_id === 7;
 
         // Pastikan ada setidaknya satu indikator yang ditandai revisi (per_indicator_status_id = 5 = Declined)
-        $hasRevision = \App\Models\SubmissionPerIndicator::where('submission_id', $submission->id)
+        $hasRevision = SubmissionPerIndicator::where('submission_id', $submission->id)
             ->where('per_indicator_status_id', 5)
             ->exists();
 
@@ -530,7 +536,7 @@ class SubmissionAdminController extends Controller
 
         // Pastikan tidak ada indikator yang masih berstatus "Uploaded" (2) atau "Need Revision" (5)
         // Jika ada yang Need Revision (5), Admin seharusnya mengklik "Kembalikan untuk Revisi", bukan meluluskan.
-        $unresolvedIndicators = \App\Models\SubmissionPerIndicator::where('submission_id', $id)
+        $unresolvedIndicators = SubmissionPerIndicator::where('submission_id', $id)
             ->whereIn('per_indicator_status_id', [2, 5]) 
             ->get();
 
@@ -622,23 +628,23 @@ class SubmissionAdminController extends Controller
         $totalSubmissions = Submission::count();
         $pendingReview    = Submission::whereIn('submission_status_id', [2, 3, 4, 6])->count();
         $certified        = Submission::where('submission_status_id', 5)->count();
-        $totalUsers       = \App\Models\User::where('role_id', RoleId::Company->value)->where('is_active', 1)->count();
+        $totalUsers       = User::where('role_id', RoleId::Company->value)->where('is_active', 1)->count();
 
-        $certificationsBySector = \App\Models\CertificateUser::with('user.companyDetail.companyField')
+        $certificationsBySector = CertificateUser::with('user.companyDetail.companyField')
             ->get()
             ->groupBy(fn($c) => $c->user?->companyDetail?->companyField?->name ?? 'Lainnya')
             ->map(fn($group) => $group->count())
             ->map(fn($count, $sector) => ['sector' => $sector, 'count' => $count])
             ->values();
 
-        $submissionsTrend = \Illuminate\Support\Facades\DB::table('submissions')
+        $submissionsTrend = DB::table('submissions')
             ->selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month, count(*) as count')
-            ->whereDate('created_at', '>=', \Carbon\Carbon::now()->subMonths(6)->toDateString())
+            ->whereDate('created_at', '>=', Carbon::now()->subMonths(6)->toDateString())
             ->groupBy('month')
             ->orderBy('month')
             ->get();
             
-        $assessorWorkload = \App\Models\User::whereIn('role_id', RoleId::assessorRoleIds())
+        $assessorWorkload = User::whereIn('role_id', RoleId::assessorRoleIds())
             ->where('is_active', 1)
             ->withCount(['assignedSubmissions as pending_count' => function($query) {
                 $query->whereIn('submission_status_id', [2, 3, 4, 6]);
@@ -668,15 +674,15 @@ class SubmissionAdminController extends Controller
         
         // Hapus file dokumen yang diupload
         foreach ($submission->documents as $doc) {
-            if (\Illuminate\Support\Facades\Storage::disk('public')->exists($doc->file_path)) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($doc->file_path);
+            if (Storage::disk('public')->exists($doc->file_path)) {
+                Storage::disk('public')->delete($doc->file_path);
             }
         }
         
         // Hapus file sertifikat background/template jika diupload spesifik
         if ($submission->certificateUser && $submission->certificateUser->certificate) {
             $cert = $submission->certificateUser->certificate;
-            if ($cert->file_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($cert->file_path)) {
+            if ($cert->file_path && Storage::disk('public')->exists($cert->file_path)) {
                 // Jangan hapus background template global
                 // Tapi kalau memang spesifik user, bisa dihapus. Karena file_path di tabel certificates dipakai bersama, kita skip hapus file fisiknya agar aman.
             }

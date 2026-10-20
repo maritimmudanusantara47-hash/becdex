@@ -34,9 +34,14 @@ export default function PrintChecklistModal({
   if (!isOpen || !mounted) return null;
 
   const company = submission.user?.company;
-  const assessors = assignedAssessors.length > 0 
-    ? assignedAssessors 
-    : (submission.assessors && submission.assessors.length > 0 ? submission.assessors : []);
+  const officialAssessors = [
+    { id: 1, name: "Dr. Ir. Diah Pranitasari, M.M., C.Bec. (BizDev)" },
+    { id: 2, name: "Dr. Gatot Prabantoro, C.Bec., (BizDev)" }
+  ];
+
+  const assessors = (assignedAssessors.length >= 2 && assignedAssessors[0].name.includes("."))
+    ? assignedAssessors
+    : officialAssessors;
 
   // Map urutan indikator 1..N berdasarkan keseluruhan indikator
   const indicatorNumberMap = new Map<number, number>();
@@ -57,8 +62,8 @@ export default function PrintChecklistModal({
   // Filter daftar indikator jika asesor memilih 'Khusus Indikator Wajib'
   const displayedIndicators = filterMandatoryOnly
     ? (submission.per_indicators ?? []).filter(
-        (pi) => pi.indicator?.is_mandatory || pi.indicator?.questions?.some((q) => q.is_mandatory)
-      )
+      (pi) => pi.indicator?.is_mandatory || pi.indicator?.questions?.some((q) => q.is_mandatory)
+    )
     : (submission.per_indicators ?? []);
 
   // Kelompokkan per_indicators berdasarkan Prinsip & Aspek
@@ -66,10 +71,10 @@ export default function PrintChecklistModal({
   const grouped: GroupedData = new Map();
 
   for (const pi of displayedIndicators) {
-    const aspectName = (lang === "id" 
-      ? (pi.indicator?.principle?.outcome?.aspect?.name_id || pi.indicator?.principle?.outcome?.aspect?.name) 
+    const aspectName = (lang === "id"
+      ? (pi.indicator?.principle?.outcome?.aspect?.name_id || pi.indicator?.principle?.outcome?.aspect?.name)
       : pi.indicator?.principle?.outcome?.aspect?.name) || "Standar Penilaian";
-    
+
     const principleName = (lang === "id"
       ? (pi.indicator?.principle?.name_id || pi.indicator?.principle?.name)
       : pi.indicator?.principle?.name) || "Prinsip Penilaian";
@@ -199,19 +204,19 @@ export default function PrintChecklistModal({
 
   const surveyDateFormatted = submission.survey?.scheduled_at
     ? new Date(submission.survey.scheduled_at).toLocaleDateString(lang === "id" ? "id-ID" : "en-US", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
     : null;
 
   const modalContent = (
     <div id="print-checklist-portal-root" className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-2 sm:p-4 overflow-y-auto print:p-0 print:bg-white print:static print:overflow-visible">
-      
+
       {/* Modal Container */}
       <div className="bg-white dark:bg-slate-900 w-full max-w-6xl max-h-[92vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-slate-200 dark:border-slate-800 print:border-none print:shadow-none print:max-w-none print:max-h-none print:w-full print:rounded-none">
-        
+
         {/* Top Control Bar (Hidden on Print) */}
         <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 flex flex-wrap items-center justify-between gap-3 print:hidden shrink-0">
           <div className="flex items-center gap-3">
@@ -267,11 +272,10 @@ export default function PrintChecklistModal({
             <button
               type="button"
               onClick={() => setShowSelfScores(!showSelfScores)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
-                showSelfScores 
-                  ? "bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200"
-                  : "bg-amber-50 dark:bg-amber-950/40 border-amber-300 text-amber-700 dark:text-amber-300"
-              }`}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer ${showSelfScores
+                ? "bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200"
+                : "bg-amber-50 dark:bg-amber-950/40 border-amber-300 text-amber-700 dark:text-amber-300"
+                }`}
               title="Tampilkan atau kosongkan klaim nilai mandiri perusahaan"
             >
               {showSelfScores ? "Mode: Lengkap" : "Mode: Blanko Murni"}
@@ -300,8 +304,8 @@ export default function PrintChecklistModal({
 
         {/* Scrollable Printable Document Area */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-8 bg-slate-100 dark:bg-slate-950/50 print:p-0 print:bg-white print:overflow-visible">
-          
-          <div 
+
+          <div
             id="on-site-checklist-sheet"
             ref={printAreaRef}
             className="w-full max-w-[210mm] mx-auto bg-white text-black p-6 sm:p-8 rounded-xl shadow-lg border border-slate-200 font-sans print:shadow-none print:border-none print:p-0 print:m-0 print:max-w-none print:w-full print:rounded-none print:min-h-0"
@@ -311,13 +315,13 @@ export default function PrintChecklistModal({
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <div className="relative w-12 h-12 shrink-0">
-                    <Image 
-                      src="/logo.webp" 
-                      alt="BECdex Logo" 
-                      width={48} 
-                      height={48} 
-                      className="object-contain" 
-                      priority 
+                    <Image
+                      src="/logo.webp"
+                      alt="BECdex Logo"
+                      width={48}
+                      height={48}
+                      className="object-contain"
+                      priority
                     />
                   </div>
                   <div>
@@ -349,8 +353,8 @@ export default function PrintChecklistModal({
               {/* Title Section */}
               <div className="mt-4 pt-3 border-t border-gray-300 text-center">
                 <h2 className="text-base font-black uppercase tracking-wide text-black underline decoration-2 underline-offset-4">
-                  {lang === "id" 
-                    ? "LEMBAR KERJA & CHECKLIST VERIFIKASI LAPANGAN (ON-SITE AUDIT)" 
+                  {lang === "id"
+                    ? "LEMBAR KERJA & CHECKLIST VERIFIKASI LAPANGAN (ON-SITE AUDIT)"
                     : "ON-SITE ASSESSMENT WORK SHEET & VERIFICATION CHECKLIST"}
                 </h2>
                 <p className="text-[10px] text-gray-700 italic mt-0.5">
@@ -401,13 +405,12 @@ export default function PrintChecklistModal({
                       {surveyDateFormatted || "Tanggal: _____ / _____ / 202___"}
                     </span>
                   </div>
-                  <div className="flex">
-                    <span className="w-32 text-gray-600 font-medium shrink-0">Tim Asesor Penilai:</span>
-                    <span className="font-semibold text-black">
-                      {assessors.length > 0 
-                        ? assessors.map((a, i) => `${i + 1}. ${a.name}`).join(", ") 
-                        : "1. ____________________  2. ____________________"}
-                    </span>
+                  <div className="flex items-start">
+                    <span className="w-32 text-gray-600 font-medium shrink-0 pt-0.5">Tim Asesor Penilai:</span>
+                    <div className="font-semibold text-black space-y-0.5 text-[10px] leading-tight">
+                      <div>1. {assessors[0]?.name || "Dr. Ir. Diah Pranitasari, M.M., C.Bec. (BizDev)"}</div>
+                      <div>2. {assessors[1]?.name || "Dr. Gatot Prabantoro, C.Bec., (BizDev)"}</div>
+                    </div>
                   </div>
                   <div className="flex">
                     <span className="w-32 text-gray-600 font-medium shrink-0">Status Pengajuan:</span>
@@ -433,15 +436,15 @@ export default function PrintChecklistModal({
                   ? "Lakukan pemeriksaan fisik dokumen asli dan kondisi operasional di lokasi perusahaan. Berikan tanda centang (✓) pada kolom hasil verifikasi: [V] Sesuai/Memenuhi, [R] Perlu Revisi, atau [X] Tidak Sesuai/Invalid. Cantumkan rincian temuan fakta lapangan dan rekomendasi tindak lanjut pada kolom Catatan."
                   : "Perform physical verification of original evidence documents and operational conditions on site. Mark (✓) on verification outcome: [V] Valid/Compliant, [R] Revision Needed, or [X] Invalid/Non-Compliant. Record on-site findings and follow-up notes in the space provided."}
               </p>
-              
+
               {/* Legend Indikator Wajib */}
               <div className="mt-1.5 pt-1.5 border-t border-black flex flex-wrap items-center gap-2 text-[9.5px]">
                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 border border-black font-bold text-black text-[8px] uppercase tracking-wider">
                   [★ WAJIB]
                 </span>
                 <span className="font-semibold text-black">
-                  = {lang === "id" 
-                    ? "Tanda Indikator Wajib. Indikator dengan tanda ini WAJIB dipenuhi dan bernilai valid sebagai syarat kelulusan penilaian BECdex." 
+                  = {lang === "id"
+                    ? "Tanda Indikator Wajib. Indikator dengan tanda ini WAJIB dipenuhi dan bernilai valid sebagai syarat kelulusan penilaian BECdex."
                     : "Mandatory Indicator Mark. Indicators with this mark are strictly REQUIRED to be fulfilled and verified valid for BECdex certification."}
                 </span>
               </div>
@@ -455,7 +458,7 @@ export default function PrintChecklistModal({
 
               {Array.from(grouped.entries()).map(([aspectName, principleMap]) => (
                 <div key={aspectName} className="mb-4">
-                  
+
                   {/* Aspect Title Banner */}
                   <div className="aspect-banner bg-gray-800 text-white font-extrabold text-[11px] px-3 py-1 uppercase tracking-wider border border-black flex items-center justify-between print:bg-gray-200 print:text-black">
                     <span>{aspectName}</span>
@@ -463,7 +466,7 @@ export default function PrintChecklistModal({
 
                   {Array.from(principleMap.entries()).map(([principleName, indicators]) => (
                     <div key={principleName} className="-mt-px">
-                      
+
                       {/* Principle Sub-header */}
                       <div className="principle-banner bg-gray-100 font-bold text-[10px] px-3 py-1 border-x border-b border-black text-black">
                         {principleName}
@@ -513,7 +516,7 @@ export default function PrintChecklistModal({
                             const indicatorName = (lang === "id" ? (pi.indicator?.name_id || pi.indicator?.name) : pi.indicator?.name) ?? "";
                             const evidenceText = (lang === "id" ? (pi.indicator?.evidence || pi.indicator?.evidence_en) : (pi.indicator?.evidence_en || pi.indicator?.evidence)) ?? "—";
                             const regulationText = (lang === "id" ? (pi.indicator?.regulation || pi.indicator?.regulation_en) : (pi.indicator?.regulation_en || pi.indicator?.regulation)) ?? "";
-                            
+
                             // Ambil klaim mandiri dari answers
                             const questions = pi.indicator?.questions ?? [];
                             const questionAnswers = questions.map((q) => {
@@ -695,37 +698,52 @@ export default function PrintChecklistModal({
                 Lokasi & Tanggal: _____________________________________, _____ / _____ / 202___
               </div>
 
-              {/* 2 Kolom Tanda Tangan */}
-              <div className="grid grid-cols-2 gap-8 text-center pt-2">
-                
-                {/* Asesor */}
+              {/* 3 Kolom Tanda Tangan: 2 Asesor BECDEX + 1 Perwakilan Perusahaan */}
+              <div className="grid grid-cols-3 gap-4 text-center pt-2">
+
+                {/* Asesor 1 */}
                 <div className="space-y-1">
-                  <p className="font-bold text-black uppercase">TIM ASESOR PENILAI BECDEX</p>
-                  <p className="text-[9px] text-gray-600">Ketua / Anggota Tim Asesor Lapangan</p>
-                  
-                  <div className="h-24 flex items-end justify-center pb-1">
-                    <div className="w-52 border-b-2 border-black" />
+                  <p className="font-bold text-black uppercase text-[10px]">TIM ASESOR PENILAI I</p>
+                  <p className="text-[8.5px] text-gray-600">Lead Assessor / Asesor Lapangan</p>
+
+                  <div className="h-20 flex items-end justify-center pb-1">
+                    <div className="w-40 border-b-2 border-black" />
                   </div>
-                  
-                  <p className="font-bold text-black uppercase text-[10.5px]">
-                    ( {assessors[0]?.name || "___________________________________"} )
+
+                  <p className="font-bold text-black text-[9.5px] leading-tight">
+                    ( {assessors[0]?.name || "Dr. Ir. Diah Pranitasari, M.M., C.Bec. (BizDev)"} )
                   </p>
-                  <p className="text-[9px] text-gray-500">Tanda Tangan & Nama Terang</p>
+                  <p className="text-[8.5px] text-gray-500">Tanda Tangan & Nama Terang</p>
+                </div>
+
+                {/* Asesor 2 */}
+                <div className="space-y-1">
+                  <p className="font-bold text-black uppercase text-[10px]">TIM ASESOR PENILAI II</p>
+                  <p className="text-[8.5px] text-gray-600">Assessor / Asesor Lapangan</p>
+
+                  <div className="h-20 flex items-end justify-center pb-1">
+                    <div className="w-40 border-b-2 border-black" />
+                  </div>
+
+                  <p className="font-bold text-black text-[9.5px] leading-tight">
+                    ( {assessors[1]?.name || "Dr. Gatot Prabantoro, C.Bec., (BizDev)"} )
+                  </p>
+                  <p className="text-[8.5px] text-gray-500">Tanda Tangan & Nama Terang</p>
                 </div>
 
                 {/* Perwakilan Perusahaan */}
                 <div className="space-y-1">
-                  <p className="font-bold text-black uppercase">PERWAKILAN PERUSAHAAN</p>
-                  <p className="text-[9px] text-gray-600">Pimpinan / PIC / Manajemen Fasilitas</p>
-                  
-                  <div className="h-24 flex items-end justify-center pb-1">
-                    <div className="w-52 border-b-2 border-black" />
+                  <p className="font-bold text-black uppercase text-[10px]">PERWAKILAN PERUSAHAAN</p>
+                  <p className="text-[8.5px] text-gray-600">Pimpinan / PIC / Manajemen Fasilitas</p>
+
+                  <div className="h-20 flex items-end justify-center pb-1">
+                    <div className="w-40 border-b-2 border-black" />
                   </div>
-                  
-                  <p className="font-bold text-black uppercase text-[10.5px]">
+
+                  <p className="font-bold text-black text-[9.5px] leading-tight">
                     ( {company?.pic_name || "___________________________________"} )
                   </p>
-                  <p className="text-[9px] text-gray-500">Nama, Jabatan, & Cap Perusahaan</p>
+                  <p className="text-[8.5px] text-gray-500">Nama, Jabatan, & Cap Perusahaan</p>
                 </div>
 
               </div>
