@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
-import { Loader2, MapPin, Upload, Download, Save } from "lucide-react";
+import { Loader2, MapPin, Upload, Download, Save, Printer } from "lucide-react";
 import { toast } from "sonner";
 
 interface Survey {
@@ -15,7 +15,13 @@ interface Survey {
   assessor: { name: string } | null;
 }
 
-export default function FieldSurveyTab({ submissionId }: { submissionId: string }) {
+export default function FieldSurveyTab({ 
+  submissionId,
+  onPrintChecklist
+}: { 
+  submissionId: string;
+  onPrintChecklist?: () => void;
+}) {
   const queryClient = useQueryClient();
   
   const { data: surveys = [], isLoading } = useQuery<Survey[]>({
@@ -72,11 +78,24 @@ export default function FieldSurveyTab({ submissionId }: { submissionId: string 
           <h3 className="font-extrabold text-lg text-slate-800 dark:text-white mb-1">Log Kunjungan Observasi</h3>
           <p className="text-sm text-slate-500">Buku catatan internal tim asesor untuk mendokumentasikan bukti kunjungan fisik ke perusahaan.</p>
         </div>
-        {!isAdding && (
-          <button onClick={() => setIsAdding(true)} className="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-colors cursor-pointer">
-            + Tambah Catatan Kunjungan
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {onPrintChecklist && (
+            <button 
+              type="button"
+              onClick={onPrintChecklist} 
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-950/60 dark:hover:text-blue-300 transition-colors cursor-pointer shadow-2xs"
+              title="Cetak Lembar Checklist Lapangan untuk Dibawa Saat Kunjungan"
+            >
+              <Printer size={14} />
+              <span>Cetak Checklist Lapangan</span>
+            </button>
+          )}
+          {!isAdding && (
+            <button onClick={() => setIsAdding(true)} className="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-colors cursor-pointer">
+              + Tambah Catatan Kunjungan
+            </button>
+          )}
+        </div>
       </div>
 
       {isAdding && (

@@ -827,7 +827,8 @@
   body {
     background: #ffffff !important;
     color: #000000 !important;
-    height: 100% !important;
+    height: auto !important;
+    min-height: 100% !important;
     overflow: visible !important;
     margin: 0 !important;
     padding: 0 !important;
@@ -851,6 +852,32 @@
   .lg\:ml-72\.5,
   .lg\:ml-22\.5 {
     margin-left: 0 !important;
+  }
+
+  /* Support for multi-page On-Site Checklist print sheets */
+  #on-site-checklist-sheet {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 8mm 6mm !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  #on-site-checklist-sheet table {
+    border-collapse: collapse !important;
+  }
+
+  #on-site-checklist-sheet tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .break-inside-avoid,
+  .page-break-avoid {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 }
 

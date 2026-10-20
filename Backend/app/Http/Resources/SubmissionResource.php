@@ -46,6 +46,11 @@ class SubmissionResource extends JsonResource
                     'notes'         => $this->survey->notes,
                 ] : null
             ),
+            'assessors'    => $this->whenLoaded('assessors', fn () => $this->assessors->map(fn ($a) => [
+                'id'    => $a->id,
+                'name'  => $a->name,
+                'email' => $a->email,
+            ])),
 
             // Relasi untuk halaman detail submission
             'answers'        => $this->whenLoaded('answers', fn () => $this->answers->map(fn ($ans) => [

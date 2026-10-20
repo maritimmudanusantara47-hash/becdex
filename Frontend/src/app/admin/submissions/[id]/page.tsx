@@ -13,12 +13,13 @@ import { cn } from "@/lib/utils";
 import {
   ArrowLeft, CheckCircle2, XCircle, ChevronDown, ChevronRight,
   FileText, Loader2, Award, MapPin, Building2, BookOpen, Scale,
-  ShieldCheck, Mail, Briefcase, Calendar, ExternalLink, X, AlertTriangle, Users, FileSearch, Activity, MessageSquare, Info
+  ShieldCheck, Mail, Briefcase, Calendar, ExternalLink, X, AlertTriangle, Users, FileSearch, Activity, MessageSquare, Info, Printer
 } from "lucide-react";
 import { MdFolder } from "react-icons/md";
 import AssessorTab from "@/components/admin-tabs/AssessorTab";
 import ActivityLogTab from "@/components/admin-tabs/ActivityLogTab";
 import FieldSurveyTab from "@/components/admin-tabs/FieldSurveyTab";
+import PrintChecklistModal from "@/components/admin-tabs/PrintChecklistModal";
 import { IndicatorChat } from "@/components/submission-tabs/IndicatorChat";
 import { useTranslation } from "@/store/lang";
 import { useAuthStore } from "@/store/auth";
@@ -56,12 +57,13 @@ interface SubmissionData {
   valid_score: number;
   documents_uploaded?: number;
   status: { id: number; name: string; color: string };
-  user?: { name?: string; email?: string; company?: { pic_name?: string; pic_position?: string; pic_email?: string } };
+  user?: { name?: string; email?: string; company?: { pic_name?: string; pic_position?: string; pic_email?: string; name?: string; sector?: string; address?: string; phone?: string; pic_phone?: string } };
   per_indicators?: PerIndicatorItem[];
   documents?: (IndicatorDoc & { indicator_id: number })[];
   answers?: AnswerItem[];
   revision_count?: number;
   survey?: { scheduled_at: string; location_link?: string; notes?: string };
+  assessors?: { id: number; name: string; email: string }[];
 }
 
 export default function AdminSubmissionDetailPage({ params }: { params: Promise<{ id: string }> | { id: string } }) {
@@ -80,6 +82,7 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [returnReason, setReturnReason] = useState("");
   const [showScoringGuide, setShowScoringGuide] = useState(false);
+  const [showPrintChecklist, setShowPrintChecklist] = useState(false);
   const [surveyForm, setSurveyForm] = useState({ scheduled_at: "", location_link: "", notes: "" });
   const [certForm, setCertForm] = useState({ certificate_id: "10", becdex_category_id: "3", published_at: "", mmic: "", direktur: "" });
 
@@ -309,16 +312,27 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
           <span>{t.dash_admin_sub_id_back || "Kembali ke Daftar Submission"}</span>
         </Link>
 
-        {isSuperAdmin(user) && (
+        <div className="flex items-center gap-2">
           <button
-            onClick={() => setShowDeleteModal(true)}
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-700 dark:bg-rose-900/50 dark:hover:bg-rose-900/80 dark:text-rose-400 font-bold text-xs transition-all shadow-2xs"
-            title="Hapus Pengajuan (Hanya Super Admin)"
+            onClick={() => setShowPrintChecklist(true)}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-all shadow-sm shadow-blue-500/20"
+            title="Cetak Surat Checklist Indikator untuk Kunjungan / Audit Lapangan"
           >
-            <X size={14} />
-            <span>Hapus Pengajuan</span>
+            <Printer size={14} />
+            <span>Cetak Checklist Lapangan</span>
           </button>
-        )}
+
+          {isSuperAdmin(user) && (
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-rose-100 hover:bg-rose-200 text-rose-700 dark:bg-rose-900/50 dark:hover:bg-rose-900/80 dark:text-rose-400 font-bold text-xs transition-all shadow-2xs"
+              title="Hapus Pengajuan (Hanya Super Admin)"
+            >
+              <X size={14} />
+              <span>Hapus Pengajuan</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Warning Revision Limit — only show during active verification/survey */}
@@ -588,6 +602,14 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
               <Info size={14} />
               <span>Panduan Skoring</span>
             </button>
+            <button
+              onClick={() => setShowPrintChecklist(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-white hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 transition-colors shadow-2xs"
+              title="Cetak Surat Checklist Lapangan"
+            >
+              <Printer size={14} />
+              <span>Cetak Checklist</span>
+            </button>
             <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 rounded-lg border border-blue-200/80 dark:border-blue-800">
               {t.dash_admin_sub_id_total_aspect || "Total Aspek:"} {grouped.size}
             </span>
@@ -624,9 +646,16 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
                     (d) => (d as IndicatorDoc & { indicator_id: number }).indicator_id === pi.indicator_id
                   );
                   const isAssessmentDisabled = !isAdminEditable || indicatorMutation.isPending;
+                  const isMandatory = !!(pi.indicator.is_mandatory || pi.indicator.questions?.some((q: IndicatorQuestion) => q.is_mandatory));
 
                   return (
-                    <div key={pi.id} className="transition-colors">
+                    <div 
+                      key={pi.id} 
+                      className={cn(
+                        "transition-colors",
+                        isMandatory && "border-l-4 border-l-rose-500 bg-rose-50/15 dark:bg-rose-950/10"
+                      )}
+                    >
                       <div className="flex items-center justify-between px-5 py-3.5 hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
                         <button
                           onClick={() => toggleIndicator(pi.indicator_id)}
@@ -644,9 +673,9 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
                             <span className="shrink-0 text-xs text-blue-600 dark:text-blue-400 font-extrabold font-mono bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-md border border-blue-200/60 dark:border-blue-800">
                               {t.dash_admin_sub_id_indicator || "Indikator"} {indicatorNumberMap.get(pi.indicator_id) ?? "—"}
                             </span>
-                            {(pi.indicator.is_mandatory || pi.indicator.questions?.some((q: IndicatorQuestion) => q.is_mandatory)) && (
+                            {isMandatory && (
                               <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 font-extrabold text-[10px] border border-rose-300 dark:border-rose-800 shadow-2xs">
-                                <span className="text-rose-500 font-bold">★</span>
+                                <span className="text-rose-500 font-black">★</span>
                                 <span>{locale === 'en' ? 'Mandatory' : 'Wajib'}</span>
                               </span>
                             )}
@@ -935,7 +964,12 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
       )}
 
       {activeTab === 'assessors' && <AssessorTab submissionId={id} />}
-      {activeTab === 'survey' && <FieldSurveyTab submissionId={id} />}
+      {activeTab === 'survey' && (
+        <FieldSurveyTab 
+          submissionId={id} 
+          onPrintChecklist={() => setShowPrintChecklist(true)} 
+        />
+      )}
       {activeTab === 'logs' && <ActivityLogTab submissionId={id} />}
 
       {/* Return Revision Confirmation Modal */}
@@ -1411,6 +1445,16 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
             </div>
           </div>
         </div>
+      )}
+
+      {/* Print Checklist Modal for Assessor On-Site Visit */}
+      {submission && (
+        <PrintChecklistModal
+          submission={submission as unknown as any}
+          isOpen={showPrintChecklist}
+          onClose={() => setShowPrintChecklist(false)}
+          assignedAssessors={submission.assessors}
+        />
       )}
 
     </AppLayout>

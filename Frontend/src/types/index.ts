@@ -58,6 +58,7 @@ export interface Submission {
   payment?: PaymentTransaction | null;
   certificate?: CertificateUser | null;
   survey?: Survey | null;
+  assessors?: { id: number; name: string; email: string }[];
 }
 
 export interface SubmissionDetail extends Submission {

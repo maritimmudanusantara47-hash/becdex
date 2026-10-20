@@ -68,6 +68,7 @@ class SubmissionAdminController extends Controller
             'latestPayment',
             'certificateUser.certificate',
             'survey',
+            'assessors:id,name,email',
         ])->findOrFail($id);
 
         // Auto-advance ke status 3 telah dihapus agar Admin bisa melakukan review tanpa mengubah status,
