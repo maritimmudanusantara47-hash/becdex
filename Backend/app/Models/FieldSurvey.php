@@ -11,13 +11,15 @@ class FieldSurvey extends Model
         'submission_id',
         'assessor_id',
         'scheduled_at',
+        'scheduled_end_at',
         'notes',
         'file_path',
         'status',
     ];
 
     protected $casts = [
-        'scheduled_at' => 'datetime',
+        'scheduled_at'     => 'datetime',
+        'scheduled_end_at' => 'datetime',
     ];
 
     public function submission(): BelongsTo
