@@ -172,9 +172,10 @@ class SubmissionAdminController extends Controller
     public function addSurvey(Request $request, string $id): JsonResponse
     {
         $request->validate([
-            'scheduled_at'  => ['required', 'date', 'after:now'],
-            'location_link' => ['required', 'string'],
-            'notes'         => ['nullable', 'string'],
+            'scheduled_at'     => ['required', 'date', 'after:now'],
+            'scheduled_end_at' => ['nullable', 'date', 'after:scheduled_at'],
+            'location_link'    => ['required', 'string'],
+            'notes'            => ['nullable', 'string'],
         ]);
 
         $submission = Submission::findOrFail($id);
@@ -190,9 +191,10 @@ class SubmissionAdminController extends Controller
         $survey = $submission->survey()->updateOrCreate(
             ['submission_id' => $submission->id],
             [
-                'scheduled_at'  => $request->scheduled_at,
-                'location_link' => $request->location_link,
-                'notes'         => $request->notes,
+                'scheduled_at'     => $request->scheduled_at,
+                'scheduled_end_at' => $request->scheduled_end_at,
+                'location_link'    => $request->location_link,
+                'notes'            => $request->notes,
             ]
         );
 
@@ -203,20 +205,26 @@ class SubmissionAdminController extends Controller
                 'scheduled_at'  => $request->scheduled_at,
             ],
             [
-                'assessor_id'   => Auth::id(),
-                'status'        => 'scheduled',
-                'notes'         => 'Jadwal observasi lapangan resmi (Dibuat otomatis oleh Sistem)',
+                'scheduled_end_at' => $request->scheduled_end_at,
+                'assessor_id'      => Auth::id(),
+                'status'           => 'scheduled',
+                'notes'            => 'Jadwal observasi lapangan resmi (Dibuat otomatis oleh Sistem)',
             ]
         );
+
+        $startFormatted = date('d M Y H:i', strtotime($request->scheduled_at));
+        $timeRangeFormatted = $request->scheduled_end_at
+            ? $startFormatted . ' - ' . date('H:i', strtotime($request->scheduled_end_at)) . ' WIB'
+            : $startFormatted . ' WIB';
 
         ActivityLog::create([
             'submission_id' => $submission->id,
             'user_id'       => Auth::id(),
             'action'        => 'admin_schedule_survey',
-            'description'   => "Admin menjadwalkan survei lapangan pada " . $request->scheduled_at
+            'description'   => "Admin menjadwalkan survei lapangan pada " . $timeRangeFormatted
         ]);
         
-        $message = 'Jadwal survei lokasi telah ditentukan pada: ' . date('d M Y H:i', strtotime($request->scheduled_at));
+        $message = 'Jadwal survei lokasi telah ditentukan pada: ' . $timeRangeFormatted;
         if ($submission->user) {
             $submission->user->notify(new SystemNotification(
                 'Jadwal Survei Lapangan',
@@ -233,9 +241,10 @@ class SubmissionAdminController extends Controller
         return response()->json([
             'message' => 'Jadwal survei berhasil ditambahkan',
             'data'    => [
-                'scheduled_at'  => $survey->scheduled_at->toISOString(),
-                'location_link' => $survey->location_link,
-                'notes'         => $survey->notes,
+                'scheduled_at'     => $survey->scheduled_at->toISOString(),
+                'scheduled_end_at' => $survey->scheduled_end_at?->toISOString(),
+                'location_link'    => $survey->location_link,
+                'notes'            => $survey->notes,
             ],
         ]);
     }

@@ -28,17 +28,19 @@ class FieldSurveyController extends Controller
     public function store(Request $request, string $submissionId): JsonResponse
     {
         $request->validate([
-            'scheduled_at' => 'nullable|date',
-            'notes' => 'nullable|string',
-            'status' => 'required|string|in:scheduled,completed,cancelled',
+            'scheduled_at'     => 'nullable|date',
+            'scheduled_end_at' => 'nullable|date|after:scheduled_at',
+            'notes'            => 'nullable|string',
+            'status'           => 'required|string|in:scheduled,completed,cancelled',
         ]);
 
         $survey = FieldSurvey::create([
-            'submission_id' => $submissionId,
-            'assessor_id' => Auth::id(),
-            'scheduled_at' => $request->scheduled_at,
-            'notes' => $request->notes,
-            'status' => $request->status,
+            'submission_id'    => $submissionId,
+            'assessor_id'      => Auth::id(),
+            'scheduled_at'     => $request->scheduled_at,
+            'scheduled_end_at' => $request->scheduled_end_at,
+            'notes'            => $request->notes,
+            'status'           => $request->status,
         ]);
 
         ActivityLog::create([
@@ -92,12 +94,13 @@ class FieldSurveyController extends Controller
         $survey = FieldSurvey::findOrFail($id);
 
         $request->validate([
-            'scheduled_at' => 'nullable|date',
-            'notes' => 'nullable|string',
-            'status' => 'required|string|in:scheduled,completed,cancelled',
+            'scheduled_at'     => 'nullable|date',
+            'scheduled_end_at' => 'nullable|date|after:scheduled_at',
+            'notes'            => 'nullable|string',
+            'status'           => 'required|string|in:scheduled,completed,cancelled',
         ]);
 
-        $survey->update($request->only('scheduled_at', 'notes', 'status'));
+        $survey->update($request->only('scheduled_at', 'scheduled_end_at', 'notes', 'status'));
 
         ActivityLog::create([
             'user_id' => Auth::id(),
