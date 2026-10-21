@@ -170,6 +170,7 @@ export interface CertificateUser {
 
 export interface Survey {
   scheduled_at: string;
+  scheduled_end_at?: string | null;
   location_link: string | null;
   notes: string | null;
 }

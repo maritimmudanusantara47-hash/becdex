@@ -339,6 +339,8 @@ const id = {
   dash_admin_sub_id_score_0: "0 (Ditolak)",
   dash_admin_sub_id_surv_title: "Jadwalkan Survei Lokasi",
   dash_admin_sub_id_surv_date: "Tanggal & Waktu Kunjungan",
+  dash_admin_sub_id_surv_start_date: "Waktu Mulai",
+  dash_admin_sub_id_surv_end_date: "Estimasi Selesai",
   dash_admin_sub_id_surv_link: "Link Lokasi (Google Maps / URL)",
   dash_admin_sub_id_surv_notes: "Catatan Instruksi untuk PIC",
   dash_admin_sub_id_surv_notes_placeholder: "Harap persiapkan dokumen asli fisik saat kunjungan lapangan...",
