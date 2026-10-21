@@ -420,7 +420,7 @@ export default function PrintChecklistModal({
                   <div className="flex">
                     <span className="w-32 text-gray-600 font-medium shrink-0">Total Indikator:</span>
                     <span className="font-semibold text-black">
-                      {totalCount} Indikator ({mandatoryCount} Wajib, {optionalCount} Standar)
+                      {totalCount} {lang === "id" ? "Indikator" : "Indicators"} ({mandatoryCount} {lang === "id" ? "Wajib" : "Mandatory"}, {optionalCount} {lang === "id" ? "Pilihan" : "Optional"})
                     </span>
                   </div>
                 </div>
@@ -439,14 +439,12 @@ export default function PrintChecklistModal({
               </p>
 
               {/* Legend Indikator Wajib */}
-              <div className="mt-1.5 pt-1.5 border-t border-black flex flex-wrap items-center gap-2 text-[9.5px]">
-                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 border border-black font-bold text-black text-[8px] uppercase tracking-wider">
-                  [★ WAJIB]
-                </span>
+              <div className="mt-1.5 pt-1.5 border-t border-black flex flex-wrap items-center gap-1.5 text-[9.5px]">
+                <span className="font-black text-xs text-black leading-none">*</span>
                 <span className="font-semibold text-black">
                   = {lang === "id"
-                    ? "Tanda Indikator Wajib. Indikator dengan tanda ini WAJIB dipenuhi dan bernilai valid sebagai syarat kelulusan penilaian BECdex."
-                    : "Mandatory Indicator Mark. Indicators with this mark are strictly REQUIRED to be fulfilled and verified valid for BECdex certification."}
+                    ? "Indikator Wajib. Indikator dengan tanda bintang (*) WAJIB dipenuhi dan bernilai valid sebagai syarat kelulusan penilaian BECdex."
+                    : "Mandatory Indicator. Indicators marked with an asterisk (*) are strictly REQUIRED to be fulfilled and verified valid for BECdex certification."}
                 </span>
               </div>
             </div>
@@ -536,27 +534,19 @@ export default function PrintChecklistModal({
                               <tr key={pi.id} className="border-b border-black align-top break-inside-avoid">
                                 {/* Nomor Indikator */}
                                 <td className="border border-black px-1 py-2 text-center font-bold font-mono break-words">
-                                  <div className="font-bold text-xs">{indNumber}</div>
-                                  {isMandatory && (
-                                    <div className="text-[8px] leading-tight text-black font-bold mt-0.5 tracking-tight" title="Indikator Wajib">
-                                      [WAJIB]
-                                    </div>
-                                  )}
+                                  <div className="font-bold text-xs">
+                                    {indNumber}{isMandatory ? "*" : ""}
+                                  </div>
                                 </td>
 
                                 {/* Nama Indikator & Pertanyaan */}
                                 <td className="border border-black px-2 py-2 break-words overflow-hidden">
-                                  <div className="flex items-start gap-1.5 mb-1.5">
+                                  <div className="flex items-start gap-1 mb-1.5">
                                     <div className="flex-1 min-w-0">
                                       <span className="font-bold text-[10.5px] block leading-tight text-black break-words">
-                                        {indicatorName}
+                                        {indicatorName}{isMandatory ? "*" : ""}
                                       </span>
                                     </div>
-                                    {isMandatory && (
-                                      <span className="inline-flex items-center gap-1 text-[8px] font-bold uppercase tracking-wider px-1 py-0.5 border border-black text-black shrink-0">
-                                        [★ {lang === "id" ? "WAJIB" : "MANDATORY"}]
-                                      </span>
-                                    )}
                                   </div>
 
                                   {/* List pertanyaan kuesioner */}
@@ -569,9 +559,7 @@ export default function PrintChecklistModal({
                                             <p className="leading-snug break-words">
                                               {questions.length > 1 ? `${String.fromCharCode(97 + qIdx)}. ` : ""}{q.text}
                                               {isQuestionMandatory && (
-                                                <span className="ml-1 text-[7.5px] font-bold text-black uppercase">
-                                                  [★ {lang === "id" ? "Wajib" : "Mandatory"}]
-                                                </span>
+                                                <span className="ml-0.5 font-bold text-black">*</span>
                                               )}
                                             </p>
                                           </div>
@@ -669,6 +657,11 @@ export default function PrintChecklistModal({
                   ))}
                 </div>
               ))}
+
+              {/* Keterangan Indikator Wajib di bawah tabel */}
+              <div className="mt-2 text-[10.5px] text-black font-semibold italic">
+                <span>* {lang === "id" ? "Indikator Wajib" : "Mandatory Indicator"}</span>
+              </div>
             </div>
 
             {/* Catatan Ringkasan Umum Lapangan */}
@@ -752,7 +745,7 @@ export default function PrintChecklistModal({
 
             {/* Footer Halaman Resmi */}
             <div className="mt-6 pt-2 border-t border-gray-400 flex justify-between items-center text-[8.5px] text-gray-500 print:text-black">
-              <span>BECDEX Official Form &bull; Document ID: #{submission.id}</span>
+              <span>BECDEX Official Form &bull; Document ID: #{checklistId}</span>
               <span>Halaman Verifikasi Asesor Lapangan</span>
               <span>Hak Cipta Terpelihara &copy; 2026 BECDEX Indonesia</span>
             </div>
