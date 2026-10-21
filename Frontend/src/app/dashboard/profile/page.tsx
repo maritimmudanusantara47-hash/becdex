@@ -108,6 +108,7 @@ export default function ProfilePage() {
     onSuccess: (resData) => {
       setUser(resData.data);
       queryClient.invalidateQueries({ queryKey: ["me"] });
+      queryClient.invalidateQueries({ queryKey: ["auth-me"] });
       toast.success(t.dash_profile_success || "Profil berhasil diperbarui!");
     },
     onError: () => {
@@ -127,6 +128,7 @@ export default function ProfilePage() {
     onSuccess: (resData) => {
       setUser(resData.data);
       queryClient.invalidateQueries({ queryKey: ["me"] });
+      queryClient.invalidateQueries({ queryKey: ["auth-me"] });
       toast.success(t.dash_profile_photo_success || "Foto profil/logo berhasil diperbarui!");
     },
     onError: () => {
@@ -146,6 +148,7 @@ export default function ProfilePage() {
     onSuccess: (resData) => {
       setUser(resData.data);
       queryClient.invalidateQueries({ queryKey: ["me"] });
+      queryClient.invalidateQueries({ queryKey: ["auth-me"] });
       toast.success(t.dash_profile_doc_success || "Dokumen berhasil diunggah!");
     },
     onError: () => {
@@ -200,7 +203,10 @@ export default function ProfilePage() {
     profile?.organizational_chart,
   ];
   const completedCount = fields.filter((f) => f && String(f).trim() !== "").length;
-  const completeness = Math.round((completedCount / fields.length) * 100) || 0;
+  // Prioritaskan persentase dan status resmi dari backend API
+  const completeness = profile?.profile_completion_percentage ?? (Math.round((completedCount / fields.length) * 100) || 0);
+  const isComplete = profile?.is_profile_complete ?? (completeness === 100);
+  const missingFields = profile?.missing_fields ?? [];
 
   return (
     <AppLayout title={t.dash_profile_title || "Profil Perusahaan"}>
@@ -243,6 +249,24 @@ export default function ProfilePage() {
               <span>{(t.dash_profile_incomplete_msg || "Lengkapi {count} data yang masih kosong agar proses verifikasi berjalan lancar.").replace('{count}', String(fields.length - completedCount))}</span>
             )}
           </div>
+                    {/* Daftar Field yang Masih Belum Diisi */}
+          {missingFields.length > 0 && (
+            <div className="mt-3 pt-3 border-t border-blue-200/60 dark:border-blue-900/40">
+              <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1.5">
+                Kolom / Dokumen yang wajib dilengkapi:
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {missingFields.map((field) => (
+                  <span
+                    key={field}
+                    className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200 capitalize"
+                  >
+                    • {field.replace(/_/g, " ")}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Profile Photo / Logo Uploader Card */}

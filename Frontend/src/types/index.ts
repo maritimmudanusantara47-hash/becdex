@@ -27,6 +27,9 @@ export interface User {
     website: string | null;
     brand_name: string | null;
   };
+  is_profile_complete?: boolean;
+  profile_completion_percentage?: number;
+  missing_fields?: string[];
   email_verified_at: string | null;
   created_at: string;
 }

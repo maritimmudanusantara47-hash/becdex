@@ -47,10 +47,11 @@ class SubmissionController extends Controller
     {
         $user = $request->user();
 
-        // Verifikasi profil perusahaan sudah diisi
-        if (!$user->companyDetail) {
+                // Verifikasi profil perusahaan sudah lengkap 100%
+        if (!$user->isProfileComplete()) {
             return response()->json([
-                'message' => 'Please complete your company profile before creating a submission.',
+                'message'        => 'Profil perusahaan belum lengkap. Silakan lengkapi seluruh data profil terlebih dahulu.',
+                'missing_fields' => $user->getMissingProfileFields(),
             ], 422);
         }
 

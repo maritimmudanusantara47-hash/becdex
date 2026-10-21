@@ -10,7 +10,7 @@ import { StatCard } from "@/components/ui/StatCard";
 import { LoadingSpinner, EmptyState } from "@/components/ui/index";
 import api from "@/lib/api";
 import { formatDate, cn } from "@/lib/utils";
-import { Submission, PaginatedResponse } from "@/types";
+import { Submission, PaginatedResponse, User } from "@/types";
 import { useTranslation } from "@/store/lang";
 import {
   FileText,
@@ -44,6 +44,13 @@ export default function DashboardPage() {
   const queryClient = useQueryClient();
   const { data, isLoading, error } = useSubmissions();
   const { t } = useTranslation();
+  const { data: user } = useQuery<User>({
+    queryKey: ["auth-me"],
+    queryFn: async () => {
+    const res = await api.get("/auth/me");
+    return res.data.data;
+  },
+});
 
   const createMutation = useMutation({
     mutationFn: async () => {
@@ -92,6 +99,32 @@ export default function DashboardPage() {
 
   return (
     <AppLayout title={t.dash_panel_title || "Panel Perusahaan"}>
+      {/* Warning Banner Jika Profil Belum Lengkap */}
+      {user && user.is_profile_complete === false && (
+        <div className="mb-6 rounded-2xl border border-amber-300 bg-amber-50 dark:border-amber-700/50 dark:bg-amber-950/40 p-4 md:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
+          <div className="flex items-start gap-3.5">
+            <div className="p-2.5 rounded-xl bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 shrink-0 mt-0.5 sm:mt-0">
+              <AlertTriangle size={20} />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-amber-900 dark:text-amber-200">
+                Profil Perusahaan Belum Lengkap ({user.profile_completion_percentage ?? 0}% Selesai)
+              </h4>
+              <p className="text-xs text-amber-700 dark:text-amber-300/90 mt-0.5 leading-relaxed">
+                Harap lengkapi seluruh data profil dan kontak PIC sebelum dapat memulai pengajuan penilaian (submission).
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/dashboard/profile"
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs transition-all shrink-0 self-end sm:self-center"
+          >
+            <span>Lengkapi Profil Sekarang</span>
+            <ChevronRight size={14} />
+          </Link>
+        </div>
+      )}
+
       {/* Welcome Hero Banner Banner */}
       <div className="relative overflow-hidden rounded-2xl bg-linear-to-r from-blue-600 via-blue-700 to-indigo-800 dark:from-[#0c2340] dark:via-blue-900 dark:to-[#1d4ed8] p-6 md:p-8 text-white shadow-md shadow-blue-600/15 dark:shadow-[#0c2340]/15 border border-blue-500/30 dark:border-blue-700/40 transition-colors">
         <div className="absolute -right-10 -top-10 w-64 h-64 rounded-full bg-blue-500/10 blur-3xl pointer-events-none" />
@@ -114,7 +147,14 @@ export default function DashboardPage() {
           </div>
 
           <button
-            onClick={() => createMutation.mutate()}
+            onClick={() => {
+              if (user && user.is_profile_complete === false) {
+                toast.error("Profil perusahaan belum lengkap. Silakan lengkapi profil terlebih dahulu.");
+                router.push("/dashboard/profile");
+                return;
+              }
+              createMutation.mutate();
+            }}
             disabled={createMutation.isPending}
             className="flex items-center justify-center gap-2.5 bg-white text-blue-700 hover:bg-blue-50 dark:text-[#0c2340] dark:hover:bg-slate-100 font-bold px-6 py-3.5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer shrink-0 disabled:opacity-60 text-sm"
           >
