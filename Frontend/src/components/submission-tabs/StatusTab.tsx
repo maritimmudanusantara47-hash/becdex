@@ -5,7 +5,7 @@ import { MdCelebration } from "react-icons/md";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { SubmissionDetail } from "@/types";
-import { formatDate, cn } from "@/lib/utils";
+import { formatDate, formatDateTimeRange, cn } from "@/lib/utils";
 import { useTranslation } from "@/store/lang";
 
 interface Props {
@@ -206,8 +206,13 @@ export function StatusTab({ submission }: Props) {
                     {s.id === 7 && isActive && submission.survey && (
                       <div className="mt-3 bg-white dark:bg-slate-900 rounded-xl p-3.5 border border-blue-200/80 dark:border-blue-900/60 text-xs space-y-2 shadow-2xs">
                         <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200 font-bold">
-                          <Calendar size={14} className="text-blue-500 mt-0.5" />
-                          <p className="font-semibold text-slate-800 dark:text-slate-200">{t.tab_status_survey_schedule || "Jadwal Survei Lapangan:"} {formatDate(submission.survey.scheduled_at)}</p>
+                          <Calendar size={14} className="text-blue-500 mt-0.5 shrink-0" />
+                          <p className="font-semibold text-slate-800 dark:text-slate-200">
+                            {t.tab_status_survey_schedule || "Jadwal Survei Lapangan:"}{" "}
+                            <span className="font-bold text-blue-600 dark:text-blue-400">
+                              {formatDateTimeRange(submission.survey.scheduled_at, submission.survey.scheduled_end_at)}
+                            </span>
+                          </p>
                         </div>
                         <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 leading-relaxed whitespace-pre-wrap">{submission.survey.notes}</p>
                         {submission.survey.location_link && (

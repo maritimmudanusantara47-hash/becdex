@@ -14,6 +14,44 @@ export function formatDate(dateString: string | null | undefined): string {
   });
 }
 
+export function formatDateTimeRange(start: string | null | undefined, end?: string | null | undefined): string {
+  if (!start) return "-";
+  const startDate = new Date(start);
+  if (isNaN(startDate.getTime())) return "-";
+
+  const dateStr = startDate.toLocaleDateString("id-ID", {
+    weekday: "long",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+  const startTime = startDate.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+
+  if (!end) {
+    return `${dateStr} | ${startTime} WIB`;
+  }
+
+  const endDate = new Date(end);
+  if (isNaN(endDate.getTime())) {
+    return `${dateStr} | ${startTime} WIB`;
+  }
+
+  const endTime = endDate.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+  const isSameDay = startDate.toDateString() === endDate.toDateString();
+
+  if (isSameDay) {
+    return `${dateStr} | ${startTime} - ${endTime} WIB`;
+  }
+
+  const endDateStr = endDate.toLocaleDateString("id-ID", {
+    weekday: "long",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+  return `${dateStr} ${startTime} - ${endDateStr} ${endTime} WIB`;
+}
+
 export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("id-ID", {
     style: "currency",

@@ -41,9 +41,10 @@ class SubmissionResource extends JsonResource
             ),
             'survey'       => $this->whenLoaded('survey', fn () =>
                 $this->survey ? [
-                    'scheduled_at'  => $this->survey->scheduled_at?->toISOString(),
-                    'location_link' => $this->survey->location_link,
-                    'notes'         => $this->survey->notes,
+                    'scheduled_at'     => $this->survey->scheduled_at?->toISOString(),
+                    'scheduled_end_at' => $this->survey->scheduled_end_at?->toISOString(),
+                    'location_link'    => $this->survey->location_link,
+                    'notes'            => $this->survey->notes,
                 ] : null
             ),
             'assessors'    => $this->whenLoaded('assessors', fn () => $this->assessors->map(fn ($a) => [

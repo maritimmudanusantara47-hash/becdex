@@ -62,7 +62,7 @@ interface SubmissionData {
   documents?: (IndicatorDoc & { indicator_id: number })[];
   answers?: AnswerItem[];
   revision_count?: number;
-  survey?: { scheduled_at: string; location_link?: string; notes?: string };
+  survey?: { scheduled_at: string; scheduled_end_at?: string | null; location_link?: string; notes?: string };
   assessors?: { id: number; name: string; email: string }[];
 }
 
@@ -83,7 +83,7 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
   const [returnReason, setReturnReason] = useState("");
   const [showScoringGuide, setShowScoringGuide] = useState(false);
   const [showPrintChecklist, setShowPrintChecklist] = useState(false);
-  const [surveyForm, setSurveyForm] = useState({ scheduled_at: "", location_link: "", notes: "" });
+  const [surveyForm, setSurveyForm] = useState({ scheduled_at: "", scheduled_end_at: "", location_link: "", notes: "" });
   const [certForm, setCertForm] = useState({ certificate_id: "10", becdex_category_id: "3", published_at: "", mmic: "", direktur: "" });
 
   const deleteMutation = useMutation({
@@ -132,10 +132,40 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
     onSuccess: () => {
       toast.success(t.dash_admin_sub_id_msg_surv_success || "Jadwal survei lokasi berhasil disimpan!");
       setShowSurveyModal(false);
+      setSurveyForm({ scheduled_at: "", scheduled_end_at: "", location_link: "", notes: "" });
       refetch();
     },
-    onError: () => toast.error(t.dash_admin_sub_id_msg_surv_error || "Gagal menjadwalkan survei lokasi."),
+    onError: (err: any) => {
+      const serverErrors = err.response?.data?.errors;
+      const firstError = serverErrors ? (Object.values(serverErrors).flat()[0] as string) : null;
+      const errorMsg = firstError || err.response?.data?.message || t.dash_admin_sub_id_msg_surv_error || "Gagal menjadwalkan survei lokasi.";
+      toast.error(errorMsg);
+    },
   });
+
+  const handleSaveSurvey = () => {
+    if (!surveyForm.scheduled_at) {
+      toast.error("Waktu mulai kunjungan wajib diisi.");
+      return;
+    }
+    if (new Date(surveyForm.scheduled_at).getTime() <= Date.now()) {
+      toast.error("Waktu mulai kunjungan harus setelah waktu saat ini.");
+      return;
+    }
+    if (!surveyForm.location_link) {
+      toast.error("Link lokasi survei wajib diisi.");
+      return;
+    }
+    if (surveyForm.scheduled_end_at) {
+      const start = new Date(surveyForm.scheduled_at).getTime();
+      const end = new Date(surveyForm.scheduled_end_at).getTime();
+      if (end <= start) {
+        toast.error("Waktu perkiraan selesai tidak boleh lebih awal atau sama dengan waktu mulai.");
+        return;
+      }
+    }
+    surveyMutation.mutate();
+  };
 
   const certMutation = useMutation({
     mutationFn: async () => {
@@ -492,10 +522,10 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
                       <button
                         onClick={() => setShowReturnModal(true)}
                         disabled={returnMutation.isPending || unverifiedCount > 0}
-                        className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-amber-500/80 bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 hover:bg-amber-500 hover:text-white font-bold text-[10px] sm:text-xs transition-all cursor-pointer disabled:opacity-50"
+                        className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-[#f79205] bg-[#f79205] hover:bg-[#e08304] hover:border-[#e08304] text-slate-950 dark:bg-[#f79205] dark:text-slate-950 dark:hover:bg-[#e08304] font-black text-[10px] sm:text-xs shadow-xs transition-all cursor-pointer disabled:opacity-50"
                         title={unverifiedCount > 0 ? "Selesaikan penilaian semua indikator terlebih dahulu" : "Kembalikan untuk Revisi"}
                       >
-                        <AlertTriangle size={14} />
+                        <AlertTriangle size={14} className="stroke-[2.5]" />
                         <span className="hidden sm:inline">{t.admin_sub_badge_revision || "Revisi"}</span>
                       </button>
                     )}
@@ -535,10 +565,10 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
                       <button
                         onClick={() => setShowReturnModal(true)}
                         disabled={returnMutation.isPending || unverifiedCount > 0}
-                        className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-amber-500/80 bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 hover:bg-amber-500 hover:text-white font-bold text-[10px] sm:text-xs transition-all cursor-pointer disabled:opacity-50"
+                        className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-[#f79205] bg-[#f79205] hover:bg-[#e08304] hover:border-[#e08304] text-slate-950 dark:bg-[#f79205] dark:text-slate-950 dark:hover:bg-[#e08304] font-black text-[10px] sm:text-xs shadow-xs transition-all cursor-pointer disabled:opacity-50"
                         title={unverifiedCount > 0 ? "Selesaikan penilaian semua indikator terlebih dahulu" : "Kembalikan untuk Revisi Pasca Survei"}
                       >
-                        <AlertTriangle size={14} />
+                        <AlertTriangle size={14} className="stroke-[2.5]" />
                         <span className="hidden sm:inline">{t.admin_sub_badge_revision || "Revisi"}</span>
                       </button>
                     )}
@@ -1091,7 +1121,7 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
       {/* Survey Modal */}
       {showSurveyModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md p-6 shadow-2xl border border-slate-200/80 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-lg p-6 shadow-2xl border border-slate-200/80 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 mb-4">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
@@ -1105,14 +1135,35 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
             </div>
 
             <div className="space-y-4 text-xs">
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">{t.dash_admin_sub_id_surv_date || "Tanggal & Waktu Kunjungan"}</label>
-                <input
-                  type="datetime-local"
-                  value={surveyForm.scheduled_at}
-                  onChange={(e) => setSurveyForm((p) => ({ ...p, scheduled_at: e.target.value }))}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800 text-slate-800 dark:text-white font-medium focus:bg-white focus:border-blue-500 focus:outline-hidden transition-all shadow-2xs"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <div className="flex items-center justify-between mb-1.5 h-4">
+                    <label className="font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[11px]">
+                      {t.dash_admin_sub_id_surv_start_date || "Waktu Mulai"}
+                    </label>
+                  </div>
+                  <input
+                    type="datetime-local"
+                    value={surveyForm.scheduled_at}
+                    onChange={(e) => setSurveyForm((p) => ({ ...p, scheduled_at: e.target.value }))}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800 text-slate-800 dark:text-white font-medium focus:bg-white focus:border-blue-500 focus:outline-hidden transition-all shadow-2xs"
+                  />
+                </div>
+                <div>
+                  <div className="flex items-center justify-between mb-1.5 h-4">
+                    <label className="font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider text-[11px]">
+                      {t.dash_admin_sub_id_surv_end_date || "Estimasi Selesai"}
+                    </label>
+                    <span className="text-[10px] font-semibold text-slate-400 lowercase">(opsional)</span>
+                  </div>
+                  <input
+                    type="datetime-local"
+                    min={surveyForm.scheduled_at || undefined}
+                    value={surveyForm.scheduled_end_at}
+                    onChange={(e) => setSurveyForm((p) => ({ ...p, scheduled_end_at: e.target.value }))}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800 text-slate-800 dark:text-white font-medium focus:bg-white focus:border-blue-500 focus:outline-hidden transition-all shadow-2xs"
+                  />
+                </div>
               </div>
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">{t.dash_admin_sub_id_surv_link || "Link Lokasi (Google Maps / URL)"}</label>
@@ -1145,7 +1196,7 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
                 {t.dash_admin_sub_id_btn_cancel || "Batal"}
               </button>
               <button
-                onClick={() => surveyMutation.mutate()}
+                onClick={handleSaveSurvey}
                 disabled={surveyMutation.isPending}
                 type="button"
                 className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-md shadow-blue-600/15 disabled:opacity-60 transition-all cursor-pointer text-xs"

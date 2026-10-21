@@ -9,10 +9,56 @@ import { toast } from "sonner";
 interface Survey {
   id: number;
   scheduled_at: string | null;
+  scheduled_end_at?: string | null;
   notes: string | null;
   status: string;
   file_path: string | null;
   assessor: { name: string } | null;
+}
+
+function formatSurveySchedule(start: string | null, end?: string | null) {
+  if (!start) return "Belum ditentukan";
+  const startDate = new Date(start);
+  if (isNaN(startDate.getTime())) return "Format tanggal tidak valid";
+
+  const startFormatted = startDate.toLocaleString("id-ID", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  if (!end) return startFormatted + " WIB";
+
+  const endDate = new Date(end);
+  if (isNaN(endDate.getTime())) return startFormatted + " WIB";
+
+  const isSameDay = startDate.toDateString() === endDate.toDateString();
+  const startTime = startDate.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+  const endTime = endDate.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
+
+  if (isSameDay) {
+    const dayDate = startDate.toLocaleDateString("id-ID", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+    return `${dayDate} | ${startTime} - ${endTime} WIB`;
+  }
+
+  const endFormatted = endDate.toLocaleString("id-ID", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  return `${startFormatted} - ${endFormatted} WIB`;
 }
 
 export default function FieldSurveyTab({ 
@@ -30,7 +76,7 @@ export default function FieldSurveyTab({
   });
 
   const [isAdding, setIsAdding] = useState(false);
-  const [form, setForm] = useState({ scheduled_at: "", notes: "", status: "scheduled" });
+  const [form, setForm] = useState({ scheduled_at: "", scheduled_end_at: "", notes: "", status: "scheduled" });
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [activeSurveyId, setActiveSurveyId] = useState<number | null>(null);
 
@@ -41,12 +87,32 @@ export default function FieldSurveyTab({
     onSuccess: () => {
       toast.success("Survei lapangan berhasil ditambahkan!");
       setIsAdding(false);
-      setForm({ scheduled_at: "", notes: "", status: "scheduled" });
+      setForm({ scheduled_at: "", scheduled_end_at: "", notes: "", status: "scheduled" });
       queryClient.invalidateQueries({ queryKey: ["field-surveys", submissionId] });
       queryClient.invalidateQueries({ queryKey: ["activity-logs", submissionId] });
     },
-    onError: () => toast.error("Gagal menambahkan survei."),
+    onError: (err: any) => {
+      const serverErrors = err.response?.data?.errors;
+      const firstError = serverErrors ? (Object.values(serverErrors).flat()[0] as string) : null;
+      toast.error(firstError || err.response?.data?.message || "Gagal menambahkan survei.");
+    },
   });
+
+  const handleSaveSurvey = () => {
+    if (!form.scheduled_at) {
+      toast.error("Tanggal jadwal survei wajib diisi.");
+      return;
+    }
+    if (form.scheduled_end_at) {
+      const start = new Date(form.scheduled_at).getTime();
+      const end = new Date(form.scheduled_end_at).getTime();
+      if (end <= start) {
+        toast.error("Waktu perkiraan selesai tidak boleh lebih awal atau sama dengan waktu mulai.");
+        return;
+      }
+    }
+    createMutation.mutate();
+  };
 
   const uploadMutation = useMutation({
     mutationFn: async (surveyId: number) => {
@@ -100,9 +166,31 @@ export default function FieldSurveyTab({
 
       {isAdding && (
         <div className="bg-slate-50 dark:bg-slate-800/50 p-5 rounded-xl border border-slate-200 dark:border-slate-700 mb-6 space-y-4">
-          <div>
-            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Tanggal Jadwal Survei</label>
-            <input type="datetime-local" value={form.scheduled_at} onChange={e => setForm({...form, scheduled_at: e.target.value})} className="w-full p-2 border rounded-lg dark:bg-slate-900 dark:border-slate-700 text-sm" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <div className="flex items-center justify-between mb-1.5 h-4">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Tanggal Jadwal Survei</label>
+              </div>
+              <input 
+                type="datetime-local" 
+                value={form.scheduled_at} 
+                onChange={e => setForm({...form, scheduled_at: e.target.value})} 
+                className="w-full p-2 border rounded-lg dark:bg-slate-900 dark:border-slate-700 text-sm" 
+              />
+            </div>
+            <div>
+              <div className="flex items-center justify-between mb-1.5 h-4">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Estimasi Selesai</label>
+                <span className="text-[10px] font-semibold text-slate-400 lowercase">(opsional)</span>
+              </div>
+              <input 
+                type="datetime-local" 
+                min={form.scheduled_at || undefined}
+                value={form.scheduled_end_at} 
+                onChange={e => setForm({...form, scheduled_end_at: e.target.value})} 
+                className="w-full p-2 border rounded-lg dark:bg-slate-900 dark:border-slate-700 text-sm" 
+              />
+            </div>
           </div>
           <div>
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Catatan / Rencana</label>
@@ -110,7 +198,7 @@ export default function FieldSurveyTab({
           </div>
           <div className="flex justify-end gap-2">
             <button onClick={() => setIsAdding(false)} className="px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-white rounded-lg text-xs font-bold hover:bg-slate-300">Batal</button>
-            <button onClick={() => createMutation.mutate()} disabled={createMutation.isPending} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 flex items-center gap-2">
+            <button onClick={handleSaveSurvey} disabled={createMutation.isPending} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 flex items-center gap-2">
               {createMutation.isPending ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />} Simpan
             </button>
           </div>
@@ -129,7 +217,9 @@ export default function FieldSurveyTab({
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <MapPin size={16} className="text-blue-500" />
-                    <span className="font-bold text-slate-800 dark:text-white">Jadwal: {survey.scheduled_at ? new Date(survey.scheduled_at).toLocaleString('id-ID') : 'Belum ditentukan'}</span>
+                    <span className="font-bold text-slate-800 dark:text-white">
+                      Jadwal: {formatSurveySchedule(survey.scheduled_at, survey.scheduled_end_at)}
+                    </span>
                   </div>
                   <span className="text-xs text-slate-500">Asesor: {survey.assessor?.name ?? 'Tidak diketahui'}</span>
                 </div>

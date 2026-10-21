@@ -340,6 +340,8 @@ const en = {
   dash_admin_sub_id_score_0: "0 (Rejected)",
   dash_admin_sub_id_surv_title: "Schedule Location Survey",
   dash_admin_sub_id_surv_date: "Visit Date & Time",
+  dash_admin_sub_id_surv_start_date: "Start Time",
+  dash_admin_sub_id_surv_end_date: "Estimated End Time",
   dash_admin_sub_id_surv_link: "Location Link (Google Maps / URL)",
   dash_admin_sub_id_surv_notes: "Instruction Notes for PIC",
   dash_admin_sub_id_surv_notes_placeholder: "Please prepare physical original documents during the field visit...",
