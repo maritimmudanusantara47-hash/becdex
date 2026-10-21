@@ -9,7 +9,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { LoadingSpinner, EmptyState } from "@/components/ui/index";
 import api from "@/lib/api";
 import { formatDate, cn } from "@/lib/utils";
-import { Submission, PaginatedResponse } from "@/types";
+import { Submission, PaginatedResponse, User } from "@/types";
 import {
   FileText,
   PlusCircle,
@@ -39,6 +39,14 @@ export default function SubmissionsListPage() {
     queryFn: async () => {
       const res = await api.get("/submissions");
       return res.data;
+    },
+  });
+
+  const { data: user } = useQuery<User>({
+    queryKey: ["auth-me"],
+    queryFn: async () => {
+      const res = await api.get("/auth/me");
+      return res.data.data;
     },
   });
 
@@ -120,7 +128,14 @@ export default function SubmissionsListPage() {
           </div>
 
           <button
-            onClick={() => createMutation.mutate()}
+            onClick={() => {
+              if (user && user.is_profile_complete === false) {
+                toast.error("Profil perusahaan belum lengkap. Silakan lengkapi profil terlebih dahulu.");
+                router.push("/dashboard/profile");
+                return;
+              }
+              createMutation.mutate();
+            }}
             disabled={createMutation.isPending}
             className="inline-flex items-center justify-center gap-2 bg-[#0c2340] hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 text-white font-extrabold px-5 py-3 rounded-xl shadow-md transition-all text-xs cursor-pointer disabled:opacity-60"
           >

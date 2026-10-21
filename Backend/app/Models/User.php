@@ -126,4 +126,126 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->role_id === RoleId::Company->value;
     }
+
+    // ─── Profile Completion Helpers ───────────────────────────
+
+    /**
+     * Mengembalikan daftar field wajib yang masih kosong/belum diisi.
+     *
+     * @return array<string>
+     */
+    public function getMissingProfileFields(): array
+    {
+        $missing = [];
+
+        // 1. Validasi Data User / Akun
+        if (empty(trim((string) $this->name))) {
+            $missing[] = 'name';
+        }
+
+        if (empty($this->email) || !$this->hasVerifiedEmail()) {
+            $missing[] = 'email_verified';
+        }
+
+        if (empty($this->legal_documents)) {
+            $missing[] = 'legal_documents';
+        }
+
+        if (empty($this->organizational_chart)) {
+            $missing[] = 'organizational_chart';
+        }
+
+        if (empty($this->image)) {
+            $missing[] = 'image';
+        }
+
+        // 2. Validasi Relasi & Detail Perusahaan (company_details)
+        $detail = $this->companyDetail;
+
+        if (!$detail) {
+            // Jika companyDetail sama sekali belum ada, masukkan semua field-nya
+            return array_merge($missing, [
+                'company_phone',
+                'company_country',
+                'company_field_id',
+                'becdex_category_id',
+                'address',
+                'description',
+                'brand_name',
+                'pic_name',
+                'pic_position',
+                'pic_email',
+                'pic_phone',
+            ]);
+        }
+
+        // Detail Perusahaan
+        if (empty(trim((string) $detail->company_phone))) {
+            $missing[] = 'company_phone';
+        }
+
+        if (empty(trim((string) $detail->company_country))) {
+            $missing[] = 'company_country';
+        }
+
+        if (empty($detail->company_field_id)) {
+            $missing[] = 'company_field_id';
+        }
+
+        if (empty($detail->becdex_category_id)) {
+            $missing[] = 'becdex_category_id';
+        }
+
+        if (empty(trim((string) $detail->address))) {
+            $missing[] = 'address';
+        }
+
+        if (empty(trim((string) $detail->description))) {
+            $missing[] = 'description';
+        }
+
+        if (empty(trim((string) $detail->brand_name))) {
+            $missing[] = 'brand_name';
+        }
+
+        // Detail PIC (Penanggung Jawab)
+        if (empty(trim((string) $detail->pic_name))) {
+            $missing[] = 'pic_name';
+        }
+
+        if (empty(trim((string) $detail->pic_position))) {
+            $missing[] = 'pic_position';
+        }
+
+        if (empty(trim((string) $detail->pic_email))) {
+            $missing[] = 'pic_email';
+        }
+
+        if (empty(trim((string) $detail->pic_phone))) {
+            $missing[] = 'pic_phone';
+        }
+
+        return $missing;
+    }
+
+    /**
+     * Cek apakah seluruh profil sudah lengkap 100%.
+     */
+    public function isProfileComplete(): bool
+    {
+        return empty($this->getMissingProfileFields());
+    }
+
+    /**
+     * Hitung persentase kelengkapan profil (0 - 100%).
+     */
+    public function getProfileCompletionPercentage(): int
+    {
+        $totalRequiredFields = 16;
+        $missingCount = count($this->getMissingProfileFields());
+
+        $completed = max(0, $totalRequiredFields - $missingCount);
+
+        return (int) round(($completed / $totalRequiredFields) * 100);
+    }
 }
