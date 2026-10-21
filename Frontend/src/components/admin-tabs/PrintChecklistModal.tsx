@@ -34,6 +34,7 @@ export default function PrintChecklistModal({
   if (!isOpen || !mounted) return null;
 
   const company = submission.user?.company;
+  const checklistId = "BCDBICC20260002";
   const officialAssessors = [
     { id: 1, name: "Dr. Ir. Diah Pranitasari, M.M., C.Bec. (BizDev)" },
     { id: 2, name: "Dr. Gatot Prabantoro, C.Bec., (BizDev)" }
@@ -128,7 +129,7 @@ export default function PrintChecklistModal({
         <head>
           <meta charset="utf-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <title>Checklist_Audit_Lapangan_BECDEX_${submission.id}</title>
+          <title>Checklist_Audit_Lapangan_BECDEX_${checklistId}</title>
           ${styleTags}
           <style>
             @page {
@@ -342,7 +343,7 @@ export default function PrintChecklistModal({
                     FORMULIR AUDIT RESMI
                   </span>
                   <p className="text-[11px] font-mono font-bold text-gray-800">
-                    NO: BECDEX-CKL-{submission.id}
+                    NO: BECDEX-CKL-{checklistId}
                   </p>
                   <p className="text-[9px] text-gray-600">
                     Ref: ISO/IEC 25010 & BECdex-Std
@@ -371,7 +372,7 @@ export default function PrintChecklistModal({
                 <span className="uppercase tracking-wider">
                   {lang === "id" ? "I. IDENTITAS PERUSAHAAN & PENUGASAN ASESOR" : "I. COMPANY PROFILE & AUDIT ASSIGNMENT"}
                 </span>
-                <span className="font-mono text-[10px]">Case ID: #{submission.id}</span>
+                <span className="font-mono text-[10px]">Case ID: #{checklistId}</span>
               </div>
 
               <div className="grid grid-cols-2 divide-x divide-black">
