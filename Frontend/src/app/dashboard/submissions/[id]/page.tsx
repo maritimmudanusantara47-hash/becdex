@@ -8,7 +8,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { LoadingSpinner } from "@/components/ui/index";
 import api from "@/lib/api";
 import { SubmissionDetail } from "@/types";
-import { cn } from "@/lib/utils";
+import { cn, formatDateTimeRange } from "@/lib/utils";
 import { AssessmentTab } from "@/components/submission-tabs/AssessmentTab";
 import { DocumentsTab } from "@/components/submission-tabs/DocumentsTab";
 import { ScorePaymentTab } from "@/components/submission-tabs/ScorePaymentTab";
@@ -258,13 +258,33 @@ export default function SubmissionDetailPage() {
           <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/80 text-blue-700 dark:text-blue-300 flex items-center justify-center font-extrabold shrink-0 mt-0.5">
             <MdLocationOn className="w-5 h-5" />
           </div>
-          <div>
-            <h4 className="font-extrabold text-sm md:text-base tracking-tight text-blue-900 dark:text-blue-200">
-              {t.dash_sub_survey_title || "Jadwal Survei Lapangan & Wawancara Aktif"}
-            </h4>
+          <div className="flex-1">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h4 className="font-extrabold text-sm md:text-base tracking-tight text-blue-900 dark:text-blue-200">
+                {t.dash_sub_survey_title || "Jadwal Survei Lapangan & Wawancara Aktif"}
+              </h4>
+              {submission.survey?.scheduled_at && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-blue-600 text-white font-extrabold text-xs shadow-xs">
+                  <Clock size={13} />
+                  {formatDateTimeRange(submission.survey.scheduled_at, submission.survey.scheduled_end_at)}
+                </span>
+              )}
+            </div>
             <p className="text-xs text-blue-700 dark:text-blue-300 mt-1 leading-relaxed">
               {t.dash_sub_survey_desc || "Tim asesor lapangan BECdex dijadwalkan untuk melakukan verifikasi langsung ke fasilitas operasional perusahaan Anda sesuai konfirmasi yang dikirimkan. Pastikan seluruh dokumen asli tersedia untuk pengecekan."}
             </p>
+            {submission.survey?.location_link && (
+              <div className="mt-2.5 flex items-center gap-2">
+                <a
+                  href={submission.survey.location_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs font-bold text-blue-700 dark:text-blue-300 hover:underline"
+                >
+                  <span>📍 Tautan Peta Lokasi</span> &rarr;
+                </a>
+              </div>
+            )}
           </div>
         </div>
       )}
