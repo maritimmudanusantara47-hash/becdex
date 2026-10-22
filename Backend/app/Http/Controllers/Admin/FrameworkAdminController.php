@@ -209,7 +209,10 @@ class FrameworkAdminController extends Controller
     }
     public function storeCompanyField(Request $request): JsonResponse
     {
-        $validated = $request->validate(['name' => 'required|string|max:255|unique:company_fields,name']);
+        $validated = $request->validate([
+            'name'    => 'required|string|max:255|unique:company_fields,name',
+            'name_id' => 'nullable|string|max:255',
+        ]);
         $cf = CompanyField::create($validated);
         Cache::forget('public_lookups');
         return response()->json(['data' => $cf], 201);
@@ -217,7 +220,10 @@ class FrameworkAdminController extends Controller
     public function updateCompanyField(Request $request, int $id): JsonResponse
     {
         $cf = CompanyField::findOrFail($id);
-        $validated = $request->validate(['name' => "required|string|max:255|unique:company_fields,name,{$id}"]);
+        $validated = $request->validate([
+            'name'    => "required|string|max:255|unique:company_fields,name,{$id}",
+            'name_id' => 'nullable|string|max:255',
+        ]);
         $cf->update($validated);
         Cache::forget('public_lookups');
         return response()->json(['data' => $cf]);

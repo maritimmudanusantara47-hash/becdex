@@ -162,7 +162,7 @@ class PublicController extends Controller
         $data = Cache::remember('public_lookups', 3600, function () {
             return [
                 'countries'      => Country::select('id', 'iso', 'name')->orderBy('name')->get(),
-                'company_fields' => CompanyField::select('id', 'name')->orderBy('name')->get(),
+                'company_fields' => CompanyField::select('id', 'name', 'name_id')->orderBy('name')->get(),
             ];
         });
 

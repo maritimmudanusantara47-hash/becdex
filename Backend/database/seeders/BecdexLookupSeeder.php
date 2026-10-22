@@ -67,12 +67,12 @@ class BecdexLookupSeeder extends Seeder
 
         // Company Fields (Sectors)
         $fields = [
-            ['id' => 1, 'name' => 'Perikanan Tangkap & Budidaya'],
-            ['id' => 2, 'name' => 'Bioteknologi & Pengolahan Hasil Laut'],
-            ['id' => 3, 'name' => 'Pariwisata Bahari & Ekowisata'],
-            ['id' => 4, 'name' => 'Transportasi & Logistik Maritim'],
-            ['id' => 5, 'name' => 'Energi Terbarukan Laut'],
-            ['id' => 6, 'name' => 'Jasa & Teknologi Kelautan'],
+            ['id' => 1, 'name' => 'Capture Fisheries & Aquaculture', 'name_id' => 'Perikanan Tangkap & Budidaya'],
+            ['id' => 2, 'name' => 'Marine Biotechnology & Processing', 'name_id' => 'Bioteknologi & Pengolahan Hasil Laut'],
+            ['id' => 3, 'name' => 'Marine Tourism & Ecotourism', 'name_id' => 'Pariwisata Bahari & Ekowisata'],
+            ['id' => 4, 'name' => 'Maritime Transport & Logistics', 'name_id' => 'Transportasi & Logistik Maritim'],
+            ['id' => 5, 'name' => 'Ocean Renewable Energy', 'name_id' => 'Energi Terbarukan Laut'],
+            ['id' => 6, 'name' => 'Marine Services & Technology', 'name_id' => 'Jasa & Teknologi Kelautan'],
         ];
         foreach ($fields as $f) \App\Models\CompanyField::updateOrCreate(['id' => $f['id']], $f);
 
