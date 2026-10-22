@@ -17,6 +17,7 @@ export interface User {
     country: string | null;
     company_field_id: number | null;
     company_field: string | null;
+    company_field_name_id?: string | null;
     pic_name: string;
     pic_position: string;
     pic_email: string;
