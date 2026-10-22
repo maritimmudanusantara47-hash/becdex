@@ -47,11 +47,13 @@ class SubmissionController extends Controller
     {
         $user = $request->user();
 
-                // Verifikasi profil perusahaan sudah lengkap 100%
+        // Verifikasi profil perusahaan sudah lengkap 100%
         if (!$user->isProfileComplete()) {
             return response()->json([
-                'message'        => 'Profil perusahaan belum lengkap. Silakan lengkapi seluruh data profil terlebih dahulu.',
-                'missing_fields' => $user->getMissingProfileFields(),
+                'message'               => 'Profil perusahaan belum lengkap. Silakan lengkapi seluruh data profil terlebih dahulu.',
+                'completion_percentage' => $user->getProfileCompletionPercentage(),
+                'missing_fields'        => $user->getMissingProfileFields(),
+                'missing_field_labels'  => $user->getMissingProfileFieldLabels(),
             ], 422);
         }
 

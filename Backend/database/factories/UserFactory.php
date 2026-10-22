@@ -53,6 +53,17 @@ class UserFactory extends Factory
         ]);
     }
 
+    /** Company user with complete profile */
+    public function withCompleteProfile(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'legal_documents'      => 'documents/legal_sample.pdf',
+            'organizational_chart' => 'documents/org_chart_sample.pdf',
+            'image'                => 'avatars/company_logo_sample.png',
+            'email_verified_at'    => now(),
+        ]);
+    }
+
     /** Reviewer / Assessor (role 6) */
     public function reviewer(): static
     {

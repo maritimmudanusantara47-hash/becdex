@@ -51,13 +51,28 @@ abstract class TestCase extends BaseTestCase
     /**
      * Log in as a Company user and return the user model.
      */
-    protected function actingAsCompany(?User $user = null): User
+    protected function actingAsCompany(?User $user = null, bool $completeProfile = true): User
     {
-        $user ??= User::factory()->company()->create();
+        if ($user) {
+            $this->actingAs($user);
+            return $user;
+        }
+
+        $user = User::factory()->company();
+        if ($completeProfile) {
+            $user = $user->withCompleteProfile();
+        }
+        $user = $user->create();
+
         if (!$user->companyDetail) {
-            \App\Models\CompanyDetail::factory()->create(['user_id' => $user->id]);
+            $detailFactory = \App\Models\CompanyDetail::factory();
+            if ($completeProfile) {
+                $detailFactory = $detailFactory->complete();
+            }
+            $detailFactory->create(['user_id' => $user->id]);
             $user->load('companyDetail');
         }
+
         $this->actingAs($user);
         return $user;
     }

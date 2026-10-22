@@ -40,6 +40,7 @@ class UserResource extends JsonResource
             'is_profile_complete'           => $this->isCompany() ? $this->isProfileComplete() : true,
             'profile_completion_percentage' => $this->isCompany() ? $this->getProfileCompletionPercentage() : 100,
             'missing_fields'                => $this->isCompany() ? $this->getMissingProfileFields() : [],
+            'missing_field_labels'          => $this->isCompany() ? $this->getMissingProfileFieldLabels() : (object)[],
             'email_verified_at' => $this->email_verified_at,
             'created_at'    => $this->created_at->toISOString(),
         ];
