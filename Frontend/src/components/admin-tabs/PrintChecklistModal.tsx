@@ -383,8 +383,14 @@ export default function PrintChecklistModal({
                     <span className="font-bold uppercase text-black">{submission.user?.name ?? "—"}</span>
                   </div>
                   <div className="flex">
-                    <span className="w-32 text-gray-600 font-medium shrink-0">Bidang / Sektor:</span>
-                    <span className="font-semibold text-black">{company?.company_field ?? "—"}</span>
+                    <span className="w-32 text-gray-600 font-medium shrink-0">
+                      {lang === "id" ? "Bidang / Sektor:" : "Sector / Field:"}
+                    </span>
+                    <span className="font-semibold text-black">
+                      {lang === "id"
+                        ? (company?.company_field_name_id || company?.company_field || "—")
+                        : (company?.company_field || company?.company_field_name_id || "—")}
+                    </span>
                   </div>
                   <div className="flex">
                     <span className="w-32 text-gray-600 font-medium shrink-0">Alamat Lokasi:</span>
