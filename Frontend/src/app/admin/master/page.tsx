@@ -10,19 +10,29 @@ import { cn } from "@/lib/utils";
 import { Plus, Pencil, Trash2, Loader2, Building2, Globe, ShieldCheck, Database } from "lucide-react";
 import { useTranslation } from "@/store/lang";
 
-interface MasterRow { id: number; name: string }
+interface MasterRow { id: number; name: string; name_id?: string | null }
 
 function CrudModal({
-  title, initial, isPending, onClose, onSave
+  title, initialName, initialNameId, showNameId = false, isPending, onClose, onSave
 }: {
-  title: string; initial?: string; isPending: boolean;
-  onClose: () => void; onSave: (name: string) => void;
+  title: string; initialName?: string; initialNameId?: string; showNameId?: boolean; isPending: boolean;
+  onClose: () => void; onSave: (payload: { name: string; name_id?: string }) => void;
 }) {
   const { t } = useTranslation();
-  const [name, setName] = useState(initial ?? "");
+  const [name, setName]     = useState(initialName ?? "");
+  const [nameId, setNameId] = useState(initialNameId ?? "");
+
+  const handleSave = () => {
+    if (!name.trim()) return;
+    onSave({
+      name: name.trim(),
+      name_id: showNameId ? (nameId.trim() || undefined) : undefined,
+    });
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-      <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 w-full max-w-sm shadow-2xl border border-slate-200/80 dark:border-slate-800 transition-all animate-in fade-in zoom-in-95 duration-200">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 w-full max-w-md shadow-2xl border border-slate-200/80 dark:border-slate-800 transition-all animate-in fade-in zoom-in-95 duration-200">
         <div className="flex items-center gap-2.5 mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
           <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
             <Database size={18} />
@@ -30,19 +40,46 @@ function CrudModal({
           <h3 className="font-extrabold text-slate-900 dark:text-white text-base">{title}</h3>
         </div>
 
+        {/* Input 1: English */}
         <div className="mb-4">
-          <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-            {t.dash_admin_master_modal_label || "Nama Referensi"}
-          </label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+              {showNameId ? "Nama Referensi (English)" : (t.dash_admin_master_modal_label || "Nama Referensi")}
+            </label>
+            <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 px-1.5 py-0.5 rounded border border-rose-200/80 dark:border-rose-900/60 uppercase tracking-wider">
+              Wajib
+            </span>
+          </div>
           <input
             autoFocus
             value={name}
             onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && name.trim() && onSave(name)}
-            placeholder={t.dash_admin_master_modal_placeholder || "Masukkan nama data referensi..."}
+            onKeyDown={(e) => e.key === "Enter" && !showNameId && handleSave()}
+            placeholder={showNameId ? "Contoh: Deep Sea Mining, Oil, and Gas" : (t.dash_admin_master_modal_placeholder || "Masukkan nama data referensi...")}
             className="w-full border border-slate-200/80 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs font-medium text-slate-800 dark:text-white bg-slate-50/50 dark:bg-slate-800/80 focus:bg-white focus:border-blue-500 focus:outline-hidden transition-all shadow-2xs"
           />
         </div>
+
+        {/* Input 2: Indonesia (Khusus Bidang Perusahaan) */}
+        {showNameId && (
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                Nama Referensi (Indonesia)
+              </label>
+              <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-1.5 py-0.5 rounded border border-blue-200/80 dark:border-blue-900/60 uppercase tracking-wider">
+                Wajib / Disarankan
+              </span>
+            </div>
+            <input
+              value={nameId}
+              onChange={(e) => setNameId(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSave()}
+              placeholder="Contoh: Pertambangan, Minyak, dan Gas Laut Dalam"
+              className="w-full border border-slate-200/80 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs font-medium text-slate-800 dark:text-white bg-slate-50/50 dark:bg-slate-800/80 focus:bg-white focus:border-blue-500 focus:outline-hidden transition-all shadow-2xs"
+            />
+          </div>
+        )}
 
         <div className="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
           <button
@@ -53,7 +90,7 @@ function CrudModal({
             {t.dash_admin_master_modal_cancel || "Batal"}
           </button>
           <button
-            onClick={() => onSave(name)}
+            onClick={handleSave}
             disabled={isPending || !name.trim()}
             type="button"
             className="flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-600/15 disabled:opacity-60 transition-all cursor-pointer"
@@ -88,8 +125,10 @@ export default function AdminMasterPage() {
   const queryKey = tab === "company-fields" ? "master-cf" : "master-countries";
 
   const saveMutation = useMutation({
-    mutationFn: ({ id, name }: { id?: number; name: string }) =>
-      id ? api.put(`${endpoint}/${id}`, { name }) : api.post(endpoint, { name }),
+    mutationFn: ({ id, name, name_id }: { id?: number; name: string; name_id?: string }) => {
+      const payload = tab === "company-fields" ? { name, name_id } : { name };
+      return id ? api.put(`${endpoint}/${id}`, payload) : api.post(endpoint, payload);
+    },
     onSuccess: () => {
       toast.success(modal?.mode === "add" ? (t.dash_admin_master_toast_add_success || "Data master berhasil ditambahkan!") : (t.dash_admin_master_toast_edit_success || "Data master berhasil diperbarui!"));
       qc.invalidateQueries({ queryKey: [queryKey] });
@@ -194,14 +233,24 @@ export default function AdminMasterPage() {
                 className="flex items-center justify-between px-6 py-4 hover:bg-blue-50/40 dark:hover:bg-slate-800/50 transition-colors duration-150"
               >
                 <div className="flex items-center gap-3">
-                  <span className="w-6 h-6 rounded-md bg-slate-100 dark:bg-slate-800 font-mono text-xs text-slate-500 dark:text-slate-400 flex items-center justify-center font-bold">
+                  <span className="w-6 h-6 rounded-md bg-slate-100 dark:bg-slate-800 font-mono text-xs text-slate-500 dark:text-slate-400 flex items-center justify-center font-bold shrink-0">
                     {idx + 1}
                   </span>
                   <div>
                     <span className="font-bold text-slate-800 dark:text-white block text-sm">
                       {row.name}
                     </span>
-                    <span className="text-[11px] font-mono text-slate-400">
+                    {tab === "company-fields" && row.name_id && (
+                      <div className="mt-0.5 flex items-center gap-1.5">
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-900/40">
+                          ID
+                        </span>
+                        <span className="text-xs text-slate-600 dark:text-slate-300 font-medium">
+                          {row.name_id}
+                        </span>
+                      </div>
+                    )}
+                    <span className="text-[11px] font-mono text-slate-400 block mt-0.5">
                       System ID: #{row.id}
                     </span>
                   </div>
@@ -239,10 +288,12 @@ export default function AdminMasterPage() {
               ? (tab === "company-fields" ? (t.dash_admin_master_modal_add_sector || "Tambah Referensi (Bidang Perusahaan)") : (t.dash_admin_master_modal_add_country || "Tambah Referensi (Negara)"))
               : (tab === "company-fields" ? (t.dash_admin_master_modal_edit_sector || "Edit Referensi (Bidang Perusahaan)") : (t.dash_admin_master_modal_edit_country || "Edit Referensi (Negara)"))
           }
-          initial={modal.item?.name}
+          initialName={modal.item?.name}
+          initialNameId={modal.item?.name_id ?? ""}
+          showNameId={tab === "company-fields"}
           isPending={saveMutation.isPending}
           onClose={() => setModal(null)}
-          onSave={(name) => saveMutation.mutate({ id: modal.item?.id, name })}
+          onSave={({ name, name_id }) => saveMutation.mutate({ id: modal.item?.id, name, name_id })}
         />
       )}
     </AppLayout>

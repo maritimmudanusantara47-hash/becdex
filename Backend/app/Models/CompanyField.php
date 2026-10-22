@@ -5,6 +5,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CompanyField extends Model
 {
-    protected $fillable = ['name'];
+    protected $fillable = ['name', 'name_id'];
     public function companyDetails(): HasMany { return $this->hasMany(CompanyDetail::class); }
 }
