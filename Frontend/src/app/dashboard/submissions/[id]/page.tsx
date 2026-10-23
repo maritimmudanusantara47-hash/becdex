@@ -181,14 +181,10 @@ export default function SubmissionDetailPage() {
               </div>
               <div>
                 <h4 className="font-extrabold text-base md:text-lg tracking-tight text-amber-950 dark:text-amber-100">
-                  {submission.is_post_survey_revision
-                    ? "Revisi Diperlukan Pasca Survei Lapangan"
-                    : (t.dash_sub_rev_title || "Pengajuan Memerlukan Perbaikan / Revisi Dokumen (Kesempatan Ke-2)")}
+                  {t.dash_sub_rev_title || "Pengajuan Memerlukan Perbaikan / Revisi Dokumen"}
                 </h4>
                 <p className="text-xs font-semibold text-amber-800 dark:text-amber-300 mt-0.5">
-                  {submission.is_post_survey_revision
-                    ? "Berdasarkan hasil survei lapangan, terdapat dokumen yang perlu diperbaiki. Anda diwajibkan membayar biaya survei ulang sebelum revisi dapat diproses."
-                    : "Tim verifikator auditor BECdex mengembalikan pengajuan Anda untuk dilakukan perbaikan berkas/jawaban."}
+                  {"Tim verifikator auditor BECdex mengembalikan pengajuan Anda untuk dilakukan perbaikan berkas/jawaban. Anda dapat memperbarui dokumen tanpa biaya tambahan."}
                 </p>
               </div>
             </div>
@@ -196,7 +192,7 @@ export default function SubmissionDetailPage() {
               onClick={() => setActiveTab(submission.requires_payment ? "score" : "assessment")}
               className="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs shadow-md transition-all shrink-0 cursor-pointer flex items-center gap-2"
             >
-              <span>{submission.requires_payment ? "Lanjut ke Pembayaran Survei" : "Buka Form Assessment & Perbaiki"}</span> &rarr;
+              <span>{submission.requires_payment ? "Lanjut ke Pembayaran" : "Buka Form Assessment & Perbaiki"}</span> &rarr;
             </button>
           </div>
 

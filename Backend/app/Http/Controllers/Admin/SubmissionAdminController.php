@@ -437,23 +437,9 @@ class SubmissionAdminController extends Controller
         }
 
         $fromSurvey = $submission->submission_status_id === 7;
-
-        // Pastikan ada setidaknya satu indikator yang ditandai revisi (per_indicator_status_id = 5 = Declined)
-        $hasRevision = SubmissionPerIndicator::where('submission_id', $submission->id)
-            ->where('per_indicator_status_id', 5)
-            ->exists();
-
-        if (!$hasRevision) {
-            return response()->json([
-                'message' => 'Tidak ada indikator yang ditandai untuk revisi. Silakan tandai minimal satu indikator sebagai "Revisi" terlebih dahulu.',
-            ], 422);
-        }
-
-        if ($submission->revision_count >= 1) {
-            return response()->json([
-                'message' => 'Batas revisi maksimal 1 kali telah habis. Silakan Tolak Permanen pengajuan ini.'
-            ], 422);
-        }
+        // Menandai indikator revisi dibuat opsional agar Admin bisa langsung mengembalikan pengajuan 
+        // jika tujuannya hanya membuka kesempatan user untuk menambah dokumen bukti.
+        // Batasan revisi dilepas agar pengajuan dapat direvisi berkali-kali tanpa batas
 
         $submission->update([
             'submission_status_id'  => 4, // Document Submission (2nd/3rd Attempt)

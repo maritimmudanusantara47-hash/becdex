@@ -784,7 +784,7 @@ export function AssessmentTab({ submission, onUpdate, onGoToScore }: Props) {
                                   canEdit &&
                                   !(
                                     submission.status.id === 4 &&
-                                    (pi.status?.id === 4 || pi.status?.id === 6)
+                                    pi.status?.id === 6
                                   );
 
                                 return (

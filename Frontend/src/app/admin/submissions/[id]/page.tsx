@@ -365,20 +365,6 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
         </div>
       </div>
 
-      {/* Warning Revision Limit — only show during active verification/survey */}
-      {[2, 3, 4, 6, 7].includes(Number(submission.status.id)) && (submission.revision_count ?? 0) >= 1 ? (
-        <div className="mb-6 flex items-start gap-3.5 bg-rose-50/80 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800/80 rounded-2xl p-5 shadow-2xs">
-          <XCircle size={22} className="text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm font-extrabold text-rose-900 dark:text-rose-200">
-              Batas Revisi Habis (Maksimal 1x {Number(submission.status.id) === 7 ? 'Pasca Survei' : 'Tahap Verifikasi'})
-            </p>
-            <p className="text-xs text-rose-700 dark:text-rose-300 mt-1 leading-relaxed font-medium">
-              Pengajuan ini telah mencapai batas maksimal revisi pada tahap ini. Jika masih terdapat dokumen yang tidak sesuai, Anda harus menolak pengajuan ini secara permanen.
-            </p>
-          </div>
-        </div>
-      ) : null}
 
       {/* Info Uploaded Indicators Below 35 */}
       {[2, 3, 4, 6, 7].includes(Number(submission.status.id)) && uploadedIndicatorsCount < 35 && (
@@ -508,27 +494,24 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
                         <span className="hidden sm:inline">Luluskan</span>
                       </button>
                     )}
-                    {(submission.revision_count ?? 0) >= 1 ? (
-                      <button
-                        onClick={() => setShowRejectModal(true)}
-                        disabled={unverifiedCount > 0}
-                        className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-rose-600/80 bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 hover:bg-rose-600 hover:text-white font-bold text-[10px] sm:text-xs transition-all cursor-pointer disabled:opacity-50"
-                        title={unverifiedCount > 0 ? "Selesaikan penilaian semua indikator terlebih dahulu" : "Tolak Permanen (Batas Revisi Habis)"}
-                      >
-                        <XCircle size={14} />
-                        <span className="hidden sm:inline">Tolak Permanen</span>
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => setShowReturnModal(true)}
-                        disabled={returnMutation.isPending || unverifiedCount > 0}
-                        className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-[#f79205] bg-[#f79205] hover:bg-[#e08304] hover:border-[#e08304] text-slate-950 dark:bg-[#f79205] dark:text-slate-950 dark:hover:bg-[#e08304] font-black text-[10px] sm:text-xs shadow-xs transition-all cursor-pointer disabled:opacity-50"
-                        title={unverifiedCount > 0 ? "Selesaikan penilaian semua indikator terlebih dahulu" : "Kembalikan untuk Revisi"}
-                      >
-                        <AlertTriangle size={14} className="stroke-[2.5]" />
-                        <span className="hidden sm:inline">{t.admin_sub_badge_revision || "Revisi"}</span>
-                      </button>
-                    )}
+                    <button
+                      onClick={() => setShowReturnModal(true)}
+                      disabled={returnMutation.isPending || unverifiedCount > 0}
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-[#f79205] bg-[#f79205] hover:bg-[#e08304] hover:border-[#e08304] text-slate-950 dark:bg-[#f79205] dark:text-slate-950 dark:hover:bg-[#e08304] font-black text-[10px] sm:text-xs shadow-xs transition-all cursor-pointer disabled:opacity-50"
+                      title={unverifiedCount > 0 ? "Selesaikan penilaian semua indikator terlebih dahulu" : "Kembalikan untuk Revisi"}
+                    >
+                      <AlertTriangle size={14} className="stroke-[2.5]" />
+                      <span className="hidden sm:inline">{t.admin_sub_badge_revision || "Revisi"}</span>
+                    </button>
+                    <button
+                      onClick={() => setShowRejectModal(true)}
+                      disabled={unverifiedCount > 0}
+                      className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-rose-600/80 bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 hover:bg-rose-600 hover:text-white font-bold text-[10px] sm:text-xs transition-all cursor-pointer disabled:opacity-50"
+                      title={unverifiedCount > 0 ? "Selesaikan penilaian semua indikator terlebih dahulu" : "Tolak Permanen"}
+                    >
+                      <XCircle size={14} />
+                      <span className="hidden sm:inline">Tolak Permanen</span>
+                    </button>
                   </div>
                 )}
                 {Number(submission.status.id) === 8 && (
@@ -551,27 +534,24 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
                         <span>{t.dash_admin_sub_id_btn_cert || "Terbitkan Sertifikat"}</span>
                       </button>
                     )}
-                    {(submission.revision_count ?? 0) >= 1 ? (
-                      <button
-                        onClick={() => setShowRejectModal(true)}
-                        disabled={unverifiedCount > 0}
-                        className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-rose-600/80 bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 hover:bg-rose-600 hover:text-white font-bold text-[10px] sm:text-xs transition-all cursor-pointer disabled:opacity-50"
-                        title={unverifiedCount > 0 ? "Selesaikan penilaian semua indikator terlebih dahulu" : "Tolak Permanen (Batas Revisi Habis)"}
-                      >
-                        <XCircle size={14} />
-                        <span className="hidden sm:inline">Tolak Permanen</span>
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => setShowReturnModal(true)}
-                        disabled={returnMutation.isPending || unverifiedCount > 0}
-                        className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-[#f79205] bg-[#f79205] hover:bg-[#e08304] hover:border-[#e08304] text-slate-950 dark:bg-[#f79205] dark:text-slate-950 dark:hover:bg-[#e08304] font-black text-[10px] sm:text-xs shadow-xs transition-all cursor-pointer disabled:opacity-50"
-                        title={unverifiedCount > 0 ? "Selesaikan penilaian semua indikator terlebih dahulu" : "Kembalikan untuk Revisi Pasca Survei"}
-                      >
-                        <AlertTriangle size={14} className="stroke-[2.5]" />
-                        <span className="hidden sm:inline">{t.admin_sub_badge_revision || "Revisi"}</span>
-                      </button>
-                    )}
+                    <button
+                      onClick={() => setShowReturnModal(true)}
+                      disabled={returnMutation.isPending || unverifiedCount > 0}
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-[#f79205] bg-[#f79205] hover:bg-[#e08304] hover:border-[#e08304] text-slate-950 dark:bg-[#f79205] dark:text-slate-950 dark:hover:bg-[#e08304] font-black text-[10px] sm:text-xs shadow-xs transition-all cursor-pointer disabled:opacity-50"
+                      title={unverifiedCount > 0 ? "Selesaikan penilaian semua indikator terlebih dahulu" : "Kembalikan untuk Revisi Pasca Survei"}
+                    >
+                      <AlertTriangle size={14} className="stroke-[2.5]" />
+                      <span className="hidden sm:inline">{t.admin_sub_badge_revision || "Revisi"}</span>
+                    </button>
+                    <button
+                      onClick={() => setShowRejectModal(true)}
+                      disabled={unverifiedCount > 0}
+                      className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-rose-600/80 bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 hover:bg-rose-600 hover:text-white font-bold text-[10px] sm:text-xs transition-all cursor-pointer disabled:opacity-50"
+                      title={unverifiedCount > 0 ? "Selesaikan penilaian semua indikator terlebih dahulu" : "Tolak Permanen"}
+                    >
+                      <XCircle size={14} />
+                      <span className="hidden sm:inline">Tolak Permanen</span>
+                    </button>
                   </div>
                 )}
               </>
@@ -786,55 +766,52 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
                             <CheckCircle2 size={13} />
                             <span>{t.dash_admin_sub_id_btn_valid || "Valid"}</span>
                           </button>
-                          {(submission.revision_count === 0) ? (
-                            <button
-                              onClick={() =>
-                                indicatorMutation.mutate({
-                                  indicatorId: pi.indicator_id,
-                                  statusId: 5,
-                                  valid_values: pi.indicator.questions.map((q: { id: number }) => ({
-                                    question_id: q.id,
-                                    valid_value: 0,
-                                  })),
-                                })
-                              }
-                              disabled={isAssessmentDisabled}
-                              title={t.dash_admin_sub_id_tooltip_revise || "Minta perusahaan merevisi dokumen"}
-                              className={cn(
-                                "inline-flex items-center gap-1 px-2.5 py-1 rounded-xl font-bold text-xs transition-all border cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed",
-                                pi.status.id === 5
-                                  ? "bg-amber-600 text-white border-amber-600 shadow-md shadow-amber-600/20"
-                                  : "bg-amber-50 text-amber-700 border-amber-200/80 hover:bg-amber-600 hover:text-white dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800"
-                              )}
-                            >
-                              <XCircle size={13} />
-                              <span>{t.dash_admin_sub_id_btn_revise || "Revisi"}</span>
-                            </button>
-                          ) : (
-                            <button
-                              onClick={() =>
-                                indicatorMutation.mutate({
-                                  indicatorId: pi.indicator_id,
-                                  statusId: 6,
-                                  valid_values: pi.indicator.questions.map((q: { id: number }) => ({
-                                    question_id: q.id,
-                                    valid_value: 0,
-                                  })),
-                                })
-                              }
-                              disabled={isAssessmentDisabled}
-                              title="Tolak permanen / Gagal (Invalid)"
-                              className={cn(
-                                "inline-flex items-center gap-1 px-2.5 py-1 rounded-xl font-bold text-xs transition-all border cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed",
-                                pi.status.id === 6
-                                  ? "bg-rose-600 text-white border-rose-600 shadow-md shadow-rose-600/20"
-                                  : "bg-rose-50 text-rose-700 border-rose-200/80 hover:bg-rose-600 hover:text-white dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800"
-                              )}
-                            >
-                              <XCircle size={13} />
-                              <span>Invalid</span>
-                            </button>
-                          )}
+                          <button
+                            onClick={() =>
+                              indicatorMutation.mutate({
+                                indicatorId: pi.indicator_id,
+                                statusId: 5,
+                                valid_values: pi.indicator.questions.map((q: { id: number }) => ({
+                                  question_id: q.id,
+                                  valid_value: 0,
+                                })),
+                              })
+                            }
+                            disabled={isAssessmentDisabled}
+                            title={t.dash_admin_sub_id_tooltip_revise || "Minta perusahaan merevisi dokumen"}
+                            className={cn(
+                              "inline-flex items-center gap-1 px-2.5 py-1 rounded-xl font-bold text-xs transition-all border cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed",
+                              pi.status.id === 5
+                                ? "bg-amber-600 text-white border-amber-600 shadow-md shadow-amber-600/20"
+                                : "bg-amber-50 text-amber-700 border-amber-200/80 hover:bg-amber-600 hover:text-white dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800"
+                            )}
+                          >
+                            <XCircle size={13} />
+                            <span>{t.dash_admin_sub_id_btn_revise || "Revisi"}</span>
+                          </button>
+                          <button
+                            onClick={() =>
+                              indicatorMutation.mutate({
+                                indicatorId: pi.indicator_id,
+                                statusId: 6,
+                                valid_values: pi.indicator.questions.map((q: { id: number }) => ({
+                                  question_id: q.id,
+                                  valid_value: 0,
+                                })),
+                              })
+                            }
+                            disabled={isAssessmentDisabled}
+                            title="Tolak permanen / Gagal (Invalid)"
+                            className={cn(
+                              "inline-flex items-center gap-1 px-2.5 py-1 rounded-xl font-bold text-xs transition-all border cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed",
+                              pi.status.id === 6
+                                ? "bg-rose-600 text-white border-rose-600 shadow-md shadow-rose-600/20"
+                                : "bg-rose-50 text-rose-700 border-rose-200/80 hover:bg-rose-600 hover:text-white dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800"
+                            )}
+                          >
+                            <XCircle size={13} />
+                            <span>Invalid</span>
+                          </button>
                         </div>
                       </div>
 
