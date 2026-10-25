@@ -130,6 +130,32 @@ class User extends Authenticatable implements MustVerifyEmail
     // ─── Profile Completion Helpers ───────────────────────────
 
     /**
+     * Label representasi ramah pengguna untuk masing-masing field profil.
+     *
+     * @return array<string, string>
+     */
+    public static function profileFieldLabels(): array
+    {
+        return [
+            'name'                 => 'Nama Resmi Perusahaan',
+            'email_verified'       => 'Verifikasi Email Akun',
+            'legal_documents'      => 'Dokumen Legalitas (NIB / Akta)',
+            'organizational_chart' => 'Bagan Struktur Organisasi',
+            'image'                => 'Logo Perusahaan / Foto Profil',
+            'company_phone'        => 'Nomor Telepon Perusahaan',
+            'company_country'      => 'Negara Domisili Perusahaan',
+            'company_field_id'     => 'Bidang Usaha Perusahaan',
+            'address'              => 'Alamat Lengkap Perusahaan',
+            'description'          => 'Deskripsi Singkat Perusahaan',
+            'brand_name'           => 'Nama Brand / Komersial',
+            'pic_name'             => 'Nama Lengkap PIC',
+            'pic_position'         => 'Jabatan / Posisi PIC',
+            'pic_email'            => 'Email PIC',
+            'pic_phone'            => 'Nomor Telepon / WhatsApp PIC',
+        ];
+    }
+
+    /**
      * Mengembalikan daftar field wajib yang masih kosong/belum diisi.
      *
      * @return array<string>
@@ -163,12 +189,11 @@ class User extends Authenticatable implements MustVerifyEmail
         $detail = $this->companyDetail;
 
         if (!$detail) {
-            // Jika companyDetail sama sekali belum ada, masukkan semua field-nya
+            // Jika companyDetail sama sekali belum ada, masukkan semua field detail
             return array_merge($missing, [
                 'company_phone',
                 'company_country',
                 'company_field_id',
-                'becdex_category_id',
                 'address',
                 'description',
                 'brand_name',
@@ -192,10 +217,6 @@ class User extends Authenticatable implements MustVerifyEmail
             $missing[] = 'company_field_id';
         }
 
-        if (empty($detail->becdex_category_id)) {
-            $missing[] = 'becdex_category_id';
-        }
-
         if (empty(trim((string) $detail->address))) {
             $missing[] = 'address';
         }
@@ -204,7 +225,9 @@ class User extends Authenticatable implements MustVerifyEmail
             $missing[] = 'description';
         }
 
-        if (empty(trim((string) $detail->brand_name))) {
+        // Brand name: valid jika terisi, atau jika kosong otomatis fallback ke nama perusahaan (name)
+        $brandName = trim((string) ($detail->brand_name ?: $this->name));
+        if (empty($brandName)) {
             $missing[] = 'brand_name';
         }
 
@@ -229,6 +252,24 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Mengembalikan daftar field yang belum diisi beserta label yang ramah pengguna.
+     *
+     * @return array<string, string>
+     */
+    public function getMissingProfileFieldLabels(): array
+    {
+        $allLabels = static::profileFieldLabels();
+        $missing = $this->getMissingProfileFields();
+
+        $result = [];
+        foreach ($missing as $field) {
+            $result[$field] = $allLabels[$field] ?? ucwords(str_replace('_', ' ', $field));
+        }
+
+        return $result;
+    }
+
+    /**
      * Cek apakah seluruh profil sudah lengkap 100%.
      */
     public function isProfileComplete(): bool
@@ -241,7 +282,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function getProfileCompletionPercentage(): int
     {
-        $totalRequiredFields = 16;
+        $totalRequiredFields = 15;
         $missingCount = count($this->getMissingProfileFields());
 
         $completed = max(0, $totalRequiredFields - $missingCount);

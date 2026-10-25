@@ -26,4 +26,21 @@ class CompanyDetailFactory extends Factory
             'description'      => fake()->paragraph(),
         ];
     }
+
+    /** Detail with 100% completed fields */
+    public function complete(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'company_phone'    => '081234567890',
+            'company_country'  => 'ID',
+            'company_field_id' => 1,
+            'brand_name'       => fake()->company(),
+            'address'          => fake()->address(),
+            'description'      => fake()->paragraph(),
+            'pic_name'         => fake()->name(),
+            'pic_position'     => 'General Manager',
+            'pic_email'        => fake()->safeEmail(),
+            'pic_phone'        => '081298765432',
+        ]);
+    }
 }

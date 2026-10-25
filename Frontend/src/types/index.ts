@@ -31,6 +31,7 @@ export interface User {
   is_profile_complete?: boolean;
   profile_completion_percentage?: number;
   missing_fields?: string[];
+  missing_field_labels?: Record<string, string>;
   email_verified_at: string | null;
   created_at: string;
 }

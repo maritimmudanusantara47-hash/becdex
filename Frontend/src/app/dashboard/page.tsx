@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -7,7 +8,7 @@ import Link from "next/link";
 import { AppLayout } from "@/components/layouts/AppLayout";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { StatCard } from "@/components/ui/StatCard";
-import { LoadingSpinner, EmptyState } from "@/components/ui/index";
+import { LoadingSpinner, EmptyState, ProfileIncompleteModal } from "@/components/ui/index";
 import api from "@/lib/api";
 import { formatDate, cn } from "@/lib/utils";
 import { Submission, PaginatedResponse, User } from "@/types";
@@ -27,7 +28,17 @@ import {
   AlertTriangle,
 } from "lucide-react";
 
-type ApiError = { response?: { data?: { message?: string } } };
+type ApiError = {
+  response?: {
+    status?: number;
+    data?: {
+      message?: string;
+      completion_percentage?: number;
+      missing_fields?: string[];
+      missing_field_labels?: Record<string, string>;
+    };
+  };
+};
 
 function useSubmissions() {
   return useQuery<PaginatedResponse<Submission>>({
@@ -44,13 +55,20 @@ export default function DashboardPage() {
   const queryClient = useQueryClient();
   const { data, isLoading, error } = useSubmissions();
   const { t } = useTranslation();
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [errorModalData, setErrorModalData] = useState<{
+    percentage?: number;
+    missingFields?: string[];
+    missingFieldLabels?: Record<string, string>;
+  } | null>(null);
+
   const { data: user } = useQuery<User>({
     queryKey: ["auth-me"],
     queryFn: async () => {
-    const res = await api.get("/auth/me");
-    return res.data.data;
-  },
-});
+      const res = await api.get("/auth/me");
+      return res.data.data;
+    },
+  });
 
   const createMutation = useMutation({
     mutationFn: async () => {
@@ -63,6 +81,15 @@ export default function DashboardPage() {
       router.push(`/dashboard/submissions/${newSubmission.id}`);
     },
     onError: (error: ApiError) => {
+      if (error.response?.status === 422 && error.response?.data?.missing_fields) {
+        setErrorModalData({
+          percentage: error.response.data.completion_percentage,
+          missingFields: error.response.data.missing_fields,
+          missingFieldLabels: error.response.data.missing_field_labels,
+        });
+        setIsProfileModalOpen(true);
+        return;
+      }
       toast.error(error.response?.data?.message || t.dash_create_error || "Gagal membuat submission.");
     },
   });
@@ -108,10 +135,10 @@ export default function DashboardPage() {
             </div>
             <div>
               <h4 className="text-sm font-bold text-amber-900 dark:text-amber-200">
-                Profil Perusahaan Belum Lengkap ({user.profile_completion_percentage ?? 0}% Selesai)
+                {t.dash_profile_modal_title || "Profil Perusahaan Belum Lengkap"} ({user.profile_completion_percentage ?? 0}% {t.dash_profile_done || "Selesai"})
               </h4>
               <p className="text-xs text-amber-700 dark:text-amber-300/90 mt-0.5 leading-relaxed">
-                Harap lengkapi seluruh data profil dan kontak PIC sebelum dapat memulai pengajuan penilaian (submission).
+                {t.dash_profile_modal_subtitle || "Harap lengkapi seluruh data profil dan kontak PIC sebelum dapat memulai pengajuan penilaian (submission)."}
               </p>
             </div>
           </div>
@@ -119,7 +146,7 @@ export default function DashboardPage() {
             href="/dashboard/profile"
             className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs transition-all shrink-0 self-end sm:self-center"
           >
-            <span>Lengkapi Profil Sekarang</span>
+            <span>{t.dash_profile_modal_btn_complete || "Lengkapi Profil Sekarang"}</span>
             <ChevronRight size={14} />
           </Link>
         </div>
@@ -149,8 +176,7 @@ export default function DashboardPage() {
           <button
             onClick={() => {
               if (user && user.is_profile_complete === false) {
-                toast.error("Profil perusahaan belum lengkap. Silakan lengkapi profil terlebih dahulu.");
-                router.push("/dashboard/profile");
+                setIsProfileModalOpen(true);
                 return;
               }
               createMutation.mutate();
@@ -342,6 +368,17 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+
+      <ProfileIncompleteModal
+        isOpen={isProfileModalOpen}
+        onClose={() => {
+          setIsProfileModalOpen(false);
+          setErrorModalData(null);
+        }}
+        percentage={errorModalData?.percentage ?? user?.profile_completion_percentage ?? 0}
+        missingFields={errorModalData?.missingFields ?? user?.missing_fields ?? []}
+        missingFieldLabels={errorModalData?.missingFieldLabels ?? user?.missing_field_labels ?? {}}
+      />
     </AppLayout>
   );
 }

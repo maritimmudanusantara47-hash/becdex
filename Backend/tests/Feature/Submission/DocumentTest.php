@@ -125,7 +125,7 @@ class DocumentTest extends TestCase
         ]);
 
         $response->assertStatus(422)
-                 ->assertJsonFragment(['message' => 'Anda telah mencapai batas maksimal 10 dokumen untuk indikator ini.']);
+                 ->assertJsonFragment(['message' => 'Anda telah mencapai batas maksimal 10 dokumen untuk indikator ini pada tahap ini.']);
     }
 
     // ─── B-F4-05 ──────────────────────────────────────────────────────────────

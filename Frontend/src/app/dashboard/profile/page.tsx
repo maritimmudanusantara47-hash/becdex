@@ -242,28 +242,36 @@ export default function ProfilePage() {
           <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1.5">
             {completeness === 100 ? (
               <>
-                <MdCheckCircle className="text-emerald-500 w-3.5 h-3.5" />
+                <MdCheckCircle className="text-emerald-500 w-3.5 h-3.5 shrink-0" />
                 <span>{t.dash_profile_complete_msg || "Seluruh informasi perusahaan, kontak PIC, dan dokumen legal sudah lengkap."}</span>
               </>
             ) : (
-              <span>{(t.dash_profile_incomplete_msg || "Lengkapi {count} data yang masih kosong agar proses verifikasi berjalan lancar.").replace('{count}', String(fields.length - completedCount))}</span>
+              <span>{(t.dash_profile_incomplete_msg || "Lengkapi {count} data yang masih kosong agar proses verifikasi berjalan lancar.").replace('{count}', String(missingFields.length || (fields.length - completedCount)))}</span>
             )}
           </div>
-                    {/* Daftar Field yang Masih Belum Diisi */}
+
+          {/* Daftar Field yang Masih Belum Diisi */}
           {missingFields.length > 0 && (
-            <div className="mt-3 pt-3 border-t border-blue-200/60 dark:border-blue-900/40">
-              <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block mb-1.5">
-                Kolom / Dokumen yang wajib dilengkapi:
+            <div className="mt-3.5 pt-3.5 border-t border-blue-200/60 dark:border-blue-900/40 space-y-2">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 block">
+                {t.dash_profile_modal_required_note || "Kolom / Dokumen yang wajib dilengkapi:"}
               </span>
               <div className="flex flex-wrap gap-1.5">
-                {missingFields.map((field) => (
-                  <span
-                    key={field}
-                    className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200 capitalize"
-                  >
-                    • {field.replace(/_/g, " ")}
-                  </span>
-                ))}
+                {missingFields.map((field) => {
+                  const label =
+                    profile?.missing_field_labels?.[field] ||
+                    field.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+                  return (
+                    <span
+                      key={field}
+                      className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-amber-100/90 text-amber-900 dark:bg-amber-900/50 dark:text-amber-200 border border-amber-200/80 dark:border-amber-800/60 shadow-2xs"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 dark:bg-amber-400 shrink-0" />
+                      <span>{label}</span>
+                    </span>
+                  );
+                })}
               </div>
             </div>
           )}

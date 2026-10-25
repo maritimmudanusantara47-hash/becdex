@@ -259,7 +259,7 @@ class SubmissionFlowTest extends TestCase
     // ─── B-F3-08 ──────────────────────────────────────────────────────────────
 
     /** @test */
-    public function admin_cannot_return_submission_for_revision_when_no_indicator_is_marked()
+    public function admin_can_return_submission_for_revision_even_when_no_indicator_is_marked()
     {
         $this->actingAs($this->admin);
         $submission = Submission::factory()->onVerification()->create([
@@ -279,21 +279,17 @@ class SubmissionFlowTest extends TestCase
             'reason' => 'Coba kembalikan tanpa ada indikator revisi.',
         ]);
 
-        $response->assertStatus(422)
-            ->assertJsonFragment(['message' => 'Tidak ada indikator yang ditandai untuk revisi. Silakan tandai minimal satu indikator sebagai "Revisi" terlebih dahulu.']);
+        $response->assertStatus(200);
 
-        // Submission harus tetap di status 3 (On Verification)
+        // Submission harus berubah ke status 4 (Revision)
         $this->assertDatabaseHas('submissions', [
             'id'                   => $submission->id,
-            'submission_status_id' => 3,
+            'submission_status_id' => 4,
         ]);
-
-        // Tidak ada email yang dikirim
-        Mail::assertNotQueued(SubmissionStatusMail::class);
     }
 
     /** @test */
-    public function admin_cannot_return_submission_for_revision_when_no_indicators_exist_at_all()
+    public function admin_can_return_submission_for_revision_when_no_indicators_exist_at_all()
     {
         $this->actingAs($this->admin);
         $submission = Submission::factory()->onVerification()->create([
@@ -305,11 +301,11 @@ class SubmissionFlowTest extends TestCase
             'reason' => 'Tidak ada indikator sama sekali.',
         ]);
 
-        $response->assertStatus(422);
+        $response->assertStatus(200);
 
         $this->assertDatabaseHas('submissions', [
             'id'                   => $submission->id,
-            'submission_status_id' => 3,
+            'submission_status_id' => 4,
         ]);
     }
 

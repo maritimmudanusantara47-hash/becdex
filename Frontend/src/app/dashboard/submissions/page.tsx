@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AppLayout } from "@/components/layouts/AppLayout";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { LoadingSpinner, EmptyState } from "@/components/ui/index";
+import { LoadingSpinner, EmptyState, ProfileIncompleteModal } from "@/components/ui/index";
 import api from "@/lib/api";
 import { formatDate, cn } from "@/lib/utils";
 import { Submission, PaginatedResponse, User } from "@/types";
@@ -17,6 +17,7 @@ import {
   ChevronRight,
   CheckCircle2,
   AlertCircle,
+  AlertTriangle,
   Search,
   Filter,
   Trash2,
@@ -25,13 +26,29 @@ import {
 import { useState, useMemo } from "react";
 import { useTranslation } from "@/store/lang";
 
-type ApiError = { response?: { data?: { message?: string } } };
+type ApiError = {
+  response?: {
+    status?: number;
+    data?: {
+      message?: string;
+      completion_percentage?: number;
+      missing_fields?: string[];
+      missing_field_labels?: Record<string, string>;
+    };
+  };
+};
 
 export default function SubmissionsListPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [errorModalData, setErrorModalData] = useState<{
+    percentage?: number;
+    missingFields?: string[];
+    missingFieldLabels?: Record<string, string>;
+  } | null>(null);
   const { t } = useTranslation();
 
   const { data, isLoading, error } = useQuery<PaginatedResponse<Submission>>({
@@ -57,11 +74,20 @@ export default function SubmissionsListPage() {
     },
     onSuccess: (newSubmission) => {
       queryClient.invalidateQueries({ queryKey: ["submissions"] });
-      toast.success("Submission baru berhasil dibuat! Silakan isi penilaian assessment.");
+      toast.success(t.dash_create_success || "Submission baru berhasil dibuat! Silakan isi penilaian assessment.");
       router.push(`/dashboard/submissions/${newSubmission.id}`);
     },
     onError: (error: ApiError) => {
-      toast.error(error.response?.data?.message || "Gagal membuat submission.");
+      if (error.response?.status === 422 && error.response?.data?.missing_fields) {
+        setErrorModalData({
+          percentage: error.response.data.completion_percentage,
+          missingFields: error.response.data.missing_fields,
+          missingFieldLabels: error.response.data.missing_field_labels,
+        });
+        setIsProfileModalOpen(true);
+        return;
+      }
+      toast.error(error.response?.data?.message || t.dash_create_error || "Gagal membuat submission.");
     },
   });
 
@@ -116,6 +142,32 @@ export default function SubmissionsListPage() {
   return (
     <AppLayout title={t.dash_sub_title || "Daftar Submission"}>
       <div className="space-y-6">
+        {/* Warning Banner Jika Profil Belum Lengkap */}
+        {user && user.is_profile_complete === false && (
+          <div className="rounded-2xl border border-amber-300 bg-amber-50 dark:border-amber-700/50 dark:bg-amber-950/40 p-4 md:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
+            <div className="flex items-start gap-3.5">
+              <div className="p-2.5 rounded-xl bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 shrink-0 mt-0.5 sm:mt-0">
+                <AlertTriangle size={20} />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-amber-900 dark:text-amber-200">
+                  {t.dash_profile_modal_title || "Profil Perusahaan Belum Lengkap"} ({user.profile_completion_percentage ?? 0}% {t.dash_profile_done || "Selesai"})
+                </h4>
+                <p className="text-xs text-amber-700 dark:text-amber-300/90 mt-0.5 leading-relaxed">
+                  {t.dash_profile_modal_subtitle || "Harap lengkapi seluruh data profil dan kontak PIC sebelum dapat memulai pengajuan penilaian (submission)."}
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/dashboard/profile"
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-xs transition-all shrink-0 self-end sm:self-center"
+            >
+              <span>{t.dash_profile_modal_btn_complete || "Lengkapi Profil Sekarang"}</span>
+              <ChevronRight size={14} />
+            </Link>
+          </div>
+        )}
+
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -130,8 +182,7 @@ export default function SubmissionsListPage() {
           <button
             onClick={() => {
               if (user && user.is_profile_complete === false) {
-                toast.error("Profil perusahaan belum lengkap. Silakan lengkapi profil terlebih dahulu.");
-                router.push("/dashboard/profile");
+                setIsProfileModalOpen(true);
                 return;
               }
               createMutation.mutate();
@@ -305,6 +356,17 @@ export default function SubmissionsListPage() {
           )}
         </div>
       </div>
+
+      <ProfileIncompleteModal
+        isOpen={isProfileModalOpen}
+        onClose={() => {
+          setIsProfileModalOpen(false);
+          setErrorModalData(null);
+        }}
+        percentage={errorModalData?.percentage ?? user?.profile_completion_percentage ?? 0}
+        missingFields={errorModalData?.missingFields ?? user?.missing_fields ?? []}
+        missingFieldLabels={errorModalData?.missingFieldLabels ?? user?.missing_field_labels ?? {}}
+      />
     </AppLayout>
   );
 }
