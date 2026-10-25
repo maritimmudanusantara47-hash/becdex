@@ -66,3 +66,5 @@ export function EmptyState({
     </div>
   );
 }
+
+export { default as ProfileIncompleteModal } from "./ProfileIncompleteModal";
