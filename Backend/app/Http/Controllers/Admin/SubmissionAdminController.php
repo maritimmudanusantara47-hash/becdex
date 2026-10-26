@@ -257,10 +257,10 @@ class SubmissionAdminController extends Controller
     {
         $submission = Submission::with(['user.companyDetail'])->findOrFail($id);
 
-        // Bisa diterbitkan dari Status 7 (selesai survei) ATAU dari Status 3 (sudah direvisi paska survei)
+        // Bisa diterbitkan dari Status 7 (selesai survei) ATAU dari Status 3 / 4 (sudah direvisi pasca survei)
         $hasSurvey = $submission->survey()->exists();
         
-        if ($submission->submission_status_id != 7 && !($submission->submission_status_id == 3 && $hasSurvey)) {
+        if ($submission->submission_status_id != 7 && !(in_array($submission->submission_status_id, [3, 4]) && $hasSurvey)) {
             return response()->json([
                 'message' => 'Sertifikat hanya dapat diterbitkan setelah tahapan survei lapangan selesai (Status 7) atau jika direvisi pasca survei.'
             ], 422);
