@@ -26,6 +26,7 @@ const id = {
   cert_country: "Negara Domisili",
   cert_website: "Website Resmi",
   cert_address: "Alamat Kantor Terdaftar",
+  cert_profile_desc: "Deskripsi Profil",
   cert_score_overview: "Skor Validasi & Kepatuhan Keberlanjutan",
   cert_spider_chart: "Analisis Skor per Aspek (Radar Chart)",
   cert_back_to_catalog: "Kembali ke Direktori Perusahaan",

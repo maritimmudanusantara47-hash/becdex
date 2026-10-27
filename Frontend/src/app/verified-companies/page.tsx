@@ -7,7 +7,7 @@ import Link from "next/link";
 import { PublicHeader } from "@/components/layouts/PublicHeader";
 import { PublicFooter } from "@/components/layouts/PublicFooter";
 import { LoadingSpinner } from "@/components/ui/index";
-import { MapPin, FileText, Globe, CheckCircle2, Search, ChevronLeft, ChevronRight, ArrowUpRight } from "lucide-react";
+import { MapPin, FileText, Globe, CheckCircle2, Search, ChevronLeft, ChevronRight, ArrowUpRight, Lock } from "lucide-react";
 import { MdCheckCircle } from "react-icons/md";
 import { useTranslation } from "@/store/lang";
 
@@ -15,6 +15,7 @@ import { useTranslation } from "@/store/lang";
 interface Company {
   id: number;
   mmic: string;
+  is_detail_public?: boolean;
   user?: {
     id: number;
     name: string;
@@ -232,14 +233,11 @@ export default function VerifiedCompaniesPage() {
                   const sectorName = cert.user?.company?.company_field?.name || "Marine Sector";
                   const catName = cert.certificate?.name || cert.user?.company?.becdex_category?.name || "Standard";
 
+                  const isClickable = Boolean(cert.is_detail_public);
                   const targetHref = `/verified-companies/${cert.mmic || cert.id}`;
 
-                  return (
-                    <Link
-                      key={cert.id}
-                      href={targetHref}
-                      className="bg-white border border-gray-200 rounded-xl p-5 flex flex-col sm:flex-row items-center sm:items-start gap-5 hover:shadow-lg hover:border-blue-400 hover:-translate-y-0.5 transition-all cursor-pointer group relative block"
-                    >
+                  const cardInner = (
+                    <>
                       {/* Logo */}
                       <div className="w-28 h-28 sm:w-32 sm:h-32 shrink-0 relative flex items-center justify-center bg-gray-50/60 rounded-lg p-2 border border-gray-100 group-hover:border-blue-100 transition-colors">
                         {cert.user?.image ? (
@@ -259,12 +257,18 @@ export default function VerifiedCompaniesPage() {
                       {/* Info */}
                       <div className="flex-1 min-w-0 py-1 text-center sm:text-left">
                         <div className="flex items-start justify-between gap-2 mb-2">
-                          <h3 className="text-[#4154f1] group-hover:text-blue-700 font-bold text-[17px] leading-tight transition-colors">
+                          <h3 className={`font-bold text-[17px] leading-tight transition-colors ${isClickable ? "text-[#4154f1] group-hover:text-blue-700" : "text-slate-800"}`}>
                             {companyName}
                           </h3>
-                          <span className="hidden sm:inline-flex items-center text-xs font-semibold text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity gap-0.5 shrink-0 mt-0.5">
-                            Verify <ArrowUpRight size={14} />
-                          </span>
+                          {isClickable ? (
+                            <span className="hidden sm:inline-flex items-center text-xs font-semibold text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity gap-0.5 shrink-0 mt-0.5">
+                              Verify <ArrowUpRight size={14} />
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-400 bg-slate-50 px-2 py-0.5 rounded border border-slate-200/80 shrink-0 mt-0.5" title="Detail sertifikasi dikunci oleh pengelola">
+                              <Lock size={11} className="text-slate-400" /> Detail Terkunci
+                            </span>
+                          )}
                         </div>
 
                         <div className="space-y-2 inline-flex flex-col items-start mx-auto sm:mx-0 w-full">
@@ -288,7 +292,28 @@ export default function VerifiedCompaniesPage() {
                           </div>
                         </div>
                       </div>
-                    </Link>
+                    </>
+                  );
+
+                  if (isClickable) {
+                    return (
+                      <Link
+                        key={cert.id}
+                        href={targetHref}
+                        className="bg-white border border-gray-200 rounded-xl p-5 flex flex-col sm:flex-row items-center sm:items-start gap-5 hover:shadow-lg hover:border-blue-400 hover:-translate-y-0.5 transition-all cursor-pointer group relative block"
+                      >
+                        {cardInner}
+                      </Link>
+                    );
+                  }
+
+                  return (
+                    <div
+                      key={cert.id}
+                      className="bg-white border border-gray-200 rounded-xl p-5 flex flex-col sm:flex-row items-center sm:items-start gap-5 cursor-default relative group"
+                    >
+                      {cardInner}
+                    </div>
                   );
                 })}
               </div>

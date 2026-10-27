@@ -26,6 +26,7 @@ const en = {
   cert_country: "Country of Domicile",
   cert_website: "Official Website",
   cert_address: "Company Address",
+  cert_profile_desc: "Profile Description",
   cert_score_overview: "Verified Score & Sustainability Compliance",
   cert_spider_chart: "Score Breakdown by Aspect",
   cert_back_to_catalog: "Back to Certified Companies",

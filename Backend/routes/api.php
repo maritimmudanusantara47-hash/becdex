@@ -245,8 +245,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // ── CERTIFICATES (list & view): semua admin bisa lihat ────────────
         Route::get('certificates',               [CertificateAdminController::class, 'index']);
-        Route::get('certificates/{id}',          [CertificateAdminController::class, 'show']);
-        Route::get('certificates/{id}/download', [CertificateAdminController::class, 'download']);
+        Route::get('certificates/{id}',                       [CertificateAdminController::class, 'show']);
+        Route::get('certificates/{id}/download',              [CertificateAdminController::class, 'download']);
+        Route::patch('certificates/{id}/toggle-detail-public', [CertificateAdminController::class, 'toggleDetailPublic']);
 
         // ── SUPER ADMIN ONLY ─────────────────────────────────────────────
         Route::middleware('super_admin')->group(function () {

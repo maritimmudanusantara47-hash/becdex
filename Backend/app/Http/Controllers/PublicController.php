@@ -56,9 +56,10 @@ class PublicController extends Controller
         $paginated = $query->paginate(20);
 
         $items = collect($paginated->items())->map(fn ($cert) => [
-            'id'           => $cert->id,
-            'mmic'         => $cert->mmic,
-            'published_at' => $cert->published_at?->toISOString(),
+            'id'               => $cert->id,
+            'mmic'             => $cert->mmic,
+            'is_detail_public' => (bool) ($cert->is_detail_public ?? false),
+            'published_at'     => $cert->published_at?->toISOString(),
             'valid_until'  => $cert->valid_until?->toISOString(),
             'user'         => $cert->user ? [
                 'id'    => $cert->user->id,
@@ -195,14 +196,22 @@ class PublicController extends Controller
             ], 404);
         }
 
+        if (!$cert->is_detail_public) {
+            return response()->json([
+                'message'   => 'Informasi detail sertifikasi perusahaan ini bersifat privat atau belum dibuka untuk publik.',
+                'is_locked' => true,
+            ], 403);
+        }
+
         $isActive = $cert->valid_until ? $cert->valid_until->gte(now()->startOfDay()) : false;
 
         return response()->json([
             'data' => [
-                'id'           => $cert->id,
-                'serial_id'    => $cert->mmic,
-                'is_active'    => $isActive,
-                'published_at' => $cert->published_at?->format('Y-m-d'),
+                'id'               => $cert->id,
+                'serial_id'        => $cert->mmic,
+                'is_active'        => $isActive,
+                'is_detail_public' => (bool) $cert->is_detail_public,
+                'published_at'     => $cert->published_at?->format('Y-m-d'),
                 'valid_until'  => $cert->valid_until?->format('Y-m-d'),
                 'director'     => $cert->direktur,
                 'category'     => [

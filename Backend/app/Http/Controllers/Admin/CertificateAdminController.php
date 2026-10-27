@@ -57,8 +57,9 @@ class CertificateAdminController extends Controller
             'mmic'         => $c->mmic,
             'direktur'     => $c->direktur,
             'published_at' => $c->published_at?->format('Y-m-d'),
-            'valid_until'  => $c->valid_until?->format('Y-m-d'),
-            'is_approved'  => (bool) $c->is_approved,
+            'valid_until'      => $c->valid_until?->format('Y-m-d'),
+            'is_approved'      => (bool) $c->is_approved,
+            'is_detail_public' => (bool) $c->is_detail_public,
             'user'         => $c->user ? [
                 'id'    => $c->user->id,
                 'name'  => $c->user->name,
@@ -292,4 +293,28 @@ class CertificateAdminController extends Controller
 
         return $pdf->stream($fileName);
     }
+
+    /**
+     * PATCH /api/admin/certificates/{id}/toggle-detail-public
+     * Buka atau kunci halaman detail publik sertifikasi perusahaan
+     */
+    public function toggleDetailPublic(int $id): JsonResponse
+    {
+        $cert = CertificateUser::findOrFail($id);
+        $cert->is_detail_public = !$cert->is_detail_public;
+        $cert->save();
+
+        \Illuminate\Support\Facades\Cache::forget('verified_companies_p1');
+
+        return response()->json([
+            'message' => $cert->is_detail_public
+                ? 'Halaman detail perusahaan berhasil dibuka untuk publik.'
+                : 'Halaman detail perusahaan berhasil dikunci (hanya tampil di katalog).',
+            'data' => [
+                'id'               => $cert->id,
+                'is_detail_public' => (bool) $cert->is_detail_public,
+            ],
+        ]);
+    }
 }
+

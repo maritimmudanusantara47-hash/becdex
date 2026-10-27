@@ -6,7 +6,7 @@ import { AppLayout } from "@/components/layouts/AppLayout";
 import { LoadingSpinner, EmptyState } from "@/components/ui/index";
 import api from "@/lib/api";
 import { formatDate, cn } from "@/lib/utils";
-import { Award, Search, ChevronLeft, ChevronRight, ShieldCheck, Building2, CheckCircle2, Eye } from "lucide-react";
+import { Award, Search, ChevronLeft, ChevronRight, ShieldCheck, Building2, CheckCircle2, Eye, Lock, Globe } from "lucide-react";
 import { useTranslation } from "@/store/lang";
 import Link from "next/link";
 import { useAuthStore } from "@/store/auth";
@@ -19,6 +19,7 @@ interface CertRow {
   published_at: string;
   valid_until: string;
   is_approved: boolean;
+  is_detail_public?: boolean;
   user?: { name?: string; email?: string };
   certificate?: { name?: string };
   submission?: { initial_score?: number; valid_score?: number };
@@ -35,6 +36,13 @@ export default function AdminCertificatesPage() {
 
   const approveMutation = useMutation({
     mutationFn: (certId: number) => api.post(`/admin/certificates/${certId}/approve`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-certificates"] });
+    },
+  });
+
+  const toggleDetailPublicMutation = useMutation({
+    mutationFn: (certId: number) => api.patch(`/admin/certificates/${certId}/toggle-detail-public`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-certificates"] });
     },
@@ -143,6 +151,7 @@ export default function AdminCertificatesPage() {
                     <th className="px-6 py-4">{t.dash_admin_cert_col_published || "Tanggal Diterbitkan"}</th>
                     <th className="px-6 py-4">{t.dash_admin_cert_col_valid_until || "Berlaku Hingga"}</th>
                     <th className="px-6 py-4">{t.dash_admin_cert_col_approval_status || "Status Approval"}</th>
+                    <th className="px-6 py-4 text-center">Detail Publik</th>
                     <th className="px-6 py-4 text-right">{t.dash_admin_cert_col_status || "Status Masa Berlaku"}</th>
                     <th className="px-6 py-4 text-right">{t.dash_admin_cert_col_action || "Aksi"}</th>
                   </tr>
@@ -202,6 +211,33 @@ export default function AdminCertificatesPage() {
                               {t.dash_admin_cert_pending_approval || "Menunggu Persetujuan"}
                             </span>
                           )}
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          {/* Toggle Detail Publik */}
+                          <button
+                            type="button"
+                            onClick={() => toggleDetailPublicMutation.mutate(c.id)}
+                            disabled={toggleDetailPublicMutation.isPending}
+                            className={cn(
+                              "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border transition-colors cursor-pointer",
+                              c.is_detail_public
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800"
+                                : "bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
+                            )}
+                            title={c.is_detail_public ? "Klik untuk mengunci detail ke publik" : "Klik untuk membuka detail ke publik"}
+                          >
+                            {c.is_detail_public ? (
+                              <>
+                                <Globe size={12} className="text-emerald-600" />
+                                <span>Terbuka</span>
+                              </>
+                            ) : (
+                              <>
+                                <Lock size={12} className="text-slate-500" />
+                                <span>Terkunci</span>
+                              </>
+                            )}
+                          </button>
                         </td>
                         <td className="px-6 py-4 text-right">
                           {/* Status Masa Berlaku (Validity Status) */}

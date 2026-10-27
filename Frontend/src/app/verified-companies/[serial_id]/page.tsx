@@ -26,6 +26,7 @@ import {
   ChevronRight,
   TrendingUp,
   ShieldAlert,
+  Lock,
 } from "lucide-react";
 import { MdCheckCircle } from "react-icons/md";
 import {
@@ -86,7 +87,7 @@ export default function VerifiedCompanyDetailPage() {
     staleTime: 1000 * 60 * 30, // 30 minutes
   });
 
-  const { data: companyData, isLoading, isError } = useQuery({
+  const { data: companyData, isLoading, isError, error } = useQuery({
     queryKey: ["public-verified-company", serialId],
     queryFn: async () => {
       const res = await api.get(`/public/verified-companies/${encodeURIComponent(serialId)}`);
@@ -95,6 +96,10 @@ export default function VerifiedCompanyDetailPage() {
     enabled: Boolean(serialId),
     retry: 1,
   });
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const axiosError = error as any;
+  const isLocked = axiosError?.response?.status === 403 || axiosError?.response?.data?.is_locked;
 
   const handleCopySerial = () => {
     if (!companyData?.serial_id) return;
@@ -166,25 +171,49 @@ export default function VerifiedCompanyDetailPage() {
           </div>
         )}
 
-        {/* 404 / Error State */}
+        {/* 404 / Locked / Error State */}
         {!isLoading && (isError || !companyData) && (
           <div className="bg-white border border-slate-200 rounded-2xl p-8 sm:p-12 text-center shadow-2xs max-w-2xl mx-auto my-8">
-            <div className="w-16 h-16 bg-amber-50 text-amber-600 border border-amber-200 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-2xs">
-              <ShieldAlert size={32} />
-            </div>
+            {isLocked ? (
+              <>
+                <div className="w-16 h-16 bg-amber-50 text-amber-600 border border-amber-200 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-2xs">
+                  <Lock size={30} />
+                </div>
 
-            <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight mb-2">
-              {t.cert_not_found_title || "Data Sertifikat Tidak Ditemukan"}
-            </h1>
+                <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight mb-2">
+                  {locale === "id" ? "Informasi Detail Perusahaan Bersifat Privat" : "Company Detail Record is Private"}
+                </h1>
 
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-slate-100 font-mono text-xs font-semibold text-slate-700 mb-4 border border-slate-200">
-              Serial ID: <span className="text-blue-600">{serialId}</span>
-            </div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-slate-100 font-mono text-xs font-semibold text-slate-700 mb-4 border border-slate-200">
+                  Serial ID: <span className="text-amber-700 font-bold">{serialId}</span>
+                </div>
 
-            <p className="text-slate-600 text-sm leading-relaxed mb-8 max-w-lg mx-auto">
-              {t.cert_not_found_desc ||
-                "Nomor registrasi sertifikat tidak ditemukan atau belum diverifikasi dalam sistem resmi BECdex. Pastikan nomor seri sudah benar atau telusuri direktori perusahaan tersertifikasi."}
-            </p>
+                <p className="text-slate-600 text-sm leading-relaxed mb-8 max-w-lg mx-auto">
+                  {locale === "id"
+                    ? "Sesuai ketentuan pengelola atau kebijakan internal perusahaan, lembar rincian kepatuhan indikator dan skor untuk nomor sertifikasi ini tidak dipublikasikan secara terbuka kepada umum."
+                    : "Detailed indicator compliance and verification records for this certificate are private and not publicly disclosed."}
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="w-16 h-16 bg-rose-50 text-rose-600 border border-rose-200 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-2xs">
+                  <ShieldAlert size={32} />
+                </div>
+
+                <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight mb-2">
+                  {t.cert_not_found_title || "Data Sertifikat Tidak Ditemukan"}
+                </h1>
+
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-slate-100 font-mono text-xs font-semibold text-slate-700 mb-4 border border-slate-200">
+                  Serial ID: <span className="text-blue-600">{serialId}</span>
+                </div>
+
+                <p className="text-slate-600 text-sm leading-relaxed mb-8 max-w-lg mx-auto">
+                  {t.cert_not_found_desc ||
+                    "Nomor registrasi sertifikat tidak ditemukan atau belum diverifikasi dalam sistem resmi BECdex. Pastikan nomor seri sudah benar atau telusuri direktori perusahaan tersertifikasi."}
+                </p>
+              </>
+            )}
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link
@@ -396,7 +425,7 @@ export default function VerifiedCompanyDetailPage() {
                     {companyData.company.description && (
                       <div className="sm:col-span-2 bg-slate-50/70 rounded-xl p-3.5 border border-slate-200/80">
                         <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
-                          Deskripsi Profil
+                          {t.cert_profile_desc || "Profile Description"}
                         </span>
                         <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
                           {companyData.company.description}
