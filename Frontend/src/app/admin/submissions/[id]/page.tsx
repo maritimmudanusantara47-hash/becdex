@@ -57,7 +57,7 @@ interface SubmissionData {
   valid_score: number;
   documents_uploaded?: number;
   status: { id: number; name: string; color: string };
-  user?: { name?: string; email?: string; company?: { pic_name?: string; pic_position?: string; pic_email?: string; name?: string; sector?: string; address?: string; phone?: string; pic_phone?: string } };
+  user?: { image?: string | null; name?: string; email?: string; company?: { pic_name?: string; pic_position?: string; pic_email?: string; name?: string; sector?: string; address?: string; phone?: string; pic_phone?: string } };
   per_indicators?: PerIndicatorItem[];
   documents?: (IndicatorDoc & { indicator_id: number })[];
   answers?: AnswerItem[];
@@ -73,6 +73,13 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
   const { t, locale } = useTranslation();
   const { authorized } = useAdminRouteGuard({ guard: "submission_reader" });
   
+  const getImageUrl = (imagePath: string | null | undefined) => {
+    if (!imagePath) return "";
+    if (imagePath.startsWith("http")) return imagePath;
+    const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/api\/?$/, "");
+    return `${baseUrl}/storage/${imagePath}`;
+  };
+
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"verification" | "assessors" | "survey" | "logs">("verification");
   const [expandedIndicators, setExpandedIndicators] = useState<Set<number>>(new Set());
@@ -408,7 +415,26 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
         <div className="lg:col-span-2 rounded-2xl border border-slate-200/80 bg-white p-6 shadow-2xs dark:border-slate-800 dark:bg-slate-900 transition-colors space-y-5">
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
             <div className="flex items-start gap-3.5">
-              <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 flex items-center justify-center font-extrabold shrink-0 shadow-2xs">
+              {submission.user?.image ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={getImageUrl(submission.user.image)}
+                  alt={submission.user.name || "Company Logo"}
+                  className="w-12 h-12 rounded-xl object-cover shrink-0 shadow-2xs border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900"
+                  onError={(e) => {
+                    // Fallback otomatis jika file gambar pada server 404 / rusak
+                    e.currentTarget.style.display = "none";
+                    e.currentTarget.nextElementSibling?.classList.remove("hidden");
+                  }}
+                />
+              ) : null}
+
+              {/* Fallback Icon Gedung: tampil jika tidak ada image atau saat onError */}
+              <div
+                className={`w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 flex items-center justify-center font-extrabold shrink-0 shadow-2xs ${
+                  submission.user?.image ? "hidden" : ""
+                }`}
+              >
                 <Building2 size={24} />
               </div>
               <div>
