@@ -31,6 +31,7 @@ export default function ProfilePage() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
 
   const [passwordForm, setPasswordForm] = useState({ current_password: "", password: "", password_confirmation: "" });
   
@@ -165,6 +166,7 @@ export default function ProfilePage() {
         toast.error("Ukuran file terlalu besar (maksimal 2MB)");
         return;
       }
+      setPreviewPhoto(URL.createObjectURL(file));
       uploadPhotoMutation.mutate(file);
     }
   };
@@ -294,7 +296,7 @@ export default function ProfilePage() {
         <div className="mb-6 rounded-2xl border border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-900 p-6 md:p-8 shadow-sm flex flex-col sm:flex-row items-center gap-6 transition-colors">
           <div className="relative group shrink-0">
             <UserAvatar
-              image={profile?.image}
+              image={previewPhoto || profile?.image}
               name={profile?.name}
               size="xl"
               className="border-2 border-slate-200 dark:border-slate-700 shadow-sm"
