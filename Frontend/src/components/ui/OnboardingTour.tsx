@@ -165,9 +165,62 @@ export function OnboardingTour({
         onPopoverRender: (popover, { driver: currentDriver, index }) => {
           const currentStep = (index ?? 0) + 1;
 
-          // Format progress badge
+          // Format progress badge and position it above the title so it never gets compressed
           if (popover.progress) {
             popover.progress.textContent = formatProgress(currentStep);
+            popover.progress.style.setProperty("white-space", "nowrap", "important");
+            popover.progress.style.setProperty("display", "inline-flex", "important");
+            popover.progress.style.setProperty("width", "fit-content", "important");
+            popover.progress.style.setProperty("flex-shrink", "0", "important");
+            popover.progress.style.setProperty("margin-bottom", "8px", "important");
+            popover.progress.style.setProperty("line-height", "1.2", "important");
+
+            // Move badge above title to give it its own dedicated line
+            if (popover.title && popover.progress.parentElement !== popover.wrapper) {
+              popover.wrapper.insertBefore(popover.progress, popover.title);
+            }
+          }
+
+          // Ensure Next / Done button has vibrant blue / green styling and white text (prevent white-on-white)
+          if (popover.nextButton) {
+            const isLastStep = currentStep === totalSteps;
+            popover.nextButton.style.setProperty(
+              "background-color",
+              isLastStep ? "#059669" : "#2563eb",
+              "important"
+            );
+            popover.nextButton.style.setProperty(
+              "background-image",
+              isLastStep
+                ? "linear-gradient(135deg, #10b981 0%, #059669 100%)"
+                : "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
+              "important"
+            );
+            popover.nextButton.style.setProperty("color", "#ffffff", "important");
+            popover.nextButton.style.setProperty("font-weight", "700", "important");
+            popover.nextButton.style.setProperty("border", "none", "important");
+            popover.nextButton.style.setProperty("border-radius", "10px", "important");
+            popover.nextButton.style.setProperty("padding", "7px 16px", "important");
+            popover.nextButton.style.setProperty("white-space", "nowrap", "important");
+            popover.nextButton.style.setProperty(
+              "box-shadow",
+              isLastStep
+                ? "0 4px 10px rgba(16, 185, 129, 0.25)"
+                : "0 4px 10px rgba(37, 99, 235, 0.25)",
+              "important"
+            );
+            popover.nextButton.style.setProperty("cursor", "pointer", "important");
+            popover.nextButton.style.setProperty("display", "inline-flex", "important");
+            popover.nextButton.style.setProperty("align-items", "center", "important");
+            popover.nextButton.style.setProperty("justify-content", "center", "important");
+          }
+
+          // Ensure Previous button is properly styled
+          if (popover.previousButton) {
+            popover.previousButton.style.setProperty("font-weight", "600", "important");
+            popover.previousButton.style.setProperty("border-radius", "10px", "important");
+            popover.previousButton.style.setProperty("white-space", "nowrap", "important");
+            popover.previousButton.style.setProperty("padding", "7px 14px", "important");
           }
 
           // Ensure close button click explicitly destroys driver
@@ -188,7 +241,7 @@ export function OnboardingTour({
             skipBtn.type = "button";
             skipBtn.textContent = t.tour_btn_skip || (locale === "id" ? "Lewati Panduan" : "Skip Tour");
             skipBtn.style.cssText =
-              "all: unset; cursor: pointer; font-size: 11px; font-weight: 600; color: #94a3b8; padding: 6px 10px; border-radius: 8px; transition: color 0.2s, background 0.2s; margin-right: auto;";
+              "all: unset; cursor: pointer; font-size: 11px; font-weight: 600; color: #94a3b8; padding: 6px 10px; border-radius: 8px; transition: color 0.2s, background 0.2s; margin-right: auto; white-space: nowrap;";
             skipBtn.onmouseenter = () => {
               skipBtn.style.color = "#ef4444";
               skipBtn.style.background = "rgba(239, 68, 68, 0.08)";
