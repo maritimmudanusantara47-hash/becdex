@@ -64,6 +64,8 @@ interface SubmissionData {
   revision_count?: number;
   survey?: { scheduled_at: string; scheduled_end_at?: string | null; location_link?: string; notes?: string };
   assessors?: { id: number; name: string; email: string }[];
+  preview_bicc_number?: string;
+  certificate?: { mmic?: string; published_at?: string; valid_until?: string };
 }
 
 export default function AdminSubmissionDetailPage({ params }: { params: Promise<{ id: string }> | { id: string } }) {
@@ -72,7 +74,7 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
   const { user } = useAuthStore();
   const { t, locale } = useTranslation();
   const { authorized } = useAdminRouteGuard({ guard: "submission_reader" });
-  
+
   const getImageUrl = (imagePath: string | null | undefined) => {
     if (!imagePath) return "";
     if (imagePath.startsWith("http")) return imagePath;
@@ -91,7 +93,7 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
   const [showScoringGuide, setShowScoringGuide] = useState(false);
   const [showPrintChecklist, setShowPrintChecklist] = useState(false);
   const [surveyForm, setSurveyForm] = useState({ scheduled_at: "", scheduled_end_at: "", location_link: "", notes: "" });
-  const [certForm, setCertForm] = useState({ certificate_id: "10", becdex_category_id: "3", published_at: "", mmic: "", direktur: "" });
+  const [certForm, setCertForm] = useState({ published_at: new Date().toISOString().split("T")[0], direktur: "Rahmat Ihsan, S.H." });
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
@@ -176,7 +178,10 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
 
   const certMutation = useMutation({
     mutationFn: async () => {
-      await api.post(`/admin/submissions/${id}/certificate`, certForm);
+      await api.post(`/admin/submissions/${id}/certificate`, {
+        published_at: certForm.published_at || new Date().toISOString().split("T")[0],
+        direktur: certForm.direktur || undefined,
+      });
     },
     onSuccess: () => {
       toast.success(t.dash_admin_sub_id_msg_cert_success || "Sertifikat resmi BECdex berhasil diterbitkan!");
@@ -431,9 +436,8 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
 
               {/* Fallback Icon Gedung: tampil jika tidak ada image atau saat onError */}
               <div
-                className={`w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 flex items-center justify-center font-extrabold shrink-0 shadow-2xs ${
-                  submission.user?.image ? "hidden" : ""
-                }`}
+                className={`w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 flex items-center justify-center font-extrabold shrink-0 shadow-2xs ${submission.user?.image ? "hidden" : ""
+                  }`}
               >
                 <Building2 size={24} />
               </div>
@@ -619,394 +623,394 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
         <>
           {/* Auditor Indicator Review Section */}
           <div className="rounded-2xl border border-slate-200/80 bg-white shadow-2xs dark:border-slate-800 dark:bg-slate-900 overflow-hidden transition-colors">
-        <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between bg-slate-50/40 dark:bg-slate-800/20">
-          <div>
-            <h3 className="font-extrabold text-slate-800 dark:text-white text-sm">
-              {t.dash_admin_sub_id_worksheet_title || "Lembar Kerja Audit Per Indikator"}
-            </h3>
-            <p className="text-[11px] text-slate-400">
-              {t.dash_admin_sub_id_worksheet_desc || "Periksa kelengkapan dokumen dan berikan keputusan verifikasi skor untuk setiap indikator"}
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            {mandatoryStats.total > 0 && (
-              <span className="text-xs font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 px-2.5 py-1.5 rounded-lg border border-rose-200/80 dark:border-rose-800 flex items-center gap-1.5 shadow-2xs">
-                <span className="text-rose-500 font-extrabold">★</span>
-                <span>
-                  {mandatoryStats.verified}/{mandatoryStats.total} {locale === 'en' ? 'Mandatory Verified' : 'Wajib Diverifikasi'}
-                </span>
-              </span>
-            )}
-            <button
-              onClick={() => setShowScoringGuide(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
-            >
-              <Info size={14} />
-              <span>Panduan Skoring</span>
-            </button>
-            <button
-              onClick={() => setShowPrintChecklist(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-white hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 transition-colors shadow-2xs"
-              title="Cetak Surat Checklist Lapangan"
-            >
-              <Printer size={14} />
-              <span>Cetak Checklist</span>
-            </button>
-            <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 rounded-lg border border-blue-200/80 dark:border-blue-800">
-              {t.dash_admin_sub_id_total_aspect || "Total Aspek:"} {grouped.size}
-            </span>
-          </div>
-        </div>
-
-        <div className="p-6 space-y-6">
-          {Array.from(grouped.entries()).map(([aspect, outcomeMap]) => (
-            <div key={aspect} className="border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-hidden shadow-2xs">
-              <div className="px-5 py-3.5 bg-slate-100/90 dark:bg-slate-800/80 border-b border-slate-200/80 dark:border-slate-800 font-extrabold text-sm text-slate-800 dark:text-white flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-blue-600" />
-                <span>{t.dash_admin_sub_id_aspect || "Aspek:"} {aspect}</span>
+            <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between bg-slate-50/40 dark:bg-slate-800/20">
+              <div>
+                <h3 className="font-extrabold text-slate-800 dark:text-white text-sm">
+                  {t.dash_admin_sub_id_worksheet_title || "Lembar Kerja Audit Per Indikator"}
+                </h3>
+                <p className="text-[11px] text-slate-400">
+                  {t.dash_admin_sub_id_worksheet_desc || "Periksa kelengkapan dokumen dan berikan keputusan verifikasi skor untuk setiap indikator"}
+                </p>
               </div>
+              <div className="flex items-center gap-3">
+                {mandatoryStats.total > 0 && (
+                  <span className="text-xs font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 px-2.5 py-1.5 rounded-lg border border-rose-200/80 dark:border-rose-800 flex items-center gap-1.5 shadow-2xs">
+                    <span className="text-rose-500 font-extrabold">★</span>
+                    <span>
+                      {mandatoryStats.verified}/{mandatoryStats.total} {locale === 'en' ? 'Mandatory Verified' : 'Wajib Diverifikasi'}
+                    </span>
+                  </span>
+                )}
+                <button
+                  onClick={() => setShowScoringGuide(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+                >
+                  <Info size={14} />
+                  <span>Panduan Skoring</span>
+                </button>
+                <button
+                  onClick={() => setShowPrintChecklist(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 text-white hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 transition-colors shadow-2xs"
+                  title="Cetak Surat Checklist Lapangan"
+                >
+                  <Printer size={14} />
+                  <span>Cetak Checklist</span>
+                </button>
+                <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 rounded-lg border border-blue-200/80 dark:border-blue-800">
+                  {t.dash_admin_sub_id_total_aspect || "Total Aspek:"} {grouped.size}
+                </span>
+              </div>
+            </div>
 
-            <div className="p-4 space-y-4">
-                {Array.from(outcomeMap.entries()).map(([outcomeName, principleMap]) => (
-                  <div key={outcomeName} className="space-y-3">
-                    <div className="flex items-center gap-2 text-xs font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider px-1 pt-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                      <span>{outcomeName}</span>
-                    </div>
+            <div className="p-6 space-y-6">
+              {Array.from(grouped.entries()).map(([aspect, outcomeMap]) => (
+                <div key={aspect} className="border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-hidden shadow-2xs">
+                  <div className="px-5 py-3.5 bg-slate-100/90 dark:bg-slate-800/80 border-b border-slate-200/80 dark:border-slate-800 font-extrabold text-sm text-slate-800 dark:text-white flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-blue-600" />
+                    <span>{t.dash_admin_sub_id_aspect || "Aspek:"} {aspect}</span>
+                  </div>
 
-                    {Array.from(principleMap.entries()).map(([principleName, perIndicators]) => (
-                      <div key={principleName} className="pl-2 space-y-2.5">
-                        <p className="text-xs text-blue-600 dark:text-blue-400 font-bold px-1 flex items-center gap-1.5">
-                          <span>&bull;</span>
-                          <span>{t.dash_admin_sub_principle || "Prinsip"} {principleNumberMap.get(principleName)}: {principleName}</span>
-                        </p>
-
-                        <div className="divide-y divide-slate-100 dark:divide-slate-800 border border-slate-200/60 dark:border-slate-800/80 rounded-xl overflow-hidden bg-white dark:bg-slate-900 shadow-2xs">
-                          {perIndicators!.map((pi: PerIndicatorItem) => {
-                  const isExpanded = expandedIndicators.has(pi.indicator_id);
-                  const docs = (submission.documents ?? []).filter(
-                    (d) => (d as IndicatorDoc & { indicator_id: number }).indicator_id === pi.indicator_id
-                  );
-                  const isAssessmentDisabled = !isAdminEditable || indicatorMutation.isPending;
-                  const isMandatory = !!(pi.indicator.is_mandatory || pi.indicator.questions?.some((q: IndicatorQuestion) => q.is_mandatory));
-
-                  return (
-                    <div 
-                      key={pi.id} 
-                      className={cn(
-                        "transition-colors",
-                        isMandatory && "border-l-4 border-l-rose-500 bg-rose-50/15 dark:bg-rose-950/10"
-                      )}
-                    >
-                      <div className="flex items-center justify-between px-5 py-3.5 hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
-                        <button
-                          onClick={() => toggleIndicator(pi.indicator_id)}
-                          className="flex items-center gap-3 text-sm font-bold text-slate-800 dark:text-white text-left flex-1 min-w-0 cursor-pointer"
-                        >
-                          <span
-                            className={cn(
-                              "w-2.5 h-2.5 rounded-full shrink-0 shadow-2xs",
-                              pi.status.id === 4 ? "bg-emerald-500" :
-                              pi.status.id === 5 ? "bg-rose-500" :
-                              "bg-amber-400"
-                            )}
-                          />
-                          <div className="flex items-center gap-2 flex-1 min-w-0">
-                            <span className="shrink-0 text-xs text-blue-600 dark:text-blue-400 font-extrabold font-mono bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-md border border-blue-200/60 dark:border-blue-800">
-                              {t.dash_admin_sub_id_indicator || "Indikator"} {indicatorNumberMap.get(pi.indicator_id) ?? "—"}
-                            </span>
-                            {isMandatory && (
-                              <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 font-extrabold text-[10px] border border-rose-300 dark:border-rose-800 shadow-2xs">
-                                <span className="text-rose-500 font-black">★</span>
-                                <span>{locale === 'en' ? 'Mandatory' : 'Wajib'}</span>
-                              </span>
-                            )}
-                            <span className="truncate">{locale === 'id' ? (pi.indicator.name_id || pi.indicator.name) : pi.indicator.name}</span>
-                            {(pi.indicator.description || pi.indicator.evidence || pi.indicator.regulation) && (
-                              <span
-                                role="button"
-                                tabIndex={0}
-                                title={t.dash_admin_sub_id_tooltip_detail || "Lihat Syarat & Bukti Indikator"}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setInfoModalIndicator({
-                                    name: locale === 'id' ? (pi.indicator.name_id || pi.indicator.name) : pi.indicator.name,
-                                    description: locale === 'en' ? (pi.indicator.description_en || pi.indicator.description) : (pi.indicator.description || pi.indicator.description_en),
-                                    evidence: locale === 'en' ? (pi.indicator.evidence_en || pi.indicator.evidence) : (pi.indicator.evidence || pi.indicator.evidence_en),
-                                    verification_method: locale === 'en' ? (pi.indicator.verification_method_en || pi.indicator.verification_method) : (pi.indicator.verification_method || pi.indicator.verification_method_en),
-                                    regulation: locale === 'en' ? (pi.indicator.regulation_en || pi.indicator.regulation) : (pi.indicator.regulation || pi.indicator.regulation_en),
-                                    is_mandatory: !!(pi.indicator.is_mandatory || pi.indicator.questions?.some((q: IndicatorQuestion) => q.is_mandatory)),
-                                  });
-                                }}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter' || e.key === ' ') {
-                                    e.stopPropagation();
-                                    setInfoModalIndicator({
-                                      name: locale === 'id' ? (pi.indicator.name_id || pi.indicator.name) : pi.indicator.name,
-                                      description: locale === 'en' ? (pi.indicator.description_en || pi.indicator.description) : (pi.indicator.description || pi.indicator.description_en),
-                                      evidence: locale === 'en' ? (pi.indicator.evidence_en || pi.indicator.evidence) : (pi.indicator.evidence || pi.indicator.evidence_en),
-                                      verification_method: locale === 'en' ? (pi.indicator.verification_method_en || pi.indicator.verification_method) : (pi.indicator.verification_method || pi.indicator.verification_method_en),
-                                      regulation: locale === 'en' ? (pi.indicator.regulation_en || pi.indicator.regulation) : (pi.indicator.regulation || pi.indicator.regulation_en),
-                                      is_mandatory: !!(pi.indicator.is_mandatory || pi.indicator.questions?.some((q: IndicatorQuestion) => q.is_mandatory)),
-                                    });
-                                  }
-                                }}
-                                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[11px] font-bold text-slate-500 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-700 cursor-pointer"
-                              >
-                                <Info size={14} />
-                                <span className="text-[10px] font-bold uppercase tracking-wider hidden sm:inline-block">
-                                  {t.indicator_detail_btn || "Detail Syarat"}
-                                </span>
-                              </span>
-                            )}
-                          </div>
-                          {/* Badge Perlu Dicek Ulang */}
-                          {(pi.status.id === 5 || (pi.status.id === 2 && pi.comment)) && (
-                            <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 text-[10px] font-bold border border-rose-200 dark:border-rose-800">
-                              <AlertTriangle size={9} />
-                              {t.dash_admin_sub_id_revision_needed || "Perlu Dicek Ulang"}
-                            </span>
-                          )}
-                          {isExpanded ? (
-                            <ChevronDown size={16} className="shrink-0 text-slate-400" />
-                          ) : (
-                            <ChevronRight size={16} className="shrink-0 text-slate-400" />
-                          )}
-                        </button>
-
-                        <div className="flex items-center gap-2 shrink-0 ml-4">
-                          <button
-                            onClick={() =>
-                              indicatorMutation.mutate({
-                                indicatorId: pi.indicator_id,
-                                statusId: 4,
-                                valid_values: pi.indicator.questions.map((q: { id: number }) => ({
-                                  question_id: q.id,
-                                  valid_value: 2,
-                                })),
-                              })
-                            }
-                            disabled={isAssessmentDisabled}
-                            title={t.dash_admin_sub_id_tooltip_valid || "Setuju & Verifikasi"}
-                            className={cn(
-                              "inline-flex items-center gap-1 px-2.5 py-1 rounded-xl font-bold text-xs transition-all border cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed",
-                              pi.status.id === 4
-                                ? "bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-600/20"
-                                : "bg-emerald-50 text-emerald-700 border-emerald-200/80 hover:bg-emerald-600 hover:text-white dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800"
-                            )}
-                          >
-                            <CheckCircle2 size={13} />
-                            <span>{t.dash_admin_sub_id_btn_valid || "Valid"}</span>
-                          </button>
-                          <button
-                            onClick={() =>
-                              indicatorMutation.mutate({
-                                indicatorId: pi.indicator_id,
-                                statusId: 5,
-                                valid_values: pi.indicator.questions.map((q: { id: number }) => ({
-                                  question_id: q.id,
-                                  valid_value: 0,
-                                })),
-                              })
-                            }
-                            disabled={isAssessmentDisabled}
-                            title={t.dash_admin_sub_id_tooltip_revise || "Minta perusahaan merevisi dokumen"}
-                            className={cn(
-                              "inline-flex items-center gap-1 px-2.5 py-1 rounded-xl font-bold text-xs transition-all border cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed",
-                              pi.status.id === 5
-                                ? "bg-amber-600 text-white border-amber-600 shadow-md shadow-amber-600/20"
-                                : "bg-amber-50 text-amber-700 border-amber-200/80 hover:bg-amber-600 hover:text-white dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800"
-                            )}
-                          >
-                            <XCircle size={13} />
-                            <span>{t.dash_admin_sub_id_btn_revise || "Revisi"}</span>
-                          </button>
-                          <button
-                            onClick={() =>
-                              indicatorMutation.mutate({
-                                indicatorId: pi.indicator_id,
-                                statusId: 6,
-                                valid_values: pi.indicator.questions.map((q: { id: number }) => ({
-                                  question_id: q.id,
-                                  valid_value: 0,
-                                })),
-                              })
-                            }
-                            disabled={isAssessmentDisabled}
-                            title="Tolak permanen / Gagal (Invalid)"
-                            className={cn(
-                              "inline-flex items-center gap-1 px-2.5 py-1 rounded-xl font-bold text-xs transition-all border cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed",
-                              pi.status.id === 6
-                                ? "bg-rose-600 text-white border-rose-600 shadow-md shadow-rose-600/20"
-                                : "bg-rose-50 text-rose-700 border-rose-200/80 hover:bg-rose-600 hover:text-white dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800"
-                            )}
-                          >
-                            <XCircle size={13} />
-                            <span>Invalid</span>
-                          </button>
+                  <div className="p-4 space-y-4">
+                    {Array.from(outcomeMap.entries()).map(([outcomeName, principleMap]) => (
+                      <div key={outcomeName} className="space-y-3">
+                        <div className="flex items-center gap-2 text-xs font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider px-1 pt-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                          <span>{outcomeName}</span>
                         </div>
-                      </div>
 
-                      {isExpanded && (
-                        <div className="bg-slate-50/80 dark:bg-slate-800/50 border-t border-slate-200/60 dark:border-slate-800 p-5 space-y-5 animate-in fade-in duration-150">
+                        {Array.from(principleMap.entries()).map(([principleName, perIndicators]) => (
+                          <div key={principleName} className="pl-2 space-y-2.5">
+                            <p className="text-xs text-blue-600 dark:text-blue-400 font-bold px-1 flex items-center gap-1.5">
+                              <span>&bull;</span>
+                              <span>{t.dash_admin_sub_principle || "Prinsip"} {principleNumberMap.get(principleName)}: {principleName}</span>
+                            </p>
 
-                          {/* Documents List */}
-                          <div>
-                            <span className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
-                              {t.dash_admin_sub_id_doc_title || "Bukti Dokumen Terlampir"} ({docs.length})
-                            </span>
-                            {docs.length === 0 ? (
-                              <p className="text-xs text-slate-400 italic">{t.dash_admin_sub_id_doc_empty || "Perusahaan belum mengunggah dokumen pada indikator ini."}</p>
-                            ) : (
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                                {docs.map((doc) => (
-                                  <a
-                                    key={doc.id}
-                                    href={doc.file_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center justify-between p-3 rounded-xl border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-blue-500 transition-all group"
-                                  >
-                                    <div className="flex items-center gap-2.5 min-w-0">
-                                      <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 font-bold">
-                                        <FileText size={15} />
-                                      </div>
-                                      <div className="min-w-0">
-                                        <span className="text-xs font-bold text-slate-700 dark:text-slate-200 truncate group-hover:text-blue-600 block">
-                                          {doc.original_name}
-                                        </span>
-                                        <span className={[
-                                          "inline-block text-[10px] font-bold px-1.5 py-0.5 rounded-md mt-0.5",
-                                          doc.upload_phase === 3
-                                            ? "bg-orange-100 text-orange-700 dark:bg-orange-950/60 dark:text-orange-400"
-                                            : doc.upload_phase === 2
-                                            ? "bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400"
-                                            : "bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400"
-                                        ].join(" ")}>
-                                          {doc.upload_phase === 3
-                                            ? "Fase 3 · Revisi Survei"
-                                            : doc.upload_phase === 2
-                                            ? "Fase 2 · Revisi Verifikasi"
-                                            : "Fase 1 · Pengajuan Awal"}
-                                        </span>
-                                      </div>
-                                    </div>
-                                    <ExternalLink size={14} className="text-slate-400 group-hover:text-blue-600 shrink-0" />
-                                  </a>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Verification Questions List */}
-                          <div>
-                            <span className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
-                              {t.dash_admin_sub_id_ver_label || "Verifikasi Bobot Jawaban Kuesioner"}
-                            </span>
-                            <div className="space-y-3 bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200/80 dark:border-slate-800">
-                              {pi.indicator.questions.map((q: IndicatorQuestion) => {
-                                const answer = submission.answers?.find(
-                                  (a: AnswerItem) => a.question_id === q.id
+                            <div className="divide-y divide-slate-100 dark:divide-slate-800 border border-slate-200/60 dark:border-slate-800/80 rounded-xl overflow-hidden bg-white dark:bg-slate-900 shadow-2xs">
+                              {perIndicators!.map((pi: PerIndicatorItem) => {
+                                const isExpanded = expandedIndicators.has(pi.indicator_id);
+                                const docs = (submission.documents ?? []).filter(
+                                  (d) => (d as IndicatorDoc & { indicator_id: number }).indicator_id === pi.indicator_id
                                 );
+                                const isAssessmentDisabled = !isAdminEditable || indicatorMutation.isPending;
+                                const isMandatory = !!(pi.indicator.is_mandatory || pi.indicator.questions?.some((q: IndicatorQuestion) => q.is_mandatory));
 
                                 return (
                                   <div
-                                    key={q.id}
-                                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs border-b border-slate-100 dark:border-slate-800 pb-3 last:border-0 last:pb-0"
+                                    key={pi.id}
+                                    className={cn(
+                                      "transition-colors",
+                                      isMandatory && "border-l-4 border-l-rose-500 bg-rose-50/15 dark:bg-rose-950/10"
+                                    )}
                                   >
-                                    <div className="flex-1 min-w-0">
-                                      {(q.is_mandatory || pi.indicator.is_mandatory) && (
-                                        <div className="mb-1.5">
-                                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 font-extrabold text-[10px] border border-rose-300 dark:border-rose-800">
-                                            ★ {locale === 'en' ? 'Mandatory Requirement' : 'Pertanyaan Wajib'}
-                                          </span>
-                                        </div>
-                                      )}
-                                      <p 
-                                        className="text-slate-800 dark:text-slate-200 font-semibold leading-snug whitespace-pre-line"
-                                        dangerouslySetInnerHTML={{ __html: (locale === 'en' ? (q.text_en || q.text) : (q.text || q.text_en)) ?? "" }}
-                                      />
-                                      <div className="flex items-center gap-2 mt-1.5 text-[11px]">
-                                        <span className="text-slate-400">{t.dash_admin_sub_id_claim_label || "Klaim Pengaju:"}</span>
+                                    <div className="flex items-center justify-between px-5 py-3.5 hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
+                                      <button
+                                        onClick={() => toggleIndicator(pi.indicator_id)}
+                                        className="flex items-center gap-3 text-sm font-bold text-slate-800 dark:text-white text-left flex-1 min-w-0 cursor-pointer"
+                                      >
                                         <span
                                           className={cn(
-                                            "font-bold px-2 py-0.5 rounded-md text-xs",
-                                            (Number(answer?.value) ?? 0) > 0
-                                              ? "bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800"
-                                              : Number(answer?.value) === 0
-                                              ? "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800"
-                                              : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
+                                            "w-2.5 h-2.5 rounded-full shrink-0 shadow-2xs",
+                                            pi.status.id === 4 ? "bg-emerald-500" :
+                                              pi.status.id === 5 ? "bg-rose-500" :
+                                                "bg-amber-400"
+                                          )}
+                                        />
+                                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                                          <span className="shrink-0 text-xs text-blue-600 dark:text-blue-400 font-extrabold font-mono bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-md border border-blue-200/60 dark:border-blue-800">
+                                            {t.dash_admin_sub_id_indicator || "Indikator"} {indicatorNumberMap.get(pi.indicator_id) ?? "—"}
+                                          </span>
+                                          {isMandatory && (
+                                            <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 font-extrabold text-[10px] border border-rose-300 dark:border-rose-800 shadow-2xs">
+                                              <span className="text-rose-500 font-black">★</span>
+                                              <span>{locale === 'en' ? 'Mandatory' : 'Wajib'}</span>
+                                            </span>
+                                          )}
+                                          <span className="truncate">{locale === 'id' ? (pi.indicator.name_id || pi.indicator.name) : pi.indicator.name}</span>
+                                          {(pi.indicator.description || pi.indicator.evidence || pi.indicator.regulation) && (
+                                            <span
+                                              role="button"
+                                              tabIndex={0}
+                                              title={t.dash_admin_sub_id_tooltip_detail || "Lihat Syarat & Bukti Indikator"}
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setInfoModalIndicator({
+                                                  name: locale === 'id' ? (pi.indicator.name_id || pi.indicator.name) : pi.indicator.name,
+                                                  description: locale === 'en' ? (pi.indicator.description_en || pi.indicator.description) : (pi.indicator.description || pi.indicator.description_en),
+                                                  evidence: locale === 'en' ? (pi.indicator.evidence_en || pi.indicator.evidence) : (pi.indicator.evidence || pi.indicator.evidence_en),
+                                                  verification_method: locale === 'en' ? (pi.indicator.verification_method_en || pi.indicator.verification_method) : (pi.indicator.verification_method || pi.indicator.verification_method_en),
+                                                  regulation: locale === 'en' ? (pi.indicator.regulation_en || pi.indicator.regulation) : (pi.indicator.regulation || pi.indicator.regulation_en),
+                                                  is_mandatory: !!(pi.indicator.is_mandatory || pi.indicator.questions?.some((q: IndicatorQuestion) => q.is_mandatory)),
+                                                });
+                                              }}
+                                              onKeyDown={(e) => {
+                                                if (e.key === 'Enter' || e.key === ' ') {
+                                                  e.stopPropagation();
+                                                  setInfoModalIndicator({
+                                                    name: locale === 'id' ? (pi.indicator.name_id || pi.indicator.name) : pi.indicator.name,
+                                                    description: locale === 'en' ? (pi.indicator.description_en || pi.indicator.description) : (pi.indicator.description || pi.indicator.description_en),
+                                                    evidence: locale === 'en' ? (pi.indicator.evidence_en || pi.indicator.evidence) : (pi.indicator.evidence || pi.indicator.evidence_en),
+                                                    verification_method: locale === 'en' ? (pi.indicator.verification_method_en || pi.indicator.verification_method) : (pi.indicator.verification_method || pi.indicator.verification_method_en),
+                                                    regulation: locale === 'en' ? (pi.indicator.regulation_en || pi.indicator.regulation) : (pi.indicator.regulation || pi.indicator.regulation_en),
+                                                    is_mandatory: !!(pi.indicator.is_mandatory || pi.indicator.questions?.some((q: IndicatorQuestion) => q.is_mandatory)),
+                                                  });
+                                                }
+                                              }}
+                                              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[11px] font-bold text-slate-500 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-700 cursor-pointer"
+                                            >
+                                              <Info size={14} />
+                                              <span className="text-[10px] font-bold uppercase tracking-wider hidden sm:inline-block">
+                                                {t.indicator_detail_btn || "Detail Syarat"}
+                                              </span>
+                                            </span>
+                                          )}
+                                        </div>
+                                        {/* Badge Perlu Dicek Ulang */}
+                                        {(pi.status.id === 5 || (pi.status.id === 2 && pi.comment)) && (
+                                          <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 text-[10px] font-bold border border-rose-200 dark:border-rose-800">
+                                            <AlertTriangle size={9} />
+                                            {t.dash_admin_sub_id_revision_needed || "Perlu Dicek Ulang"}
+                                          </span>
+                                        )}
+                                        {isExpanded ? (
+                                          <ChevronDown size={16} className="shrink-0 text-slate-400" />
+                                        ) : (
+                                          <ChevronRight size={16} className="shrink-0 text-slate-400" />
+                                        )}
+                                      </button>
+
+                                      <div className="flex items-center gap-2 shrink-0 ml-4">
+                                        <button
+                                          onClick={() =>
+                                            indicatorMutation.mutate({
+                                              indicatorId: pi.indicator_id,
+                                              statusId: 4,
+                                              valid_values: pi.indicator.questions.map((q: { id: number }) => ({
+                                                question_id: q.id,
+                                                valid_value: 2,
+                                              })),
+                                            })
+                                          }
+                                          disabled={isAssessmentDisabled}
+                                          title={t.dash_admin_sub_id_tooltip_valid || "Setuju & Verifikasi"}
+                                          className={cn(
+                                            "inline-flex items-center gap-1 px-2.5 py-1 rounded-xl font-bold text-xs transition-all border cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed",
+                                            pi.status.id === 4
+                                              ? "bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-600/20"
+                                              : "bg-emerald-50 text-emerald-700 border-emerald-200/80 hover:bg-emerald-600 hover:text-white dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800"
                                           )}
                                         >
-                                          {(Number(answer?.value) ?? 0) > 0
-                                            ? (t.dash_admin_sub_id_claim_yes?.replace("{value}", String(answer?.value)) || `Ya (Skor: ${answer?.value})`)
-                                            : Number(answer?.value) === 0
-                                            ? (t.dash_admin_sub_id_claim_no || "Tidak")
-                                            : "—"}
-                                        </span>
+                                          <CheckCircle2 size={13} />
+                                          <span>{t.dash_admin_sub_id_btn_valid || "Valid"}</span>
+                                        </button>
+                                        <button
+                                          onClick={() =>
+                                            indicatorMutation.mutate({
+                                              indicatorId: pi.indicator_id,
+                                              statusId: 5,
+                                              valid_values: pi.indicator.questions.map((q: { id: number }) => ({
+                                                question_id: q.id,
+                                                valid_value: 0,
+                                              })),
+                                            })
+                                          }
+                                          disabled={isAssessmentDisabled}
+                                          title={t.dash_admin_sub_id_tooltip_revise || "Minta perusahaan merevisi dokumen"}
+                                          className={cn(
+                                            "inline-flex items-center gap-1 px-2.5 py-1 rounded-xl font-bold text-xs transition-all border cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed",
+                                            pi.status.id === 5
+                                              ? "bg-amber-600 text-white border-amber-600 shadow-md shadow-amber-600/20"
+                                              : "bg-amber-50 text-amber-700 border-amber-200/80 hover:bg-amber-600 hover:text-white dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800"
+                                          )}
+                                        >
+                                          <XCircle size={13} />
+                                          <span>{t.dash_admin_sub_id_btn_revise || "Revisi"}</span>
+                                        </button>
+                                        <button
+                                          onClick={() =>
+                                            indicatorMutation.mutate({
+                                              indicatorId: pi.indicator_id,
+                                              statusId: 6,
+                                              valid_values: pi.indicator.questions.map((q: { id: number }) => ({
+                                                question_id: q.id,
+                                                valid_value: 0,
+                                              })),
+                                            })
+                                          }
+                                          disabled={isAssessmentDisabled}
+                                          title="Tolak permanen / Gagal (Invalid)"
+                                          className={cn(
+                                            "inline-flex items-center gap-1 px-2.5 py-1 rounded-xl font-bold text-xs transition-all border cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed",
+                                            pi.status.id === 6
+                                              ? "bg-rose-600 text-white border-rose-600 shadow-md shadow-rose-600/20"
+                                              : "bg-rose-50 text-rose-700 border-rose-200/80 hover:bg-rose-600 hover:text-white dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800"
+                                          )}
+                                        >
+                                          <XCircle size={13} />
+                                          <span>Invalid</span>
+                                        </button>
                                       </div>
                                     </div>
 
-                                    <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
-                                      <label className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                                        {t.dash_admin_sub_id_decision_label || "Keputusan Skor:"}
-                                      </label>
-                                      <select
-                                        value={answer?.valid_value ?? ""}
-                                        onChange={(e) => {
-                                          const val = e.target.value === "" ? 0 : Number(e.target.value);
-                                          indicatorMutation.mutate({
-                                            indicatorId: pi.indicator_id,
-                                            statusId: val === 0 ? 5 : 4,
-                                            valid_values: [{ question_id: q.id, valid_value: val }],
-                                          });
-                                        }}
-                                        className="px-3 py-1.5 text-xs border border-slate-200/80 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white rounded-xl focus:outline-hidden focus:border-blue-500 font-bold cursor-pointer transition-all shadow-2xs"
-                                      >
-                                        <option value="">{t.dash_admin_sub_id_score_select || "-- Set Skor --"}</option>
-                                        <option value="0">{t.dash_admin_sub_id_score_0 || "0 (Ditolak)"}</option>
-                                        <option value="0.5">0.5</option>
-                                        <option value="1">1.0</option>
-                                        <option value="2">2.0</option>
-                                      </select>
-                                    </div>
+                                    {isExpanded && (
+                                      <div className="bg-slate-50/80 dark:bg-slate-800/50 border-t border-slate-200/60 dark:border-slate-800 p-5 space-y-5 animate-in fade-in duration-150">
+
+                                        {/* Documents List */}
+                                        <div>
+                                          <span className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
+                                            {t.dash_admin_sub_id_doc_title || "Bukti Dokumen Terlampir"} ({docs.length})
+                                          </span>
+                                          {docs.length === 0 ? (
+                                            <p className="text-xs text-slate-400 italic">{t.dash_admin_sub_id_doc_empty || "Perusahaan belum mengunggah dokumen pada indikator ini."}</p>
+                                          ) : (
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                              {docs.map((doc) => (
+                                                <a
+                                                  key={doc.id}
+                                                  href={doc.file_url}
+                                                  target="_blank"
+                                                  rel="noopener noreferrer"
+                                                  className="flex items-center justify-between p-3 rounded-xl border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-blue-500 transition-all group"
+                                                >
+                                                  <div className="flex items-center gap-2.5 min-w-0">
+                                                    <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 font-bold">
+                                                      <FileText size={15} />
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                      <span className="text-xs font-bold text-slate-700 dark:text-slate-200 truncate group-hover:text-blue-600 block">
+                                                        {doc.original_name}
+                                                      </span>
+                                                      <span className={[
+                                                        "inline-block text-[10px] font-bold px-1.5 py-0.5 rounded-md mt-0.5",
+                                                        doc.upload_phase === 3
+                                                          ? "bg-orange-100 text-orange-700 dark:bg-orange-950/60 dark:text-orange-400"
+                                                          : doc.upload_phase === 2
+                                                            ? "bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400"
+                                                            : "bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400"
+                                                      ].join(" ")}>
+                                                        {doc.upload_phase === 3
+                                                          ? "Fase 3 · Revisi Survei"
+                                                          : doc.upload_phase === 2
+                                                            ? "Fase 2 · Revisi Verifikasi"
+                                                            : "Fase 1 · Pengajuan Awal"}
+                                                      </span>
+                                                    </div>
+                                                  </div>
+                                                  <ExternalLink size={14} className="text-slate-400 group-hover:text-blue-600 shrink-0" />
+                                                </a>
+                                              ))}
+                                            </div>
+                                          )}
+                                        </div>
+
+                                        {/* Verification Questions List */}
+                                        <div>
+                                          <span className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
+                                            {t.dash_admin_sub_id_ver_label || "Verifikasi Bobot Jawaban Kuesioner"}
+                                          </span>
+                                          <div className="space-y-3 bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200/80 dark:border-slate-800">
+                                            {pi.indicator.questions.map((q: IndicatorQuestion) => {
+                                              const answer = submission.answers?.find(
+                                                (a: AnswerItem) => a.question_id === q.id
+                                              );
+
+                                              return (
+                                                <div
+                                                  key={q.id}
+                                                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs border-b border-slate-100 dark:border-slate-800 pb-3 last:border-0 last:pb-0"
+                                                >
+                                                  <div className="flex-1 min-w-0">
+                                                    {(q.is_mandatory || pi.indicator.is_mandatory) && (
+                                                      <div className="mb-1.5">
+                                                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 font-extrabold text-[10px] border border-rose-300 dark:border-rose-800">
+                                                          ★ {locale === 'en' ? 'Mandatory Requirement' : 'Pertanyaan Wajib'}
+                                                        </span>
+                                                      </div>
+                                                    )}
+                                                    <p
+                                                      className="text-slate-800 dark:text-slate-200 font-semibold leading-snug whitespace-pre-line"
+                                                      dangerouslySetInnerHTML={{ __html: (locale === 'en' ? (q.text_en || q.text) : (q.text || q.text_en)) ?? "" }}
+                                                    />
+                                                    <div className="flex items-center gap-2 mt-1.5 text-[11px]">
+                                                      <span className="text-slate-400">{t.dash_admin_sub_id_claim_label || "Klaim Pengaju:"}</span>
+                                                      <span
+                                                        className={cn(
+                                                          "font-bold px-2 py-0.5 rounded-md text-xs",
+                                                          (Number(answer?.value) ?? 0) > 0
+                                                            ? "bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800"
+                                                            : Number(answer?.value) === 0
+                                                              ? "bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800"
+                                                              : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
+                                                        )}
+                                                      >
+                                                        {(Number(answer?.value) ?? 0) > 0
+                                                          ? (t.dash_admin_sub_id_claim_yes?.replace("{value}", String(answer?.value)) || `Ya (Skor: ${answer?.value})`)
+                                                          : Number(answer?.value) === 0
+                                                            ? (t.dash_admin_sub_id_claim_no || "Tidak")
+                                                            : "—"}
+                                                      </span>
+                                                    </div>
+                                                  </div>
+
+                                                  <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                                                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                                                      {t.dash_admin_sub_id_decision_label || "Keputusan Skor:"}
+                                                    </label>
+                                                    <select
+                                                      value={answer?.valid_value ?? ""}
+                                                      onChange={(e) => {
+                                                        const val = e.target.value === "" ? 0 : Number(e.target.value);
+                                                        indicatorMutation.mutate({
+                                                          indicatorId: pi.indicator_id,
+                                                          statusId: val === 0 ? 5 : 4,
+                                                          valid_values: [{ question_id: q.id, valid_value: val }],
+                                                        });
+                                                      }}
+                                                      className="px-3 py-1.5 text-xs border border-slate-200/80 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white rounded-xl focus:outline-hidden focus:border-blue-500 font-bold cursor-pointer transition-all shadow-2xs"
+                                                    >
+                                                      <option value="">{t.dash_admin_sub_id_score_select || "-- Set Skor --"}</option>
+                                                      <option value="0">{t.dash_admin_sub_id_score_0 || "0 (Ditolak)"}</option>
+                                                      <option value="0.5">0.5</option>
+                                                      <option value="1">1.0</option>
+                                                      <option value="2">2.0</option>
+                                                    </select>
+                                                  </div>
+                                                </div>
+                                              );
+                                            })}
+                                          </div>
+                                        </div>
+
+                                        {/* Auditor Comment / Chat Section (Moved to bottom) */}
+                                        <div className="pt-2">
+                                          <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-2">
+                                            <MessageSquare size={14} className="text-blue-500" />
+                                            Diskusi & Catatan Asesor
+                                          </label>
+                                          <IndicatorChat submissionId={id as string} indicatorId={pi.indicator_id} isAdmin={true} />
+                                        </div>
+                                      </div>
+                                    )}
                                   </div>
                                 );
                               })}
                             </div>
                           </div>
-
-                          {/* Auditor Comment / Chat Section (Moved to bottom) */}
-                          <div className="pt-2">
-                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-2">
-                              <MessageSquare size={14} className="text-blue-500" />
-                              Diskusi & Catatan Asesor
-                            </label>
-                            <IndicatorChat submissionId={id as string} indicatorId={pi.indicator_id} isAdmin={true} />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      ))}
-    </div>
-  </div>
-))}
-        </div>
-      </div>
-      </>
+          </div>
+        </>
       )}
 
       {activeTab === 'assessors' && <AssessorTab submissionId={id} />}
       {activeTab === 'survey' && (
-        <FieldSurveyTab 
-          submissionId={id} 
-          onPrintChecklist={() => setShowPrintChecklist(true)} 
+        <FieldSurveyTab
+          submissionId={id}
+          onPrintChecklist={() => setShowPrintChecklist(true)}
         />
       )}
       {activeTab === 'logs' && <ActivityLogTab submissionId={id} />}
@@ -1014,8 +1018,8 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
       {/* Return Revision Confirmation Modal */}
       {showReturnModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div 
-            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" 
+          <div
+            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
             onClick={() => !returnMutation.isPending && setShowReturnModal(false)}
           />
           <div className="relative bg-white dark:bg-slate-900 rounded-3xl shadow-2xl shadow-rose-900/20 border border-slate-200/50 dark:border-slate-700/50 w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200">
@@ -1058,8 +1062,8 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
                 </button>
               </div>
             </div>
-            
-            <button 
+
+            <button
               onClick={() => !returnMutation.isPending && setShowReturnModal(false)}
               className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 bg-slate-100/50 hover:bg-slate-100 dark:bg-slate-800/50 dark:hover:bg-slate-800 rounded-full transition-colors cursor-pointer"
             >
@@ -1072,8 +1076,8 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
       {/* Reject Modal */}
       {showRejectModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div 
-            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" 
+          <div
+            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
             onClick={() => !rejectMutation.isPending && setShowRejectModal(false)}
           />
           <div className="relative bg-white dark:bg-slate-900 rounded-3xl shadow-2xl shadow-rose-900/20 border border-slate-200/50 dark:border-slate-700/50 w-full max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200">
@@ -1085,7 +1089,7 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
               <p className="text-sm text-slate-500 dark:text-slate-400 mb-4 leading-relaxed">
                 Tindakan ini tidak dapat dibatalkan. Pengajuan akan dikunci secara permanen. Mohon sertakan alasan penolakan.
               </p>
-              
+
               <div className="mb-6 text-left">
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   Alasan Penolakan <span className="text-rose-500">*</span>
@@ -1116,8 +1120,8 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
                 </button>
               </div>
             </div>
-            
-            <button 
+
+            <button
               onClick={() => !rejectMutation.isPending && setShowRejectModal(false)}
               className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 bg-slate-100/50 hover:bg-slate-100 dark:bg-slate-800/50 dark:hover:bg-slate-800 rounded-full transition-colors cursor-pointer"
             >
@@ -1235,22 +1239,32 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
             </div>
 
             <div className="space-y-4 text-xs">
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">{t.dash_admin_sub_id_cert_cat || "Kategori Peringkat BECdex"}</label>
-                <select
-                  value={certForm.becdex_category_id}
-                  onChange={(e) => {
-                    const catId = e.target.value;
-                    const certId = catId === "2" ? "12" : catId === "3" ? "10" : "11";
-                    setCertForm((p) => ({ ...p, becdex_category_id: catId, certificate_id: certId }));
-                  }}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800 text-slate-800 dark:text-white font-bold focus:bg-white focus:border-blue-500 focus:outline-hidden transition-all shadow-2xs cursor-pointer"
-                >
-                  <option value="2">Standard Blue Economy Company</option>
-                  <option value="3">Good Blue Economy Company</option>
-                  <option value="4">Excellent Blue Economy Company</option>
-                </select>
+              {/* Nomor BICC Otomatis */}
+              <div className="p-3.5 rounded-xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">
+                    Nomor Registrasi Sertifikat (BICC)
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/60 px-2 py-0.5 rounded-full">
+                    <ShieldCheck size={11} /> Terkunci Otomatis
+                  </span>
+                </div>
+                <p className="font-mono font-extrabold text-blue-700 dark:text-blue-300 text-sm tracking-wide">
+                  {submission.preview_bicc_number || submission.certificate?.mmic || "BICC..."}
+                </p>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
+                  Nomor registrasi unik resmi BICC di-generate secara otomatis sesuai standar penomoran nasional dan tidak dapat diubah manual.
+                </p>
               </div>
+
+              {/* Kategori Sertifikat */}
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700">
+                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Kategori Sertifikat (Otomatis)</span>
+                <p className="font-extrabold text-slate-900 dark:text-white text-sm">
+                  {submission.valid_score >= 89 ? "Excellent Blue Economy Company" : "Good Blue Economy Company"} (Skor: {submission.valid_score}%)
+                </p>
+              </div>
+
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">{t.dash_admin_sub_id_cert_date || "Tanggal Penerbitan"}</label>
                 <input
@@ -1259,24 +1273,31 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
                   onChange={(e) => setCertForm((p) => ({ ...p, published_at: e.target.value }))}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800 text-slate-800 dark:text-white font-medium focus:bg-white focus:border-blue-500 focus:outline-hidden transition-all shadow-2xs"
                 />
+                {certForm.published_at && (
+                  <p className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 mt-1.5 flex items-center gap-1">
+                    <CheckCircle2 size={13} />
+                    <span>
+                      Masa berlaku 3 tahun (-1 hari): Berlaku hingga{" "}
+                      <span className="font-bold underline">
+                        {(() => {
+                          const d = new Date(certForm.published_at);
+                          d.setFullYear(d.getFullYear() + 3);
+                          d.setDate(d.getDate() - 1);
+                          return d.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+                        })()}
+                      </span>
+                    </span>
+                  </p>
+                )}
               </div>
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">{t.dash_admin_sub_id_cert_mmic || "Nomor Registrasi MMIC"}</label>
-                <input
-                  type="text"
-                  value={certForm.mmic}
-                  onChange={(e) => setCertForm((p) => ({ ...p, mmic: e.target.value }))}
-                  placeholder="Contoh: MMIC-2026-BEC-001"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800 text-slate-800 dark:text-white font-mono font-bold focus:bg-white focus:border-blue-500 focus:outline-hidden transition-all shadow-2xs"
-                />
-              </div>
+
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">{t.dash_admin_sub_id_cert_director || "Nama Direktur / Pejabat Penandatangan"}</label>
                 <input
                   type="text"
                   value={certForm.direktur}
                   onChange={(e) => setCertForm((p) => ({ ...p, direktur: e.target.value }))}
-                  placeholder="Contoh: Dr. Ir. H. Halim Akbar, M.Sc."
+                  placeholder="Contoh: Rahmat Ihsan, S.H."
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800 text-slate-800 dark:text-white font-medium focus:bg-white focus:border-blue-500 focus:outline-hidden transition-all shadow-2xs"
                 />
               </div>
@@ -1466,7 +1487,7 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
           </div>
         </div>
       )}
-      
+
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
@@ -1485,7 +1506,7 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
               <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
                 Tindakan ini tidak dapat dibatalkan. Semua data terkait pengajuan ini (dokumen, penilaian, history) akan dihapus secara permanen dari sistem.
               </p>
-              
+
               <div className="flex justify-end gap-3">
                 <button
                   onClick={() => setShowDeleteModal(false)}

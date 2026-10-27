@@ -80,7 +80,7 @@ class SubmissionAdminController extends Controller
         // Auto-advance ke status 3 telah dihapus agar Admin bisa melakukan review tanpa mengubah status,
         // Status baru akan berubah ke 3 ketika user menekan tombol 'Kirim Verifikasi ke Admin' di frontend.
         return response()->json([
-            'data' => new SubmissionResource($submission),
+            'data' => SubmissionResource::make($submission),
         ]);
     }
 
@@ -273,41 +273,50 @@ class SubmissionAdminController extends Controller
             ], 422);
         }
 
-        $publishedAt = Carbon::parse($request->published_at);
-        $validUntil  = $publishedAt->copy()->addYears(3);
+        // 1. Tentukan kategori dan template sertifikat secara otomatis dari skor
+        $score = (float) $submission->valid_score;
 
-        // Auto-generate nomor sertifikat (BICC format) jika tidak diisi manual
-        $companyCountry = $submission->user->companyDetail->company_country ?? 'Indonesia';
-        $mmicNumber = $request->mmic ?: CertificateNumberService::generate($request->published_at, $companyCountry);
+        if ($score >= 89.0) {
+            $categoryId = 4; // Excellent Blue Economy Company
+            $certificateId = 11; // Template Excellent
+        } else {
+            $categoryId = 3; // Good Blue Economy Company
+            $certificateId = 10; // Template Good
+        }
 
-        // Update atau insert certificate_user
-        // is_approved = false: sertifikat menunggu persetujuan Super Admin
-        CertificateUser::updateOrCreate(
+        // 2. Generate Nomor BICC otomatis
+        $publishedAt = Carbon::parse($request->published_at ?? now());
+        $validUntil  = $publishedAt->copy()->addYears(3)->subDay();
+        $country     = $submission->user->companyDetail->company_country ?? 'ID';
+        $biccNumber  = CertificateNumberService::generate($publishedAt->toDateString(), $country);
+
+        // 3. Simpan sertifikat
+        $certUser = CertificateUser::updateOrCreate(
             ['submission_id' => $submission->id],
             [
-                'certificate_id' => $request->certificate_id,
+                'certificate_id' => $certificateId,
                 'user_id'        => $submission->user_id,
-                'mmic'           => $mmicNumber,
-                'direktur'       => $request->direktur,
+                'mmic'           => $biccNumber, // tetap menggunakan kolom 'mmic' di DB agar aman
+                'direktur'       => $request->direktur ?? 'Rahmat Ihsan, S.H.',
                 'published_at'   => $publishedAt,
                 'valid_until'    => $validUntil,
                 'is_approved'    => false,
             ]
         );
 
-        // Update submission status ke Certified
+        // 4. Update submission status ke Certified
         $submission->update(['submission_status_id' => 5]);
 
-        // Update kategori BECdex di company_detail
+        // 5. Update kategori perusahaan
         $submission->user->companyDetail?->update([
-            'becdex_category_id' => $request->becdex_category_id,
+            'becdex_category_id' => $categoryId,
         ]);
 
         ActivityLog::create([
             'user_id' => Auth::id(),
             'submission_id' => $submission->id,
             'action' => 'issued_certificate',
-            'description' => 'Menerbitkan sertifikat dengan nomor MMIC: ' . $mmicNumber,
+            'description' => 'Menerbitkan sertifikat dengan nomor BICC: ' . $biccNumber,
             'ip_address' => request()->ip(),
         ]);
 
@@ -355,7 +364,8 @@ class SubmissionAdminController extends Controller
                 }
 
                 $frontendBaseUrl = rtrim(config('app.frontend_url', env('FRONTEND_URL', 'http://localhost:3000')), '/');
-                $qrUrl           = $mmicNumber ? "{$frontendBaseUrl}/verified-companies/{$mmicNumber}" : "{$frontendBaseUrl}/verified-companies";
+                $targetSerial    = $certUser?->mmic ?? $biccNumber;
+                $qrUrl           = $targetSerial ? "{$frontendBaseUrl}/verified-companies/{$targetSerial}" : "{$frontendBaseUrl}/verified-companies";
                 $qrBase64 = '';
                 try {
                     $qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" . urlencode($qrUrl);
@@ -386,6 +396,7 @@ class SubmissionAdminController extends Controller
                 $data = [
                     'bg_image_base64' => $bgImageBase64,
                     'mmic_code'       => $certUser->mmic ?? '',
+                    'bicc_code'       => $certUser->mmic ?? '',
                     'company_name'    => $submission->user->name,
                     'company_address' => $submission->user->companyDetail->address ?? '',
                     'company_sector'  => $sectorId,

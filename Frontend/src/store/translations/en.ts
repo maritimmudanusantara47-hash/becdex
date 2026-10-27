@@ -377,7 +377,7 @@ const en = {
   dash_admin_sub_id_cert_title: "Issue Official Certificate",
   dash_admin_sub_id_cert_cat: "BECdex Rating Category",
   dash_admin_sub_id_cert_date: "Publication Date",
-  dash_admin_sub_id_cert_mmic: "MMIC Registration Number",
+  dash_admin_sub_id_cert_mmic: "BICC Registration Number",
   dash_admin_sub_id_cert_director: "Director / Signatory Name",
   dash_admin_sub_id_btn_save_cert: "Issue Certificate Now",
 
@@ -395,7 +395,7 @@ const en = {
   dash_admin_cert_empty_desc: "BECdex certificates that have been issued after passing field verification will appear on this page.",
   dash_admin_cert_col_company: "Company & Email",
   dash_admin_cert_col_category: "Index Category",
-  dash_admin_cert_col_mmic: "MMIC Number",
+  dash_admin_cert_col_mmic: "BICC Number",
   dash_admin_cert_col_score: "Valid Score",
   dash_admin_cert_col_published: "Published Date",
   dash_admin_cert_col_valid_until: "Valid Until",

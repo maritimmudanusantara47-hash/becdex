@@ -4,6 +4,13 @@ namespace App\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * @property string $published_at
+ * @property string|null $direktur
+ * @property int|null $certificate_id
+ * @property int|null $becdex_category_id
+ * @property string|null $mmic
+ */
 class IssueCertificateRequest extends FormRequest
 {
     public function authorize(): bool
@@ -14,11 +21,11 @@ class IssueCertificateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'certificate_id'    => ['required', 'integer', 'exists:certificates,id'],
-            'becdex_category_id'=> ['required', 'integer', 'exists:becdex_categories,id'],
             'published_at'      => ['required', 'date'],
-            'mmic'              => ['nullable', 'string', 'max:50'],
             'direktur'          => ['nullable', 'string', 'max:200'],
+            'certificate_id'    => ['nullable', 'integer', 'exists:certificates,id'],
+            'becdex_category_id'=> ['nullable', 'integer', 'exists:becdex_categories,id'],
+            'mmic'              => ['nullable', 'string', 'max:50'],
         ];
     }
 }

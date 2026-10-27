@@ -184,7 +184,7 @@ export function CertificateTab({ submission }: Props) {
 
           <div className="mt-6 p-4 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-amber-200/60 dark:border-amber-800/60 text-left space-y-2 text-xs">
             <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
-              <span className="text-slate-500 font-semibold">Nomor Registrasi MMIC:</span>
+              <span className="text-slate-500 font-semibold">Nomor Registrasi BICC:</span>
               <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{cert.mmic || "-"}</span>
             </div>
             <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">

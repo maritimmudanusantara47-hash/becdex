@@ -157,6 +157,7 @@ class CertificateAdminController extends Controller
                 $data = [
                     'bg_image_base64'    => $bgImageBase64,
                     'mmic_code'          => $cert->mmic ?? '',
+                    'bicc_code'          => $cert->mmic ?? '',
                     'company_name'       => $cert->user->name,
                     'company_address'    => AddressFormatter::format($cert->user->companyDetail->address ?? ''),
                     'company_sector'     => $cert->user->companyDetail->companyField->name ?? 'Maritime Sector',
@@ -266,6 +267,7 @@ class CertificateAdminController extends Controller
         $data = [
             'bg_image_base64'    => $bgImageBase64,
             'mmic_code'          => $cert->mmic ?? '',
+            'bicc_code'          => $cert->mmic ?? '',
             'company_name'       => $cert->user->name,
             'company_address'    => AddressFormatter::format($cert->user->companyDetail->address ?? ''),
             'company_sector'     => $sectorId,

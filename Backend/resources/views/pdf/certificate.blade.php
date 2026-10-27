@@ -351,8 +351,8 @@
                 {{ $company_name ?? '' }}
             @elseif($key === 'company_address')
                 {{ $company_address ?? '' }}
-            @elseif($key === 'mmic_code')
-                {{ $mmic_code ?? '' }}
+            @elseif($key === 'mmic_code' || $key === 'bicc_code')
+                {{ $bicc_code ?? $mmic_code ?? '' }}
             @elseif($key === 'company_sector')
                 {{ $company_sector ?? '' }}
             @elseif($key === 'company_sector_en')
@@ -391,7 +391,7 @@
         <div class="clear"></div>
     </div>
     
-    <div class="mmic-code">Certificate No. MICC {{ $mmic_code ?? '' }}</div>
+    <div class="mmic-code">Certificate No. BICC {{ $bicc_code ?? $mmic_code ?? '' }}</div>
 
     <div class="company-header">
         <div class="ch-logo">[Logo ICC]</div>
