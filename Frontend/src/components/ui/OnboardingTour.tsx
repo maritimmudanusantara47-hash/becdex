@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useCallback } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import type { useRouter } from "next/navigation";
 import { driver, Driver, DriveStep } from "driver.js";
 import "driver.js/dist/driver.css";
 import { useTranslation } from "@/store/lang";
@@ -20,8 +20,6 @@ export function OnboardingTour({
   onTourStart,
   onTourComplete,
 }: OnboardingTourProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const { t, locale } = useTranslation();
   const authUser = useAuthStore((s) => s.user);
   const currentUserId = userId ?? authUser?.id;
@@ -219,19 +217,18 @@ export function OnboardingTour({
 
   // Check for auto-trigger on page load or when search query ?tour=start is present
   useEffect(() => {
-    if (!currentUserId) return;
+    if (!currentUserId || typeof window === "undefined") return;
 
-    const tourParam = searchParams.get("tour");
+    const urlParams = new URLSearchParams(window.location.search);
+    const tourParam = urlParams.get("tour");
     const shouldForceFromParam = tourParam === "start" || tourParam === "1" || tourParam === "true";
 
     // Check sessionStorage flag as well (for cross-page navigation e.g. from Guide page)
-    const shouldForceFromSession =
-      typeof window !== "undefined" && sessionStorage.getItem("becdex_restart_tour") === "1";
+    const shouldForceFromSession = sessionStorage.getItem("becdex_restart_tour") === "1";
 
     if (shouldForceFromParam || shouldForceFromSession) {
-      if (typeof window !== "undefined") {
-        sessionStorage.removeItem("becdex_restart_tour");
-      }
+      sessionStorage.removeItem("becdex_restart_tour");
+
       // Clean query parameter gracefully
       const url = new URL(window.location.href);
       url.searchParams.delete("tour");
@@ -249,7 +246,7 @@ export function OnboardingTour({
     }, 600);
 
     return () => clearTimeout(timer);
-  }, [currentUserId, searchParams, startTour]);
+  }, [currentUserId, startTour]);
 
   // Expose global restart trigger for external components (e.g. settings/guide buttons)
   useEffect(() => {
