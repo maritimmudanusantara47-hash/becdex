@@ -266,7 +266,9 @@ class SubmissionController extends Controller
         $validUntilEn = $certUser->valid_until ? $certUser->valid_until->locale('en')->translatedFormat('d M Y') : '';
 
         // 3. QR code points to the public verified companies registry
-        $qrUrl = url('/verified-companies');
+        $frontendBaseUrl = rtrim(config('app.frontend_url', env('FRONTEND_URL', 'http://localhost:3000')), '/');
+        $targetSerial    = $certUser->mmic ?? '';
+        $qrUrl           = $targetSerial ? "{$frontendBaseUrl}/verified-companies/{$targetSerial}" : "{$frontendBaseUrl}/verified-companies";
         $qrBase64 = '';
         try {
             $qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" . urlencode($qrUrl);

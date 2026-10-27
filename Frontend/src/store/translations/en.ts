@@ -12,6 +12,26 @@ const en = {
   cat_good: "Good",
   cat_excellent: "Excellent",
 
+  // Certified Company Verification Detail
+  cert_verification_title: "Official Certification Verification",
+  cert_status_verified: "VERIFIED & ACTIVE",
+  cert_status_expired: "EXPIRED",
+  cert_validity_period: "Validity Period",
+  cert_published_date: "Date Issued",
+  cert_valid_until: "Valid Until",
+  cert_signatory: "Authorized Signatory",
+  cert_registration_no: "Certificate No. (BICC)",
+  cert_company_profile: "Company Profile",
+  cert_sector: "Blue Economy Sector",
+  cert_country: "Country of Domicile",
+  cert_website: "Official Website",
+  cert_address: "Company Address",
+  cert_score_overview: "Verified Score & Sustainability Compliance",
+  cert_spider_chart: "Score Breakdown by Aspect",
+  cert_back_to_catalog: "Back to Certified Companies",
+  cert_not_found_title: "Certificate Record Not Found",
+  cert_not_found_desc: "The certification number does not match any approved certificate in our database. Please verify the serial ID or browse certified companies.",
+
   // 404 Not Found
   notfound_title: "404 - Page Not Found",
   notfound_subtitle: "Oops! The page you are looking for doesn't exist.",

@@ -354,7 +354,8 @@ class SubmissionAdminController extends Controller
                     $bgImageBase64 = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($bgPath));
                 }
 
-                $qrUrl = url('/verified-companies');
+                $frontendBaseUrl = rtrim(config('app.frontend_url', env('FRONTEND_URL', 'http://localhost:3000')), '/');
+                $qrUrl           = $mmicNumber ? "{$frontendBaseUrl}/verified-companies/{$mmicNumber}" : "{$frontendBaseUrl}/verified-companies";
                 $qrBase64 = '';
                 try {
                     $qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" . urlencode($qrUrl);
@@ -384,7 +385,7 @@ class SubmissionAdminController extends Controller
 
                 $data = [
                     'bg_image_base64' => $bgImageBase64,
-                    'mmic_code'       => ($certUser->published_at ? $certUser->published_at->format('dmY') : '') . ($certUser->mmic ?? ''),
+                    'mmic_code'       => $certUser->mmic ?? '',
                     'company_name'    => $submission->user->name,
                     'company_address' => $submission->user->companyDetail->address ?? '',
                     'company_sector'  => $sectorId,

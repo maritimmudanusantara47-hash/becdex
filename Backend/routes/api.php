@@ -55,7 +55,8 @@ Route::prefix('auth')->group(function () {
 
 // Public informational endpoints
 Route::prefix('public')->group(function () {
-    Route::get('verified-companies', [PublicController::class, 'verifiedCompanies'])->middleware('throttle:60,1');
+    Route::get('verified-companies',             [PublicController::class, 'verifiedCompanies'])->middleware('throttle:60,1');
+    Route::get('verified-companies/{serial_id}', [PublicController::class, 'showVerifiedCompany'])->middleware('throttle:60,1');
     Route::get('indicators',         [PublicController::class, 'catalogIndicators'])->middleware('throttle:30,1');
     Route::get('downloads',          [PublicController::class, 'downloads'])->middleware('throttle:60,1');
     Route::post('help',              [PublicController::class, 'sendHelp'])->middleware('throttle:5,1');

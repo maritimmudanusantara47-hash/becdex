@@ -152,7 +152,8 @@ class CertificateTemplateController extends Controller
 
         $qrBase64 = '';
         try {
-            $qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" . urlencode("https://becdex.com/verified-companies");
+            $frontendBaseUrl = rtrim(config('app.frontend_url', env('FRONTEND_URL', 'http://localhost:3000')), '/');
+            $qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" . urlencode("{$frontendBaseUrl}/verified-companies/BICCID002072026");
             $arrContextOptions = [
                 "ssl" => [
                     "verify_peer" => false,

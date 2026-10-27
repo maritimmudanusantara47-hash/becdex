@@ -3,10 +3,11 @@
 import { useState, useMemo, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
+import Link from "next/link";
 import { PublicHeader } from "@/components/layouts/PublicHeader";
 import { PublicFooter } from "@/components/layouts/PublicFooter";
 import { LoadingSpinner } from "@/components/ui/index";
-import { MapPin, FileText, Globe, CheckCircle2, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { MapPin, FileText, Globe, CheckCircle2, Search, ChevronLeft, ChevronRight, ArrowUpRight } from "lucide-react";
 import { MdCheckCircle } from "react-icons/md";
 import { useTranslation } from "@/store/lang";
 
@@ -66,7 +67,7 @@ export default function VerifiedCompaniesPage() {
 
   const coastalStates = lookupsData?.countries || [];
   const sectors = lookupsData?.company_fields || [];
-  
+
   // BECdex Categories: Standard, Good, Excellent
   const becdexCategories = [
     { id: "Standard", name: t.cat_standard || "Standard" },
@@ -76,8 +77,8 @@ export default function VerifiedCompaniesPage() {
 
   // Handle Sector Checkbox
   const handleSectorChange = (sectorName: string) => {
-    setSelectedSectors(prev => 
-      prev.includes(sectorName) 
+    setSelectedSectors(prev =>
+      prev.includes(sectorName)
         ? prev.filter(s => s !== sectorName)
         : [...prev, sectorName]
     );
@@ -112,9 +113,9 @@ export default function VerifiedCompaniesPage() {
   return (
     <div className="flex flex-col min-h-screen bg-[#fafbfc]">
       <PublicHeader />
-      
+
       <main className="flex-1 max-w-300 w-full mx-auto px-4 py-8 lg:py-12 flex flex-col md:flex-row gap-6 lg:gap-8">
-        
+
         {/* Sidebar Filters */}
         <aside className="w-full md:w-70 shrink-0">
           <div className="bg-white border border-gray-200 rounded overflow-hidden">
@@ -122,7 +123,7 @@ export default function VerifiedCompaniesPage() {
             <div className="bg-[#0d6efd] text-white px-4 py-3 font-semibold text-[15px]">
               Filter
             </div>
-            
+
             <div className="p-4 space-y-6">
               {/* Coastal States */}
               <div>
@@ -188,7 +189,7 @@ export default function VerifiedCompaniesPage() {
             </div>
           </div>
         </aside>
-        
+
         {/* Main Content */}
         <div className="flex-1 min-w-0">
           {isLoading ? (
@@ -230,40 +231,48 @@ export default function VerifiedCompaniesPage() {
                   const countryName = getCountryName(cert.user?.company?.company_country);
                   const sectorName = cert.user?.company?.company_field?.name || "Marine Sector";
                   const catName = cert.certificate?.name || cert.user?.company?.becdex_category?.name || "Standard";
-                  
+
+                  const targetHref = `/verified-companies/${cert.mmic || cert.id}`;
+
                   return (
-                    <div 
-                      key={cert.id} 
-                      className="bg-white border border-gray-200 rounded p-4 flex flex-col sm:flex-row items-center sm:items-start gap-5 hover:shadow-md transition-shadow"
+                    <Link
+                      key={cert.id}
+                      href={targetHref}
+                      className="bg-white border border-gray-200 rounded-xl p-5 flex flex-col sm:flex-row items-center sm:items-start gap-5 hover:shadow-lg hover:border-blue-400 hover:-translate-y-0.5 transition-all cursor-pointer group relative block"
                     >
                       {/* Logo */}
-                      <div className="w-32 h-32 shrink-0 relative flex items-center justify-center bg-transparent">
-                      {cert.user?.image ? (
-                        /* eslint-disable-next-line @next/next/no-img-element */
-                        <img
-                          src={cert.user.image.startsWith("http") ? cert.user.image : `${(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/api\/?$/, '')}/storage/${cert.user.image}`}
-                          alt={companyName}
-                          className="w-full h-full object-contain"
-                        />
-                      ) : (
-                          <div className="w-20 h-20 bg-gray-50 text-gray-300 flex items-center justify-center rounded-full border border-gray-100">
-                            <span className="text-2xl font-bold">{companyName.charAt(0)}</span>
+                      <div className="w-28 h-28 sm:w-32 sm:h-32 shrink-0 relative flex items-center justify-center bg-gray-50/60 rounded-lg p-2 border border-gray-100 group-hover:border-blue-100 transition-colors">
+                        {cert.user?.image ? (
+                          /* eslint-disable-next-line @next/next/no-img-element */
+                          <img
+                            src={cert.user.image.startsWith("http") ? cert.user.image : `${(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/api\/?$/, '')}/storage/${cert.user.image}`}
+                            alt={companyName}
+                            className="w-full h-full object-contain"
+                          />
+                        ) : (
+                          <div className="w-16 h-16 bg-blue-50 text-blue-600 flex items-center justify-center rounded-full font-bold text-2xl">
+                            {companyName.charAt(0)}
                           </div>
                         )}
                       </div>
 
                       {/* Info */}
-                      <div className="flex-1 min-w-0 py-2 text-center sm:text-left">
-                        <h3 className="text-[#4154f1] font-semibold text-[17px] leading-tight mb-3">
-                          {companyName}
-                        </h3>
-                        
-                        <div className="space-y-2 inline-flex flex-col items-start mx-auto sm:mx-0">
+                      <div className="flex-1 min-w-0 py-1 text-center sm:text-left">
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <h3 className="text-[#4154f1] group-hover:text-blue-700 font-bold text-[17px] leading-tight transition-colors">
+                            {companyName}
+                          </h3>
+                          <span className="hidden sm:inline-flex items-center text-xs font-semibold text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity gap-0.5 shrink-0 mt-0.5">
+                            Verify <ArrowUpRight size={14} />
+                          </span>
+                        </div>
+
+                        <div className="space-y-2 inline-flex flex-col items-start mx-auto sm:mx-0 w-full">
                           <div className="flex items-start gap-1.5 text-[13px] text-gray-500 text-left">
                             <MapPin size={15} className="shrink-0 mt-0.5 text-gray-400" />
                             <span className="leading-snug">{countryName}</span>
                           </div>
-                          
+
                           <div className="flex items-start gap-1.5 text-[13px] text-gray-500 text-left">
                             <FileText size={15} className="shrink-0 mt-0.5 text-gray-400" />
                             <span className="leading-snug line-clamp-2">
@@ -271,13 +280,15 @@ export default function VerifiedCompaniesPage() {
                             </span>
                           </div>
 
-                          <div className="flex items-start gap-1.5 text-[13px] text-gray-600 font-medium mt-1">
-                            <MdCheckCircle size={16} className="text-[#0d6efd] shrink-0 mt-0.5" />
-                            <span className="leading-snug">Certified {catName} Blue Economy Company</span>
+                          <div className="flex items-center justify-between w-full pt-1">
+                            <div className="flex items-start gap-1.5 text-[13px] text-emerald-700 font-medium">
+                              <MdCheckCircle size={16} className="text-emerald-600 shrink-0 mt-0.5" />
+                              <span className="leading-snug">Certified {catName} Blue Economy</span>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </Link>
                   );
                 })}
               </div>
@@ -321,7 +332,7 @@ export default function VerifiedCompaniesPage() {
         </div>
 
       </main>
-      
+
       <PublicFooter />
     </div>
   );

@@ -168,4 +168,61 @@ class PublicController extends Controller
 
         return response()->json(['data' => $data]);
     }
+
+    /**
+     * GET /api/public/verified-companies/{serial_id}
+     * Detail verification for a certified company by serial ID (BICC / MMIC number or ID)
+     */
+    public function showVerifiedCompany(string $serialId): JsonResponse
+    {
+        $cert = CertificateUser::with([
+            'user.companyDetail.companyField',
+            'certificate',
+            'submission',
+        ])
+        ->where(function ($q) use ($serialId) {
+            $q->where('mmic', $serialId);
+            if (is_numeric($serialId)) {
+                $q->orWhere('id', (int) $serialId);
+            }
+        })
+        ->where('is_approved', true)
+        ->first();
+
+        if (!$cert) {
+            return response()->json([
+                'message' => 'Perusahaan atau sertifikat dengan nomor registrasi tersebut tidak ditemukan atau belum diverifikasi.',
+            ], 404);
+        }
+
+        $isActive = $cert->valid_until ? $cert->valid_until->gte(now()->startOfDay()) : false;
+
+        return response()->json([
+            'data' => [
+                'id'           => $cert->id,
+                'serial_id'    => $cert->mmic,
+                'is_active'    => $isActive,
+                'published_at' => $cert->published_at?->format('Y-m-d'),
+                'valid_until'  => $cert->valid_until?->format('Y-m-d'),
+                'director'     => $cert->direktur,
+                'category'     => [
+                    'name'  => $cert->certificate?->category,
+                    'label' => $cert->certificate?->description,
+                ],
+                'company' => [
+                    'name'        => $cert->user?->name ?? 'Company',
+                    'image'       => $cert->user?->image,
+                    'country'     => $cert->user?->companyDetail?->company_country,
+                    'sector'      => $cert->user?->companyDetail?->companyField?->name,
+                    'sector_id'   => $cert->user?->companyDetail?->companyField?->name_id,
+                    'description' => $cert->user?->companyDetail?->description,
+                    'website'     => $cert->user?->companyDetail?->website,
+                    'address'     => $cert->user?->companyDetail?->address,
+                ],
+                'score'      => (float) ($cert->submission?->valid_score ?? 0),
+                'radar_data' => $cert->submission ? $cert->submission->getRadarChartData() : [],
+            ],
+        ]);
+    }
 }
+

@@ -216,6 +216,7 @@ class DemoCompanySeeder extends Seeder
                     'direktur'       => 'Rahmat Ihsan, S.H.',
                     'published_at'   => $publishedAt->toDateString(),
                     'valid_until'    => $publishedAt->copy()->addYears(3)->toDateString(),
+                    'is_approved'    => true,
                 ]
             );
 

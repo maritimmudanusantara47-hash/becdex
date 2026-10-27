@@ -133,7 +133,9 @@ class CertificateAdminController extends Controller
                     }
                 }
 
-                $qrUrl    = url('/verified-companies');
+                $frontendBaseUrl = rtrim(config('app.frontend_url', env('FRONTEND_URL', 'http://localhost:3000')), '/');
+                $targetSerial    = $cert->mmic ?? '';
+                $qrUrl           = $targetSerial ? "{$frontendBaseUrl}/verified-companies/{$targetSerial}" : "{$frontendBaseUrl}/verified-companies";
                 $qrBase64 = '';
                 try {
                     $qrApiUrl          = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" . urlencode($qrUrl);
@@ -152,7 +154,7 @@ class CertificateAdminController extends Controller
 
                 $data = [
                     'bg_image_base64'    => $bgImageBase64,
-                    'mmic_code'          => ($cert->published_at ? $cert->published_at->format('dmY') : '') . ($cert->mmic ?? ''),
+                    'mmic_code'          => $cert->mmic ?? '',
                     'company_name'       => $cert->user->name,
                     'company_address'    => $cert->user->companyDetail->address ?? '',
                     'company_sector'     => $cert->user->companyDetail->companyField->name ?? 'Maritime Sector',
@@ -225,7 +227,9 @@ class CertificateAdminController extends Controller
         $validUntilEn    = $cert->valid_until   ? $cert->valid_until->locale('en')->translatedFormat('d M Y') : '';
 
         // 3. QR Code
-        $qrUrl    = url('/verified-companies');
+        $frontendBaseUrl = rtrim(config('app.frontend_url', env('FRONTEND_URL', 'http://localhost:3000')), '/');
+        $targetSerial    = $cert->mmic ?? '';
+        $qrUrl           = $targetSerial ? "{$frontendBaseUrl}/verified-companies/{$targetSerial}" : "{$frontendBaseUrl}/verified-companies";
         $qrBase64 = '';
         try {
             $qrApiUrl          = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" . urlencode($qrUrl);

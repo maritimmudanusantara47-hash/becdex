@@ -12,6 +12,26 @@ const id = {
   cat_good: "Baik",
   cat_excellent: "Sangat Baik",
 
+  // Certified Company Verification Detail
+  cert_verification_title: "Verifikasi Resmi Sertifikasi",
+  cert_status_verified: "TERVERIFIKASI & AKTIF",
+  cert_status_expired: "KEDALUWARSA",
+  cert_validity_period: "Masa Berlaku Sertifikat",
+  cert_published_date: "Tanggal Diterbitkan",
+  cert_valid_until: "Berlaku Hingga",
+  cert_signatory: "Pejabat Penandatangan",
+  cert_registration_no: "Nomor Registrasi (BICC)",
+  cert_company_profile: "Profil Perusahaan",
+  cert_sector: "Sektor Usaha Ekonomi Biru",
+  cert_country: "Negara Domisili",
+  cert_website: "Website Resmi",
+  cert_address: "Alamat Kantor Terdaftar",
+  cert_score_overview: "Skor Validasi & Kepatuhan Keberlanjutan",
+  cert_spider_chart: "Analisis Skor per Aspek (Radar Chart)",
+  cert_back_to_catalog: "Kembali ke Direktori Perusahaan",
+  cert_not_found_title: "Data Sertifikat Tidak Ditemukan",
+  cert_not_found_desc: "Nomor registrasi sertifikat tidak ditemukan atau belum diverifikasi dalam sistem resmi BECdex. Pastikan nomor seri sudah benar atau telusuri direktori perusahaan.",
+
   // 404 Not Found
   notfound_title: "404 - Halaman Tidak Ditemukan",
   notfound_subtitle: "Waduh! Halaman yang Anda cari tidak ditemukan.",
