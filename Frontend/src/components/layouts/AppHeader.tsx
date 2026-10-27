@@ -320,6 +320,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ title }) => {
           {/* User Profile Mini Indicator (Only Photo / Fallback Initials) */}
           <Link
             href={isAdmin ? "/admin/profile" : "/dashboard/profile"}
+            data-tour="tour-header-profile"
             className="flex items-center pl-3 border-l border-slate-200/80 dark:border-slate-800 hover:opacity-80 transition-opacity shrink-0"
           >
             <UserAvatar image={user?.image} name={user?.name} size="md" />

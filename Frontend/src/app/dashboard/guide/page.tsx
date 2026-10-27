@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { AppLayout } from "@/components/layouts/AppLayout";
 import { useTranslation } from "@/store/lang";
+import { restartOnboardingTour } from "@/components/ui/index";
 import { 
   Building2, 
   FileCheck, 
@@ -15,13 +17,15 @@ import {
   Lightbulb,
   Headphones,
   X,
-  Loader2
+  Loader2,
+  Compass,
 } from "lucide-react";
 import { toast } from "sonner";
 import api from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 export default function UserGuidePage() {
+  const router = useRouter();
   const { locale, t } = useTranslation();
 
   const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -136,15 +140,25 @@ export default function UserGuidePage() {
               ? "Pelajari tahapan lengkap proses sertifikasi Blue Economy Company Index (BECdex) dari awal pendaftaran hingga penerbitan sertifikat." 
               : "Learn the complete steps of the Blue Economy Company Index (BECdex) certification process from initial registration to certificate issuance."}
           </p>
-          <a 
-            href="/proposal.pdf"
-            target="_blank"
-            download
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-[#012970] text-white font-bold text-sm shadow-sm hover:bg-[#021f54] hover:shadow-md transition-all active:scale-95 cursor-pointer"
-          >
-            <DownloadCloud size={18} />
-            {locale === 'id' ? "Unduh Buku Panduan (PDF)" : "Download Guidebook (PDF)"}
-          </a>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => restartOnboardingTour(router)}
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-blue-600 text-white font-bold text-sm shadow-sm hover:bg-blue-700 hover:shadow-md transition-all active:scale-95 cursor-pointer"
+            >
+              <Compass size={18} />
+              {t.tour_restart_btn || (locale === "id" ? "Mulai Ulang Tutorial" : "Restart Tutorial")}
+            </button>
+            <a 
+              href="/proposal.pdf"
+              target="_blank"
+              download
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-bold text-sm shadow-sm hover:bg-slate-50 dark:hover:bg-slate-750 hover:shadow-md transition-all active:scale-95 cursor-pointer"
+            >
+              <DownloadCloud size={18} />
+              {locale === 'id' ? "Unduh Buku Panduan (PDF)" : "Download Guidebook (PDF)"}
+            </a>
+          </div>
         </div>
 
         {/* Timeline Section */}

@@ -1045,6 +1045,27 @@ const en = {
   auth_reset_toast_failed: "Failed to reset password.",
   auth_reset_aria_show_pw: "Show password",
   auth_reset_aria_hide_pw: "Hide password",
+
+  // Onboarding Tour
+  tour_step_indicator: "{current} of {total}",
+  tour_btn_skip: "Skip Tour",
+  tour_btn_prev: "Back",
+  tour_btn_next: "Next",
+  tour_btn_done: "Finish",
+  tour_restart_btn: "Restart Tutorial",
+  tour_restart_desc: "Revisit the initial guide for account verification, company profile completion, and certification submissions.",
+  tour_restart_success: "Onboarding tutorial restarted successfully.",
+  tour_step1_title: "Welcome & Account Verification Status",
+  tour_step1_desc: "Ensure your company email is verified. Email verification must be completed to fully unlock dashboard features and certification submission access.",
+  tour_email_verified_badge: "Verified Account",
+  tour_email_unverified_badge: "Pending Email Verification",
+  tour_step2_title: "Mandatory Company Profile Completion (100%)",
+  tour_step2_desc: "Before creating a new submission, you are required to complete 100% of your company profile (legal documents, organization chart, company logo, and PIC contact). Incomplete profiles will restrict new submissions.",
+  tour_step3_title: "Start New Certification Submission",
+  tour_step3_desc: "Once your company profile is 100% complete, click this button to begin the 50 blue economy indicators assessment and upload supporting evidence documents.",
+  tour_step4_title: "Help Center & Certification Guidelines",
+  tour_step4_desc: "If you need technical assistance, BECdex certification guidelines, or wish to contact the assessor support team, access the User Guide menu at any time.",
+  tour_quick_help: "Guide & Tutorial",
 } as const;
 
 export default en;
