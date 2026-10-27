@@ -68,18 +68,35 @@ describe("OnboardingTour Component", () => {
     expect(mockDrive).not.toHaveBeenCalled();
   });
 
-  it("persists completion to localStorage when onDestroyStarted is fired", () => {
+  it("persists completion to localStorage when onCloseClick is fired", () => {
     render(<OnboardingTour userId={42} isCompanyUser={true} />);
 
     act(() => {
       vi.advanceTimersByTime(700);
     });
 
-    expect(lastDriverConfig.onDestroyStarted).toBeDefined();
+    expect(lastDriverConfig.onCloseClick).toBeDefined();
 
-    // Simulate user closing / completing the tour
+    // Simulate user clicking close
     act(() => {
-      lastDriverConfig.onDestroyStarted();
+      lastDriverConfig.onCloseClick();
+    });
+
+    expect(mockDestroy).toHaveBeenCalled();
+    expect(localStorage.getItem("becdex_onboarding_completed_42")).toBe("true");
+  });
+
+  it("persists completion to localStorage when onDestroyed is fired", () => {
+    render(<OnboardingTour userId={42} isCompanyUser={true} />);
+
+    act(() => {
+      vi.advanceTimersByTime(700);
+    });
+
+    expect(lastDriverConfig.onDestroyed).toBeDefined();
+
+    act(() => {
+      lastDriverConfig.onDestroyed();
     });
 
     expect(localStorage.getItem("becdex_onboarding_completed_42")).toBe("true");
