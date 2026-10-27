@@ -154,12 +154,30 @@ export function OnboardingTour({
         prevBtnText: t.tour_btn_prev || (locale === "id" ? "Sebelumnya" : "Back"),
         doneBtnText: t.tour_btn_done || (locale === "id" ? "Selesai" : "Finish"),
         steps,
+        onCloseClick: () => {
+          markTourCompleted();
+          driverObj.destroy();
+        },
+        onDoneClick: () => {
+          markTourCompleted();
+          driverObj.destroy();
+        },
         onPopoverRender: (popover, { driver: currentDriver, index }) => {
           const currentStep = (index ?? 0) + 1;
 
           // Format progress badge
           if (popover.progress) {
             popover.progress.textContent = formatProgress(currentStep);
+          }
+
+          // Ensure close button click explicitly destroys driver
+          if (popover.closeButton) {
+            popover.closeButton.onclick = (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              markTourCompleted();
+              currentDriver.destroy();
+            };
           }
 
           // Add customized "Skip Tour" link button in footer if not the last step
@@ -179,7 +197,9 @@ export function OnboardingTour({
               skipBtn.style.color = "#94a3b8";
               skipBtn.style.background = "transparent";
             };
-            skipBtn.onclick = () => {
+            skipBtn.onclick = (e) => {
+              e.preventDefault();
+              e.stopPropagation();
               markTourCompleted();
               currentDriver.destroy();
             };
@@ -192,12 +212,10 @@ export function OnboardingTour({
             }
           }
         },
-        onDestroyStarted: () => {
+        onDestroyed: () => {
           markTourCompleted();
           isRunningRef.current = false;
-        },
-        onDestroyed: () => {
-          isRunningRef.current = false;
+          driverInstanceRef.current = null;
         },
       });
 
