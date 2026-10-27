@@ -146,7 +146,7 @@ export default function AdminCertificatesPage() {
                   <tr className="bg-slate-50/90 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-800 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">
                     <th className="px-6 py-4">{t.dash_admin_cert_col_company || "Perusahaan & Email"}</th>
                     <th className="px-6 py-4">{t.dash_admin_cert_col_category || "Kategori Indeks"}</th>
-                    <th className="px-6 py-4">{t.dash_admin_cert_col_mmic || "Nomor MMIC"}</th>
+                    <th className="px-6 py-4">{t.dash_admin_cert_col_mmic || "Nomor BICC"}</th>
                     <th className="px-6 py-4">{t.dash_admin_cert_col_score || "Skor Valid"}</th>
                     <th className="px-6 py-4">{t.dash_admin_cert_col_published || "Tanggal Diterbitkan"}</th>
                     <th className="px-6 py-4">{t.dash_admin_cert_col_valid_until || "Berlaku Hingga"}</th>

@@ -21,20 +21,19 @@ class CertificateNumberService
      * @param string $companyCountry  Country code (ISO Alpha-2 or Alpha-3) or full name
      * @return string
      */
-    public static function generate(string $publishedAt, string $companyCountry = 'IDN'): string
+    public static function generate(string $publishedAt, string $companyCountry = 'ID'): string
     {
         $date  = Carbon::parse($publishedAt);
         $year  = $date->year;
         $month = $date->format('m');
 
-        // Derive 2-letter ISO country code
         $countryCode = self::deriveCountryCode($companyCountry);
 
-        // Count how many certificates were issued in this year (determines sequence)
-        $countThisYear = CertificateUser::whereYear('published_at', $year)->count();
-        $sequence = str_pad($countThisYear + 1, 3, '0', STR_PAD_LEFT);
+        // Hitung total sertifikat yang sudah terbit untuk menentukan nomor urut perusahaan
+        $certifiedCount = CertificateUser::count();
+        $sequence = str_pad($certifiedCount + 1, 3, '0', STR_PAD_LEFT);
 
-        return 'BICC' . $countryCode . $sequence . $month . $year;
+        return "BICC{$countryCode}{$sequence}{$month}{$year}";
     }
 
     /**

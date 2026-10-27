@@ -183,7 +183,7 @@ export default function AdminCertificateDetailPage() {
               </div>
 
               <div className="space-y-1">
-                <InfoRow icon={<Hash size={14} />} label={t.dash_admin_cert_col_mmic || "Nomor MMIC"} value={<span className="font-mono font-bold text-slate-800 dark:text-white">{cert.mmic || "—"}</span>} />
+                <InfoRow icon={<Hash size={14} />} label={t.dash_admin_cert_col_mmic || "Nomor BICC"} value={<span className="font-mono font-bold text-slate-800 dark:text-white">{cert.mmic || "—"}</span>} />
                 <InfoRow icon={<FileText size={14} />} label={t.dash_admin_cert_director || "Direktur"} value={cert.direktur || "—"} />
                 <InfoRow icon={<BarChart3 size={14} />} label={t.dash_admin_cert_col_score || "Skor Valid"} value={<span className="font-extrabold text-slate-900 dark:text-white">{Number(cert.submission?.valid_score ?? cert.submission?.initial_score ?? 0).toFixed(1)}%</span>} />
                 <InfoRow icon={<Calendar size={14} />} label={t.dash_admin_cert_col_published || "Tanggal Diterbitkan"} value={formatDate(cert.published_at)} />

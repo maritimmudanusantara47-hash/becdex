@@ -314,6 +314,7 @@ class SubmissionController extends Controller
         $data = [
             'bg_image_base64' => $bgImageBase64,
             'mmic_code'       => $certUser->mmic ?? '',
+            'bicc_code'       => $certUser->mmic ?? '',
             'company_name'    => $submission->user->name,
             'company_address' => AddressFormatter::format($submission->user->companyDetail->address ?? ''),
             'company_sector'  => $sectorId,

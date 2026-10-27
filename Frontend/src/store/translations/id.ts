@@ -376,7 +376,7 @@ const id = {
   dash_admin_sub_id_cert_title: "Terbitkan Sertifikat Resmi",
   dash_admin_sub_id_cert_cat: "Kategori Peringkat BECdex",
   dash_admin_sub_id_cert_date: "Tanggal Penerbitan",
-  dash_admin_sub_id_cert_mmic: "Nomor Registrasi MMIC",
+  dash_admin_sub_id_cert_mmic: "Nomor Registrasi BICC",
   dash_admin_sub_id_cert_director: "Nama Direktur / Pejabat Penandatangan",
   dash_admin_sub_id_btn_save_cert: "Terbitkan Sertifikat Sekarang",
 
@@ -394,7 +394,7 @@ const id = {
   dash_admin_cert_empty_desc: "Sertifikat BECdex yang telah diterbitkan setelah lulus verifikasi lapangan akan muncul di halaman ini.",
   dash_admin_cert_col_company: "Perusahaan & Email",
   dash_admin_cert_col_category: "Kategori Indeks",
-  dash_admin_cert_col_mmic: "Nomor MMIC",
+  dash_admin_cert_col_mmic: "Nomor BICC",
   dash_admin_cert_col_score: "Skor Valid",
   dash_admin_cert_col_published: "Tanggal Diterbitkan",
   dash_admin_cert_col_valid_until: "Berlaku Hingga",
