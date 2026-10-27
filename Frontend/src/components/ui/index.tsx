@@ -69,3 +69,5 @@ export function EmptyState({
 
 export { default as ProfileIncompleteModal } from "./ProfileIncompleteModal";
 export { OnboardingTour, restartOnboardingTour } from "./OnboardingTour";
+export { UserAvatar } from "./UserAvatar";
+

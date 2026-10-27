@@ -9,6 +9,7 @@ import { useAuthStore } from "@/store/auth";
 import { useSidebar } from "@/context/SidebarContext";
 import { cn } from "@/lib/utils";
 import api, { setAuthToken } from "@/lib/api";
+import { UserAvatar } from "@/components/ui/UserAvatar";
 import {
   LayoutDashboard,
   FileText,
@@ -293,18 +294,7 @@ export function Sidebar() {
             !showFullText ? "justify-center p-1.5" : ""
           )}
         >
-          {user?.image ? (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
-              src={user.image.startsWith("http") ? user.image : `${(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/api\/?$/, '')}/storage/${user.image}`}
-              alt={user.name}
-              className="w-9 h-9 rounded-xl object-cover shrink-0 shadow-xs border border-blue-400/20"
-            />
-          ) : (
-            <div className="w-9 h-9 rounded-xl bg-[#0c2340] text-blue-300 flex items-center justify-center font-bold text-sm shrink-0 shadow-xs border border-blue-400/20">
-              {user?.name?.[0]?.toUpperCase() ?? "U"}
-            </div>
-          )}
+          <UserAvatar image={user?.image} name={user?.name} size="md" />
           {showFullText && (
             <div className="min-w-0 flex-1">
               <p className="text-slate-800 dark:text-slate-200 text-xs font-bold truncate leading-none mb-1">
