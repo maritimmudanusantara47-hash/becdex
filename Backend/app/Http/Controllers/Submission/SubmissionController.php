@@ -9,6 +9,7 @@ use App\Models\Indicator;
 use App\Models\Question;
 use App\Models\Submission;
 use App\Models\SubmissionPerIndicator;
+use App\Services\AddressFormatter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -314,7 +315,7 @@ class SubmissionController extends Controller
             'bg_image_base64' => $bgImageBase64,
             'mmic_code'       => $certUser->mmic ?? '',
             'company_name'    => $submission->user->name,
-            'company_address' => $submission->user->companyDetail->address ?? '',
+            'company_address' => AddressFormatter::format($submission->user->companyDetail->address ?? ''),
             'company_sector'  => $sectorId,
             'company_sector_en' => $sectorEn,
             'becdex_score'    => $submission->valid_score ?? $submission->initial_score,

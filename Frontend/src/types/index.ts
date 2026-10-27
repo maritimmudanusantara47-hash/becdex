@@ -25,6 +25,13 @@ export interface User {
     becdex_category: string | null;
     description: string | null;
     address: string | null;
+    street_address?: string | null;
+    province?: string | null;
+    city?: string | null;
+    district?: string | null;
+    postal_code?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
     website: string | null;
     brand_name: string | null;
   };
