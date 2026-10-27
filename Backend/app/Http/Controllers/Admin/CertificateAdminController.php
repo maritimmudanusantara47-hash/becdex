@@ -144,6 +144,12 @@ class CertificateAdminController extends Controller
                     }
                 } catch (\Exception $e) {}
 
+                $publishedDate   = $cert->published_at ? str_replace('Agt', 'Agu', $cert->published_at->locale('id')->translatedFormat('d M Y')) : '';
+                $validUntil      = $cert->valid_until   ? str_replace('Agt', 'Agu', $cert->valid_until->locale('id')->translatedFormat('d M Y')) : '';
+                $publishedDateEn = $cert->published_at  ? $cert->published_at->locale('en')->translatedFormat('d M Y') : '';
+                $validUntilEn    = $cert->valid_until   ? $cert->valid_until->locale('en')->translatedFormat('d M Y') : '';
+                $activeTemplate  = CertificateTemplate::where('is_active', true)->first() ?: CertificateTemplate::latest()->first();
+
                 $data = [
                     'bg_image_base64'    => $bgImageBase64,
                     'mmic_code'          => ($cert->published_at ? $cert->published_at->format('dmY') : '') . ($cert->mmic ?? ''),
@@ -152,9 +158,12 @@ class CertificateAdminController extends Controller
                     'company_sector'     => $cert->user->companyDetail->companyField->name ?? 'Maritime Sector',
                     'becdex_category_id' => $cert->certificate->id ?? 10,
                     'qr_base64'          => $qrBase64,
-                    'published_date'     => $cert->published_at ? $cert->published_at->format('d-m-Y') : '',
-                    'valid_until'        => $cert->valid_until ? $cert->valid_until->format('d-m-Y') : '',
+                    'published_date'     => $publishedDate,
+                    'valid_until'        => $validUntil,
+                    'published_date_en'  => $publishedDateEn,
+                    'valid_until_en'     => $validUntilEn,
                     'director_name'      => $cert->direktur ?? 'Rahmat Ihsan, S.H.',
+                    'config'             => $activeTemplate ? $activeTemplate->config : CertificateTemplate::getDefaultConfig(),
                 ];
 
                 $pdf        = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.certificate', $data);
@@ -210,10 +219,10 @@ class CertificateAdminController extends Controller
         }
 
         // 2. Format tanggal (Bahasa Indonesia & English)
-        $publishedDate   = $cert->published_at ? $cert->published_at->locale('id')->translatedFormat('d F Y') : '';
-        $validUntil      = $cert->valid_until   ? $cert->valid_until->locale('id')->translatedFormat('d F Y') : '';
-        $publishedDateEn = $cert->published_at  ? $cert->published_at->locale('en')->translatedFormat('d F Y') : '';
-        $validUntilEn    = $cert->valid_until   ? $cert->valid_until->locale('en')->translatedFormat('d F Y') : '';
+        $publishedDate   = $cert->published_at ? str_replace('Agt', 'Agu', $cert->published_at->locale('id')->translatedFormat('d M Y')) : '';
+        $validUntil      = $cert->valid_until   ? str_replace('Agt', 'Agu', $cert->valid_until->locale('id')->translatedFormat('d M Y')) : '';
+        $publishedDateEn = $cert->published_at  ? $cert->published_at->locale('en')->translatedFormat('d M Y') : '';
+        $validUntilEn    = $cert->valid_until   ? $cert->valid_until->locale('en')->translatedFormat('d M Y') : '';
 
         // 3. QR Code
         $qrUrl    = url('/verified-companies');
