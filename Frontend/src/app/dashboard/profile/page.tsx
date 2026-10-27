@@ -7,6 +7,8 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { AppLayout } from "@/components/layouts/AppLayout";
 import { LoadingSpinner, restartOnboardingTour, UserAvatar } from "@/components/ui/index";
+import { AddressAutocompleteInput } from "@/components/ui/AddressAutocompleteInput";
+import { formatSmartAddress } from "@/lib/formatAddress";
 import { ActiveSessions } from "@/components/profile/ActiveSessions";
 import { useAuthStore } from "@/store/auth";
 import api from "@/lib/api";
@@ -85,8 +87,10 @@ export default function ProfilePage() {
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { isSubmitting },
-  } = useForm({
+  } = useForm<Record<string, any>>({
     values: {
       name: profile?.name ?? "",
       brand_name: profile?.company?.brand_name ?? "",
@@ -95,6 +99,13 @@ export default function ProfilePage() {
       company_field_id: profile?.company?.company_field_id ? String(profile.company.company_field_id) : "",
       description: profile?.company?.description ?? "",
       address: profile?.company?.address ?? "",
+      street_address: profile?.company?.street_address || profile?.company?.address || "",
+      province: profile?.company?.province ?? "",
+      city: profile?.company?.city ?? "",
+      district: profile?.company?.district ?? "",
+      postal_code: profile?.company?.postal_code ?? "",
+      latitude: profile?.company?.latitude ?? null,
+      longitude: profile?.company?.longitude ?? null,
       website: profile?.company?.website ?? "",
       pic_name: profile?.company?.pic_name ?? "",
       pic_position: profile?.company?.pic_position ?? "",
@@ -103,8 +114,19 @@ export default function ProfilePage() {
     },
   });
 
+  const watchedStreet = watch("street_address");
+  const watchedDistrict = watch("district");
+  const watchedCity = watch("city");
+  const watchedProvince = watch("province");
+  const watchedPostalCode = watch("postal_code");
+
   const mutation = useMutation({
-    mutationFn: async (formData: Record<string, string | number>) => {
+    mutationFn: async (formData: Record<string, any>) => {
+      if (formData.street_address) formData.street_address = formatSmartAddress(String(formData.street_address));
+      if (formData.city) formData.city = formatSmartAddress(String(formData.city));
+      if (formData.province) formData.province = formatSmartAddress(String(formData.province));
+      if (formData.district) formData.district = formatSmartAddress(String(formData.district));
+      if (formData.address) formData.address = formatSmartAddress(String(formData.address));
       const res = await api.put("/auth/profile", formData);
       return res.data;
     },
@@ -427,12 +449,129 @@ export default function ProfilePage() {
                 <textarea required {...register("description")} rows={4} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 text-slate-800 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"></textarea>
               </div>
 
-              <div className="md:col-span-2">
-                <label className="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                  <MapPin size={13} className="text-blue-500" />
-                  <span>{t.dash_profile_address || "Alamat Lengkap"} <span className="text-red-500">*</span></span>
-                </label>
-                <textarea required {...register("address")} rows={4} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 text-slate-800 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"></textarea>
+              {/* Structured Address Section */}
+              <div className="md:col-span-2 space-y-4">
+                {/* Notice upgrade alamat untuk akun lama */}
+                {profile?.company?.address && !profile?.company?.street_address && (
+                  <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 flex items-start gap-2.5 text-amber-800 dark:text-amber-300 text-xs leading-relaxed">
+                    <Info size={16} className="shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+                    <div>
+                      <span className="font-bold">Format Alamat Resmi Telah Diperbarui: </span>
+                      Alamat lama Anda telah dimuat ke input jalan di bawah. Silakan gunakan pencarian pencarian otomatis untuk mengisi kota, provinsi, dan kode pos secara otomatis agar format sertifikat resmi Anda semakin rapi.
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <label className="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+                    <MapPin size={13} className="text-blue-500" />
+                    <span>{t.dash_profile_address || "Alamat Lengkap"} <span className="text-red-500">*</span></span>
+                  </label>
+                  <AddressAutocompleteInput
+                    value={watchedStreet || ""}
+                    onChange={(val) => {
+                      setValue("street_address", val, { shouldValidate: true, shouldDirty: true });
+                      const full = [val, watch("district"), watch("city"), watch("province"), watch("postal_code") ? "Kode Pos: " + watch("postal_code") : null].filter(Boolean).join(", ");
+                      setValue("address", full);
+                    }}
+                    onPlaceSelect={(data) => {
+                      setValue("street_address", data.street_address, { shouldValidate: true, shouldDirty: true });
+                      setValue("province", data.province, { shouldValidate: true, shouldDirty: true });
+                      setValue("city", data.city, { shouldValidate: true, shouldDirty: true });
+                      if (data.district) {
+                        setValue("district", data.district, { shouldValidate: true, shouldDirty: true });
+                      }
+                      if (data.postal_code) {
+                        setValue("postal_code", data.postal_code, { shouldValidate: true, shouldDirty: true });
+                      }
+                      if (data.latitude) setValue("latitude", data.latitude);
+                      if (data.longitude) setValue("longitude", data.longitude);
+
+                      const full = [data.street_address, data.district, data.city, data.province, data.postal_code ? "Kode Pos: " + data.postal_code : null]
+                        .filter(Boolean)
+                        .join(", ");
+                      setValue("address", full);
+                    }}
+                    placeholder="Ketik nama jalan/gedung, lalu lengkapi Blok/No (misal: Kawasan Marunda Center Blok B No. 21)..."
+                    required
+                  />
+                </div>
+
+                {/* Grid Rincian Wilayah */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 pt-1">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">
+                      Provinsi <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Contoh: Jawa Barat"
+                      {...register("province", { required: true })}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 text-slate-800 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">
+                      Kota / Kabupaten <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Contoh: Kab. Bekasi"
+                      {...register("city", { required: true })}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 text-slate-800 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">
+                      Kecamatan <span className="text-slate-400 font-normal">(Opsional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Contoh: Tarumajaya"
+                      {...register("district")}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 text-slate-800 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">
+                      Kode Pos <span className="text-slate-400 font-normal">(5 Digit)</span>
+                    </label>
+                    <input
+                      type="text"
+                      maxLength={10}
+                      placeholder="Contoh: 17211"
+                      {...register("postal_code")}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 text-slate-800 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                    />
+                  </div>
+                </div>
+
+                {/* Live Preview Alamat Sertifikat */}
+                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/80 space-y-1">
+                  <div className="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    <Eye size={13} className="text-blue-500" />
+                    <span>Pratinjau Alamat di Sertifikat Resmi</span>
+                  </div>
+                  <p className="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200 italic break-words">
+                    {formatSmartAddress(
+                      [
+                        watchedStreet?.trim(),
+                        watchedDistrict?.trim(),
+                        watchedCity?.trim(),
+                        watchedProvince?.trim(),
+                        watchedPostalCode?.trim() ? "Kode Pos: " + watchedPostalCode.trim() : null,
+                      ]
+                        .filter(Boolean)
+                        .join(", ")
+                    ) || (
+                      <span className="text-slate-400 font-normal not-italic">
+                        Alamat belum lengkap. Ketik nama jalan di atas atau gunakan saran pencarian untuk melihat pratinjau sertifikat.
+                      </span>
+                    )}
+                  </p>
+                </div>
               </div>
 
               <div className="md:col-span-2">

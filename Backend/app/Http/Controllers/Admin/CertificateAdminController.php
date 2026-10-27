@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CertificateUser;
 use App\Models\CertificateTemplate;
 use App\Notifications\SystemNotification;
+use App\Services\AddressFormatter;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -154,7 +155,7 @@ class CertificateAdminController extends Controller
                     'bg_image_base64'    => $bgImageBase64,
                     'mmic_code'          => ($cert->published_at ? $cert->published_at->format('dmY') : '') . ($cert->mmic ?? ''),
                     'company_name'       => $cert->user->name,
-                    'company_address'    => $cert->user->companyDetail->address ?? '',
+                    'company_address'    => AddressFormatter::format($cert->user->companyDetail->address ?? ''),
                     'company_sector'     => $cert->user->companyDetail->companyField->name ?? 'Maritime Sector',
                     'becdex_category_id' => $cert->certificate->id ?? 10,
                     'qr_base64'          => $qrBase64,
@@ -261,7 +262,7 @@ class CertificateAdminController extends Controller
             'bg_image_base64'    => $bgImageBase64,
             'mmic_code'          => $cert->mmic ?? '',
             'company_name'       => $cert->user->name,
-            'company_address'    => $cert->user->companyDetail->address ?? '',
+            'company_address'    => AddressFormatter::format($cert->user->companyDetail->address ?? ''),
             'company_sector'     => $sectorId,
             'company_sector_en'  => $sectorEn,
             'becdex_score'       => $cert->submission->valid_score ?? $cert->submission->initial_score ?? 0,
