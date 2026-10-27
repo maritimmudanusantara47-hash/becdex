@@ -10,6 +10,7 @@ import { Bell, Search, Menu, X, ShieldCheck, Sun, Moon, Check } from "lucide-rea
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { formatDate } from "@/lib/utils";
+import { UserAvatar } from "@/components/ui/UserAvatar";
 
 interface AppHeaderProps {
   title?: string;
@@ -321,18 +322,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ title }) => {
             href={isAdmin ? "/admin/profile" : "/dashboard/profile"}
             className="flex items-center pl-3 border-l border-slate-200/80 dark:border-slate-800 hover:opacity-80 transition-opacity shrink-0"
           >
-            {user?.image ? (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img
-                src={user.image.startsWith("http") ? user.image : `${(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/api\/?$/, '')}/storage/${user.image}`}
-                alt={user.name}
-                className="w-9 h-9 rounded-xl object-cover shadow-sm border border-slate-200/60 dark:border-slate-850"
-              />
-            ) : (
-              <div className="w-9 h-9 rounded-xl bg-linear-to-tr from-[#0c2340] to-blue-600 text-white flex items-center justify-center font-bold text-xs shadow-sm">
-                {user?.name?.[0]?.toUpperCase() ?? "U"}
-              </div>
-            )}
+            <UserAvatar image={user?.image} name={user?.name} size="md" />
           </Link>
         </div>
       </div>

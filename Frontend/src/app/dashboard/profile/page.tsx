@@ -5,7 +5,7 @@ import { MdCheckCircle } from "react-icons/md";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { AppLayout } from "@/components/layouts/AppLayout";
-import { LoadingSpinner } from "@/components/ui/index";
+import { LoadingSpinner, UserAvatar } from "@/components/ui/index";
 import { ActiveSessions } from "@/components/profile/ActiveSessions";
 import { useAuthStore } from "@/store/auth";
 import api from "@/lib/api";
@@ -280,18 +280,13 @@ export default function ProfilePage() {
         {/* Profile Photo / Logo Uploader Card */}
         <div className="mb-6 rounded-2xl border border-slate-200/80 bg-white dark:border-slate-800 dark:bg-slate-900 p-6 md:p-8 shadow-sm flex flex-col sm:flex-row items-center gap-6 transition-colors">
           <div className="relative group shrink-0">
-            <div className="w-24 h-24 rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 flex items-center justify-center shadow-sm transition-colors">
-              {profile?.image ? (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img
-                  src={profile.image.startsWith("http") ? profile.image : `${(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/api\/?$/, '')}/storage/${profile.image}`}
-                  alt={profile.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <Building className="w-10 h-10 text-slate-400 dark:text-slate-500" />
-              )}
-            </div>
+            <UserAvatar
+              image={profile?.image}
+              name={profile?.name}
+              size="xl"
+              className="border-2 border-slate-200 dark:border-slate-700 shadow-sm"
+              fallbackIcon={<Building className="w-10 h-10 text-white/90" />}
+            />
             {uploadPhotoMutation.isPending && (
               <div className="absolute inset-0 bg-black/50 rounded-2xl flex items-center justify-center text-white">
                 <Loader2 size={20} className="animate-spin" />

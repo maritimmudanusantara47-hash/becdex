@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Loader2, Save, UserCircle, KeyRound, Camera, Eye, EyeOff } from "lucide-react";
 import { useState, useRef } from "react";
 import { ActiveSessions } from "@/components/profile/ActiveSessions";
+import { UserAvatar } from "@/components/ui/UserAvatar";
 
 import { useTranslation } from "@/store/lang";
 
@@ -91,25 +92,17 @@ export default function AdminProfilePage() {
       <div className="mb-6 rounded-2xl border border-slate-200/80 bg-white p-6 shadow-2xs dark:border-slate-800 dark:bg-slate-900 transition-colors max-w-3xl">
         <div className="flex flex-col md:flex-row md:items-center gap-6">
           <div className="relative group shrink-0">
-            <div className="w-24 h-24 rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 relative">
-              {previewImage || user?.image ? (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img
-                  src={previewImage || getImageUrl(user?.image)}
-                  alt="Profile"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-slate-400">
-                  <UserCircle size={48} />
-                </div>
-              )}
-              {photoMutation.isPending && (
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                  <Loader2 className="animate-spin text-white" />
-                </div>
-              )}
-            </div>
+            <UserAvatar
+              image={previewImage || user?.image}
+              name={user?.name}
+              size="xl"
+              className="border-2 border-slate-200 dark:border-slate-700 shadow-sm"
+            />
+            {photoMutation.isPending && (
+              <div className="absolute inset-0 bg-black/40 rounded-2xl flex items-center justify-center">
+                <Loader2 className="animate-spin text-white" />
+              </div>
+            )}
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={photoMutation.isPending}
