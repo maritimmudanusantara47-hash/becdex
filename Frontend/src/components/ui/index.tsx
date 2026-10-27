@@ -68,3 +68,5 @@ export function EmptyState({
 }
 
 export { default as ProfileIncompleteModal } from "./ProfileIncompleteModal";
+export { UserAvatar } from "./UserAvatar";
+
