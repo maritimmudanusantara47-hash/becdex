@@ -8,7 +8,7 @@ import Link from "next/link";
 import { AppLayout } from "@/components/layouts/AppLayout";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { StatCard } from "@/components/ui/StatCard";
-import { LoadingSpinner, EmptyState, ProfileIncompleteModal } from "@/components/ui/index";
+import { LoadingSpinner, EmptyState, ProfileIncompleteModal, OnboardingTour, restartOnboardingTour } from "@/components/ui/index";
 import api from "@/lib/api";
 import { formatDate, cn } from "@/lib/utils";
 import { Submission, PaginatedResponse, User } from "@/types";
@@ -26,6 +26,7 @@ import {
   ChevronRight,
   ShieldCheck,
   AlertTriangle,
+  HelpCircle,
 } from "lucide-react";
 
 type ApiError = {
@@ -128,7 +129,10 @@ export default function DashboardPage() {
     <AppLayout title={t.dash_panel_title || "Panel Perusahaan"}>
       {/* Warning Banner Jika Profil Belum Lengkap */}
       {user && user.is_profile_complete === false && (
-        <div className="mb-6 rounded-2xl border border-amber-300 bg-amber-50 dark:border-amber-700/50 dark:bg-amber-950/40 p-4 md:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
+        <div
+          data-tour="tour-profile-banner"
+          className="mb-6 rounded-2xl border border-amber-300 bg-amber-50 dark:border-amber-700/50 dark:bg-amber-950/40 p-4 md:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs"
+        >
           <div className="flex items-start gap-3.5">
             <div className="p-2.5 rounded-xl bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 shrink-0 mt-0.5 sm:mt-0">
               <AlertTriangle size={20} />
@@ -161,10 +165,31 @@ export default function DashboardPage() {
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="max-w-xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-blue-200 text-xs font-bold tracking-wide uppercase mb-3">
-              <ShieldCheck size={14} className="text-blue-300" />
-              <span>Blue Economy Company Index 2026</span>
+            <div className="flex flex-wrap items-center gap-2 mb-3">
+              <div
+                data-tour="tour-account-verification"
+                className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-blue-200 text-xs font-bold tracking-wide uppercase"
+              >
+                <ShieldCheck size={14} className="text-blue-300" />
+                <span>
+                  {user?.email_verified_at
+                    ? (t.tour_email_verified_badge || "Akun Terverifikasi")
+                    : (t.tour_email_unverified_badge || "Menunggu Verifikasi Email")}
+                </span>
+              </div>
+
+              <button
+                data-tour="tour-quick-help"
+                type="button"
+                onClick={() => restartOnboardingTour(router)}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 hover:bg-white/25 text-blue-100 hover:text-white text-xs font-semibold backdrop-blur-md border border-white/20 transition-all cursor-pointer shadow-2xs active:scale-95"
+                title={t.tour_restart_desc || "Mulai ulang panduan langkah demi langkah dasbor"}
+              >
+                <HelpCircle size={13} className="text-blue-200" />
+                <span>{t.tour_quick_help || "Panduan Dasbor"}</span>
+              </button>
             </div>
+
             <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">
               {t.dash_welcome || "Selamat Datang di Portal BECdex"}
             </h2>
@@ -174,6 +199,7 @@ export default function DashboardPage() {
           </div>
 
           <button
+            data-tour="tour-create-submission"
             onClick={() => {
               if (user && user.is_profile_complete === false) {
                 setIsProfileModalOpen(true);
@@ -378,6 +404,14 @@ export default function DashboardPage() {
         percentage={errorModalData?.percentage ?? user?.profile_completion_percentage ?? 0}
         missingFields={errorModalData?.missingFields ?? user?.missing_fields ?? []}
         missingFieldLabels={errorModalData?.missingFieldLabels ?? user?.missing_field_labels ?? {}}
+      />
+
+      {/* Interactive Onboarding Tour for Company User */}
+      <OnboardingTour
+        userId={user?.id}
+        isCompanyUser={
+          user?.role?.id === 2 || !user?.role || !([1, 6, 7, 10, 11, 12].includes(user?.role?.id))
+        }
       />
     </AppLayout>
   );

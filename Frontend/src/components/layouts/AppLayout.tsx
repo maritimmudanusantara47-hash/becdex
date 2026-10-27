@@ -55,7 +55,7 @@ function AppLayoutInner({ children, title }: AppLayoutProps) {
         {/* Page Content */}
         <main className="grow">
           {user && !user.email_verified_at && (
-            <div className="bg-amber-50 dark:bg-amber-950/30 border-b border-amber-200 dark:border-amber-900/50 px-4 md:px-6 lg:px-8 py-3 w-full">
+            <div data-tour="tour-email-banner" className="bg-amber-50 dark:bg-amber-950/30 border-b border-amber-200 dark:border-amber-900/50 px-4 md:px-6 lg:px-8 py-3 w-full">
               <div className="mx-auto max-w-screen-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="p-1.5 bg-amber-100 dark:bg-amber-900/50 rounded-full text-amber-600 dark:text-amber-400">

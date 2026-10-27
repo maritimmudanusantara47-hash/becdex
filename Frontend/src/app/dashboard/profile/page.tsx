@@ -4,18 +4,20 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { MdCheckCircle } from "react-icons/md";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import { AppLayout } from "@/components/layouts/AppLayout";
-import { LoadingSpinner } from "@/components/ui/index";
+import { LoadingSpinner, restartOnboardingTour } from "@/components/ui/index";
 import { ActiveSessions } from "@/components/profile/ActiveSessions";
 import { useAuthStore } from "@/store/auth";
 import api from "@/lib/api";
 import { User } from "@/types";
 
-import { Save, Loader2, Building, User as UserIcon, Mail, Phone, Briefcase, Camera, Globe, MapPin, AlignLeft, FileText, Download, Info, Key, Eye, EyeOff } from "lucide-react";
+import { Save, Loader2, Building, User as UserIcon, Mail, Phone, Briefcase, Camera, Globe, MapPin, AlignLeft, FileText, Download, Info, Key, Eye, EyeOff, Compass } from "lucide-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "@/store/lang";
 
 export default function ProfilePage() {
+  const router = useRouter();
   const { setUser } = useAuthStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const legalDocRef = useRef<HTMLInputElement>(null);
@@ -211,13 +213,24 @@ export default function ProfilePage() {
   return (
     <AppLayout title={t.dash_profile_title || "Profil Perusahaan"}>
       <div className="max-w-4xl mx-auto pb-10">
-        <div className="mb-6">
-          <h2 className="text-xl md:text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">
-            {t.dash_profile_title || "Profil & Identitas Perusahaan"}
-          </h2>
-          <p className="text-slate-500 dark:text-slate-400 text-xs md:text-sm mt-1">
-            {t.dash_profile_desc || "Kelola informasi resmi perusahaan, dokumen legal, dan kontak penanggung jawab (Person In Charge) untuk sertifikasi BECdex"}
-          </p>
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h2 className="text-xl md:text-2xl font-extrabold text-slate-800 dark:text-white tracking-tight">
+              {t.dash_profile_title || "Profil & Identitas Perusahaan"}
+            </h2>
+            <p className="text-slate-500 dark:text-slate-400 text-xs md:text-sm mt-1">
+              {t.dash_profile_desc || "Kelola informasi resmi perusahaan, dokumen legal, dan kontak penanggung jawab (Person In Charge) untuk sertifikasi BECdex"}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => restartOnboardingTour(router)}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-slate-700/80 hover:text-blue-600 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-bold text-xs shadow-2xs transition-all shrink-0 self-start sm:self-auto cursor-pointer"
+            title={t.tour_restart_desc || "Mulai ulang tutorial onboarding"}
+          >
+            <Compass size={15} className="text-blue-600 dark:text-blue-400" />
+            <span>{t.tour_restart_btn || "Mulai Ulang Tutorial"}</span>
+          </button>
         </div>
 
         {/* Completeness Tracker Card */}

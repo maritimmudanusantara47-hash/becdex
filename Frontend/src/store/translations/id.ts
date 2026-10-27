@@ -1045,6 +1045,27 @@ const id = {
   auth_reset_toast_failed: "Gagal mereset kata sandi.",
   auth_reset_aria_show_pw: "Tampilkan kata sandi",
   auth_reset_aria_hide_pw: "Sembunyikan kata sandi",
+
+  // Onboarding Tour
+  tour_step_indicator: "{current} dari {total}",
+  tour_btn_skip: "Lewati Panduan",
+  tour_btn_prev: "Sebelumnya",
+  tour_btn_next: "Selanjutnya",
+  tour_btn_done: "Selesai",
+  tour_restart_btn: "Mulai Ulang Tutorial",
+  tour_restart_desc: "Pelajari kembali langkah awal verifikasi akun, kelengkapan profil perusahaan, dan pengajuan sertifikasi.",
+  tour_restart_success: "Tutorial onboarding berhasil dimulai ulang.",
+  tour_step1_title: "Selamat Datang & Verifikasi Akun",
+  tour_step1_desc: "Pastikan email akun perusahaan Anda telah terverifikasi. Verifikasi email wajib diselesaikan agar seluruh hak akses dasbor dan pengajuan sertifikasi BECdex terbuka penuh.",
+  tour_email_verified_badge: "Akun Terverifikasi",
+  tour_email_unverified_badge: "Menunggu Verifikasi Email",
+  tour_step2_title: "Kewajiban Pengisian Profil Perusahaan (100%)",
+  tour_step2_desc: "Sebelum membuat pengajuan baru, Anda wajib melengkapi data profil perusahaan hingga 100% (dokumen legalitas NIB/Akta, struktur organisasi, logo perusahaan, dan kontak PIC). Jika belum lengkap, pembuatan pengajuan baru akan diblokir oleh sistem.",
+  tour_step3_title: "Memulai Pengajuan Baru (Create Submission)",
+  tour_step3_desc: "Setelah profil perusahaan lengkap 100%, klik tombol ini untuk memulai pengisian kuesioner asesmen 50 indikator ekonomi biru dan mengunggah dokumen bukti pendukung.",
+  tour_step4_title: "Pusat Bantuan & Panduan Sertifikasi",
+  tour_step4_desc: "Jika Anda membutuhkan bantuan teknis, pedoman sertifikasi BECdex, atau ingin menghubungi tim dukungan asesor, Anda dapat mengakses menu Panduan Pengguna kapan saja.",
+  tour_quick_help: "Panduan & Tutorial",
 } as const;
 
 export default id;

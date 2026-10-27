@@ -149,11 +149,20 @@ export function Sidebar() {
         {items.map((item) => {
           const Icon = item.icon;
           const active = checkIsActive(item.href, item.label);
+          const tourAttr =
+            item.href === "/dashboard/profile"
+              ? "tour-nav-profile"
+              : item.href === "/dashboard/guide"
+              ? "tour-nav-guide"
+              : item.href === "/dashboard/submissions"
+              ? "tour-nav-submissions"
+              : undefined;
 
           return (
             <li key={item.label}>
               <Link
                 href={item.href}
+                data-tour={tourAttr}
                 className={cn(
                   "group relative flex items-center gap-3.5 rounded-xl px-3.5 py-3 text-sm font-medium transition-all duration-200 cursor-pointer",
                   !showFullText ? "justify-center px-3" : "justify-start",
