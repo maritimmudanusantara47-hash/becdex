@@ -462,13 +462,13 @@
                 <table class="dates-table" border="0" cellspacing="0" cellpadding="2">
                     <tr>
                         <td width="30%">Sertifikat ini berlaku dari<br/><i>This certificate is valid from</i></td>
-                        <td width="20%"><b>{{ $published_date ?? '' }}</b><br/><b>{{ $published_date ?? '' }}</b></td>
+                        <td width="20%"><b>{{ $published_date ?? '' }}</b><br/><b>{{ $published_date_en ?? $published_date ?? '' }}</b></td>
                         <td width="15%">sampai<br/><i>until</i></td>
-                        <td width="35%"><b>{{ $valid_until ?? '' }}</b><br/><b>{{ $valid_until ?? '' }}</b></td>
+                        <td width="35%"><b>{{ $valid_until ?? '' }}</b><br/><b>{{ $valid_until_en ?? $valid_until ?? '' }}</b></td>
                     </tr>
                     <tr>
                         <td colspan="2">Sertifikat ini diberikan pertama kali pada<br/><i>This certificate has been granted for the first time on</i></td>
-                        <td colspan="2"><b>{{ $published_date ?? '' }}</b><br/><b>{{ $published_date ?? '' }}</b></td>
+                        <td colspan="2"><b>{{ $published_date ?? '' }}</b><br/><b>{{ $published_date_en ?? $published_date ?? '' }}</b></td>
                     </tr>
                 </table>
             </div>

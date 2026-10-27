@@ -154,7 +154,10 @@ class CertificateAdminController extends Controller
                     'qr_base64'          => $qrBase64,
                     'published_date'     => $cert->published_at ? $cert->published_at->format('d-m-Y') : '',
                     'valid_until'        => $cert->valid_until ? $cert->valid_until->format('d-m-Y') : '',
+                    'published_date_en'  => $cert->published_at ? $cert->published_at->format('d-m-Y') : '',
+                    'valid_until_en'     => $cert->valid_until ? $cert->valid_until->format('d-m-Y') : '',
                     'director_name'      => $cert->direktur ?? 'Rahmat Ihsan, S.H.',
+                    'config'             => CertificateTemplate::where('is_active', true)->first()?->config ?? CertificateTemplate::getDefaultConfig(),
                 ];
 
                 $pdf        = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.certificate', $data);
@@ -209,11 +212,11 @@ class CertificateAdminController extends Controller
             $bgImageBase64 = 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($bgPath));
         }
 
-        // 2. Format tanggal (Bahasa Indonesia & English)
-        $publishedDate   = $cert->published_at ? $cert->published_at->locale('id')->translatedFormat('d F Y') : '';
-        $validUntil      = $cert->valid_until   ? $cert->valid_until->locale('id')->translatedFormat('d F Y') : '';
-        $publishedDateEn = $cert->published_at  ? $cert->published_at->locale('en')->translatedFormat('d F Y') : '';
-        $validUntilEn    = $cert->valid_until   ? $cert->valid_until->locale('en')->translatedFormat('d F Y') : '';
+        // 2. Format tanggal (DD-MM-YYYY)
+        $publishedDate   = $cert->published_at ? $cert->published_at->format('d-m-Y') : '';
+        $validUntil      = $cert->valid_until   ? $cert->valid_until->format('d-m-Y') : '';
+        $publishedDateEn = $publishedDate;
+        $validUntilEn    = $validUntil;
 
         // 3. QR Code
         $qrUrl    = url('/verified-companies');
