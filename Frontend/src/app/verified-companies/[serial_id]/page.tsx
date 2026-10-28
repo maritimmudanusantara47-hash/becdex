@@ -24,21 +24,10 @@ import {
   FileText,
   UserCheck,
   ChevronRight,
-  TrendingUp,
   ShieldAlert,
   Lock,
 } from "lucide-react";
 import { MdCheckCircle } from "react-icons/md";
-import {
-  Radar,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  ResponsiveContainer,
-  Tooltip as RechartsTooltip,
-  Legend,
-} from "recharts";
 import { useTranslation } from "@/store/lang";
 
 interface VerifiedCompanyDetail {
@@ -314,8 +303,8 @@ export default function VerifiedCompanyDetailPage() {
               </div>
             </div>
 
-            {/* Grid Layout: Profil Perusahaan (Kiri) & Kredensial / Radar (Kanan) */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Grid Layout: Profil Perusahaan (Kiri) & Detail Sertifikasi (Kanan) */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
               {/* Kolom Kiri: Kartu Identitas & Profil Perusahaan (7 kolom) */}
               <div className="lg:col-span-7 space-y-6">
                 {/* Kartu Profil Perusahaan */}
@@ -446,7 +435,7 @@ export default function VerifiedCompanyDetailPage() {
                 </div>
               </div>
 
-              {/* Kolom Kanan: Detail Sertifikasi & Radar Chart (5 kolom) */}
+              {/* Kolom Kanan: Detail Sertifikasi (5 kolom) */}
               <div className="lg:col-span-5 space-y-6">
                 {/* Ringkasan Skor & Kategori */}
                 <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
@@ -491,64 +480,6 @@ export default function VerifiedCompanyDetailPage() {
                       <span className="font-semibold text-slate-800">{companyData.director || "Rahmat Ihsan, S.H."}</span>
                     </div>
                   </div>
-                </div>
-
-                {/* Radar Chart (Aspek Keberlanjutan Ekonomi Biru) */}
-                <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
-                  <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
-                    <h2 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
-                      <TrendingUp size={16} className="text-blue-600" />
-                      <span>{t.cert_spider_chart || "Analisis Skor per Aspek"}</span>
-                    </h2>
-                    <span className="text-[11px] text-slate-400 font-medium">Spider Chart</span>
-                  </div>
-
-                  {companyData.radar_data && companyData.radar_data.length > 0 ? (
-                    <div className="space-y-4">
-                      <div className="h-64 sm:h-72 w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <RadarChart cx="50%" cy="50%" outerRadius="68%" data={companyData.radar_data}>
-                            <PolarGrid stroke="#e2e8f0" />
-                            <PolarAngleAxis
-                              dataKey="subject"
-                              tick={{ fill: "#475569", fontSize: 11, fontWeight: 600 }}
-                            />
-                            <PolarRadiusAxis
-                              angle={30}
-                              domain={[0, 100]}
-                              tick={{ fill: "#94a3b8", fontSize: 9 }}
-                            />
-                            <Radar
-                              name="Verified Score (%)"
-                              dataKey="B"
-                              stroke="#0d6efd"
-                              fill="#0d6efd"
-                              fillOpacity={0.4}
-                            />
-                            <RechartsTooltip />
-                            <Legend wrapperStyle={{ fontSize: "11px", paddingTop: "8px" }} />
-                          </RadarChart>
-                        </ResponsiveContainer>
-                      </div>
-
-                      {/* Aspect Score Pills */}
-                      <div className="space-y-1.5 pt-2 border-t border-slate-100">
-                        {companyData.radar_data.map((item, idx) => (
-                          <div
-                            key={idx}
-                            className="flex items-center justify-between text-xs py-1 px-2.5 rounded-lg bg-slate-50 border border-slate-100"
-                          >
-                            <span className="text-slate-600 font-medium">{item.subject}</span>
-                            <span className="font-bold text-blue-700">{item.B}%</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-xs text-slate-400">
-                      Informasi radar chart penilaian belum tersedia untuk sertifikasi ini.
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
