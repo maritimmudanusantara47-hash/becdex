@@ -160,12 +160,19 @@ class PublicController extends Controller
      */
     public function lookups(): JsonResponse
     {
-        $data = Cache::remember('public_lookups', 3600, function () {
-            return [
+        try {
+            $data = Cache::remember('public_lookups', 3600, function () {
+                return [
+                    'countries'      => Country::select('id', 'iso', 'name')->orderBy('name')->get(),
+                    'company_fields' => CompanyField::select('id', 'name', 'name_id')->orderBy('name')->get(),
+                ];
+            });
+        } catch (\Throwable $e) {
+            $data = [
                 'countries'      => Country::select('id', 'iso', 'name')->orderBy('name')->get(),
                 'company_fields' => CompanyField::select('id', 'name', 'name_id')->orderBy('name')->get(),
             ];
-        });
+        }
 
         return response()->json(['data' => $data]);
     }

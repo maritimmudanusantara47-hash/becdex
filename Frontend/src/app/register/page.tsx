@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { Loader2, ArrowLeft, Eye, EyeOff } from "lucide-react";import Image from "next/image";
 import api from "@/lib/api";
 import { useTranslation } from "@/store/lang";
+import { getSectorLabel, SectorLookupItem, DEFAULT_COUNTRIES, DEFAULT_SECTORS } from "@/constants/sectors";
 
 type RegisterFormData = {
   name: string;
@@ -26,162 +27,56 @@ type RegisterFormData = {
   terms_accepted: boolean;
 };
 
-const COUNTRIES = [
-  { iso: "AL", name: "Albania" },
-  { iso: "DZ", name: "Algeria" },
-  { iso: "AO", name: "Angola" },
-  { iso: "AG", name: "Antigua and Barbuda" },
-  { iso: "AR", name: "Argentina" },
-  { iso: "AU", name: "Australia" },
-  { iso: "AZ", name: "Azerbaijan" },
-  { iso: "BH", name: "Bahrain" },
-  { iso: "BD", name: "Bangladesh" },
-  { iso: "BY", name: "Belarus" },
-  { iso: "BE", name: "Belgium" },
-  { iso: "BZ", name: "Belize" },
-  { iso: "BJ", name: "Benin" },
-  { iso: "BA", name: "Bosnia and Herzegovina" },
-  { iso: "BR", name: "Brazil" },
-  { iso: "BN", name: "Brunei Darussalam" },
-  { iso: "BG", name: "Bulgaria" },
-  { iso: "CV", name: "Cabo Verde" },
-  { iso: "KH", name: "Cambodia" },
-  { iso: "CM", name: "Cameroon" },
-  { iso: "CA", name: "Canada" },
-  { iso: "CL", name: "Chile" },
-  { iso: "CN", name: "China" },
-  { iso: "CO", name: "Colombia" },
-  { iso: "KM", name: "Comoros" },
-  { iso: "CR", name: "Costa Rica" },
-  { iso: "HR", name: "Croatia" },
-  { iso: "CU", name: "Cuba" },
-  { iso: "CY", name: "Cyprus" },
-  { iso: "DK", name: "Denmark" },
-  { iso: "DJ", name: "Djibouti" },
-  { iso: "DM", name: "Dominica" },
-  { iso: "DO", name: "Dominican Republic" },
-  { iso: "EC", name: "Ecuador" },
-  { iso: "EG", name: "Egypt" },
-  { iso: "SV", name: "El Salvador" },
-  { iso: "GQ", name: "Equatorial Guinea" },
-  { iso: "ER", name: "Eritrea" },
-  { iso: "EE", name: "Estonia" },
-  { iso: "FJ", name: "Fiji" },
-  { iso: "FI", name: "Finland" },
-  { iso: "FR", name: "France" },
-  { iso: "GA", name: "Gabon" },
-  { iso: "GE", name: "Georgia" },
-  { iso: "DE", name: "Germany" },
-  { iso: "GH", name: "Ghana" },
-  { iso: "GR", name: "Greece" },
-  { iso: "GD", name: "Grenada" },
-  { iso: "GT", name: "Guatemala" },
-  { iso: "GN", name: "Guinea" },
-  { iso: "GY", name: "Guyana" },
-  { iso: "HT", name: "Haiti" },
-  { iso: "HN", name: "Honduras" },
-  { iso: "IS", name: "Iceland" },
-  { iso: "IN", name: "India" },
-  { iso: "ID", name: "Indonesia" },
-  { iso: "IR", name: "Iran" },
-  { iso: "IQ", name: "Iraq" },
-  { iso: "IE", name: "Ireland" },
-  { iso: "IL", name: "Israel" },
-  { iso: "IT", name: "Italy" },
-  { iso: "JM", name: "Jamaica" },
-  { iso: "JP", name: "Japan" },
-  { iso: "JO", name: "Jordan" },
-  { iso: "KE", name: "Kenya" },
-  { iso: "KI", name: "Kiribati" },
-  { iso: "KW", name: "Kuwait" },
-  { iso: "LV", name: "Latvia" },
-  { iso: "LB", name: "Lebanon" },
-  { iso: "LR", name: "Liberia" },
-  { iso: "LY", name: "Libya" },
-  { iso: "LT", name: "Lithuania" },
-  { iso: "MG", name: "Madagascar" },
-  { iso: "MY", name: "Malaysia" },
-  { iso: "MV", name: "Maldives" },
-  { iso: "MT", name: "Malta" },
-  { iso: "MR", name: "Mauritania" },
-  { iso: "MU", name: "Mauritius" },
-  { iso: "MX", name: "Mexico" },
-  { iso: "MC", name: "Monaco" },
-  { iso: "ME", name: "Montenegro" },
-  { iso: "MA", name: "Morocco" },
-  { iso: "MZ", name: "Mozambique" },
-  { iso: "MM", name: "Myanmar" },
-  { iso: "NA", name: "Namibia" },
-  { iso: "NR", name: "Nauru" },
-  { iso: "NP", name: "Netherlands" },
-  { iso: "NZ", name: "New Zealand" },
-  { iso: "NI", name: "Nicaragua" },
-  { iso: "NG", name: "Nigeria" },
-  { iso: "NO", name: "Norway" },
-  { iso: "OM", name: "Oman" },
-  { iso: "PK", name: "Pakistan" },
-  { iso: "PW", name: "Palau" },
-  { iso: "PA", name: "Panama" },
-  { iso: "PG", name: "Papua New Guinea" },
-  { iso: "PE", name: "Peru" },
-  { iso: "PH", name: "Philippines" },
-  { iso: "PL", name: "Poland" },
-  { iso: "PT", name: "Portugal" },
-  { iso: "QA", name: "Qatar" },
-  { iso: "RO", name: "Romania" },
-  { iso: "RU", name: "Russian Federation" },
-  { iso: "WS", name: "Samoa" },
-  { iso: "SA", name: "Saudi Arabia" },
-  { iso: "SN", name: "Senegal" },
-  { iso: "SC", name: "Seychelles" },
-  { iso: "SL", name: "Sierra Leone" },
-  { iso: "SG", name: "Singapore" },
-  { iso: "SI", name: "Slovenia" },
-  { iso: "ZA", name: "South Africa" },
-  { iso: "ES", name: "Spain" },
-  { iso: "LK", name: "Sri Lanka" },
-  { iso: "SE", name: "Sweden" },
-  { iso: "TH", name: "Thailand" },
-  { iso: "TL", name: "Timor-Leste" },
-  { iso: "TO", name: "Tonga" },
-  { iso: "TR", name: "Türkiye" },
-  { iso: "UA", name: "Ukraine" },
-  { iso: "AE", name: "United Arab Emirates" },
-  { iso: "GB", name: "United Kingdom" },
-  { iso: "US", name: "United States of America" },
-  { iso: "UY", name: "Uruguay" },
-  { iso: "VU", name: "Vanuatu" },
-  { iso: "VE", name: "Venezuela" },
-  { iso: "VN", name: "Viet Nam" },
-  { iso: "YE", name: "Yemen" },
-];
-
-const SECTORS = [
-  { id: 1, name: "Marine Fisheries and Aquaculture" },
-  { id: 2, name: "Maritime Transport, Shipping, and Ports" },
-  { id: 3, name: "Marine Tourism and Cruise Ships" },
-  { id: 4, name: "Biotechnology and Marine Bioproducts Processing" },
-  { id: 5, name: "Seawater Desalination" },
-  { id: 6, name: "Deep Sea Mining, Oil, and Gas" },
-  { id: 7, name: "Marine Renewable Energy" },
-  { id: 8, name: "Ship and Boat Building" },
-  { id: 9, name: "Ocean Building" },
-  { id: 10, name: "Marine Defense and Security" },
-  { id: 11, name: "Maritime Research and Education" },
-];
-
 export default function RegisterPage() {
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   const { data: lookupsData } = useQuery({
     queryKey: ["lookups"],
     queryFn: async () => {
-      const res = await api.get("/public/lookups");
-      return res.data;
+      try {
+        const res = await api.get("/public/lookups");
+        return res.data?.data || res.data;
+      } catch {
+        return { countries: DEFAULT_COUNTRIES, company_fields: DEFAULT_SECTORS };
+      }
     },
+    initialData: { countries: DEFAULT_COUNTRIES, company_fields: DEFAULT_SECTORS },
+    staleTime: Infinity,
+    gcTime: 1000 * 60 * 60 * 24,
   });
-  const lookups = lookupsData?.data || { countries: [], company_fields: [] };
+  const countries =
+    (lookupsData?.countries?.length
+      ? lookupsData.countries
+      : lookupsData?.data?.countries?.length
+      ? lookupsData.data.countries
+      : null) || DEFAULT_COUNTRIES;
+
+  const companyFields =
+    (lookupsData?.company_fields?.length
+      ? lookupsData.company_fields
+      : lookupsData?.data?.company_fields?.length
+      ? lookupsData.data.company_fields
+      : null) || DEFAULT_SECTORS;
+
+  const countryOptions = useMemo(() => {
+    return countries.map((c: { id?: number; iso: string; name: string }) => (
+      <option key={c.id} value={c.iso}>
+        {c.name}
+      </option>
+    ));
+  }, [countries]);
+
+  const sectorOptions = useMemo(() => {
+    return companyFields.map((s: SectorLookupItem) => {
+      const label = getSectorLabel(s, locale);
+      return (
+        <option key={s.id} value={s.id}>
+          {label}
+        </option>
+      );
+    });
+  }, [companyFields, locale]);
 
   const [showPassword, setShowPassword] = useState(false);
   const [showRepeatPassword, setShowRepeatPassword] = useState(false);
@@ -214,7 +109,8 @@ export default function RegisterPage() {
           message: t.val_passwords_dont_match || "Passwords do not match",
           path: ["password_confirmation"],
         }),
-    [t]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [locale]
   );
 
   const {
@@ -312,11 +208,7 @@ export default function RegisterPage() {
                   className="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 bg-white outline-none focus:ring-2 focus:ring-[#0d6efd]/20 focus:border-[#0d6efd] text-gray-700"
                 >
                   <option value="">{t.auth_country_select || "Country"}</option>
-                  {lookups.countries.map((c: { id: number; iso: string; name: string }) => (
-                    <option key={c.id} value={c.iso}>
-                      {c.name}
-                    </option>
-                  ))}
+                  {countryOptions}
                 </select>
                 {errors.company_country && (
                   <p className="text-red-500 text-[10px] mt-0.5">{errors.company_country.message}</p>
@@ -343,11 +235,7 @@ export default function RegisterPage() {
                   className="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 bg-white outline-none focus:ring-2 focus:ring-[#0d6efd]/20 focus:border-[#0d6efd] text-gray-700"
                 >
                   <option value="">{t.auth_sector_select || "Blue Economic Sector"}</option>
-                  {lookups.company_fields.map((s: { id: number; name: string }) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
+                  {sectorOptions}
                 </select>
                 {errors.company_field_id && (
                   <p className="text-red-500 text-[10px] mt-0.5">{errors.company_field_id.message}</p>
