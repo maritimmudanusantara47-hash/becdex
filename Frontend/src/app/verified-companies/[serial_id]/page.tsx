@@ -341,8 +341,8 @@ export default function VerifiedCompanyDetailPage() {
 
             {/* Grid Layout: Profil Perusahaan (Kiri) & Detail Sertifikasi (Kanan) */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-              {/* Kolom Kiri: Kartu Identitas & Profil Perusahaan (7 kolom) */}
-              <div className="lg:col-span-7 space-y-6">
+              {/* Kolom Kiri: Kartu Identitas & Profil Perusahaan (diubah ke lg:col-span-12 karena card kanan di-comment) */}
+              <div className="lg:col-span-12 space-y-6">
                 {/* Kartu Profil Perusahaan */}
                 <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-7 shadow-xs">
                   <div className="flex items-center justify-between pb-4 mb-6 border-b border-slate-100">
@@ -471,9 +471,10 @@ export default function VerifiedCompanyDetailPage() {
                 </div>
               </div>
 
-              {/* Kolom Kanan: Detail Sertifikasi (5 kolom) */}
+              {/* Kolom Kanan: Detail Sertifikasi (Skor Validasi & Kepatuhan dan Analisis Skor per Aspek) - DI-COMMENT SESUAI PERMINTAAN */}
+              {/*
               <div className="lg:col-span-5 space-y-6">
-                {/* Ringkasan Skor & Kategori */}
+                // Card 1: Skor Validasi & Kepatuhan Keberlanjutan
                 <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
                   <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
                     <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
@@ -518,7 +519,7 @@ export default function VerifiedCompanyDetailPage() {
                   </div>
                 </div>
 
-                {/* Analisis Skor per Aspek (Radar Chart) */}
+                // Card 2: Analisis Skor per Aspek (Radar Chart)
                 <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
                   <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
                     <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
@@ -566,7 +567,7 @@ export default function VerifiedCompanyDetailPage() {
                         )}
                       </div>
 
-                      {/* Rincian Skor per Aspek */}
+                      // Rincian Skor per Aspek
                       <div className="space-y-1.5 pt-3 border-t border-slate-100">
                         {companyData.radar_data.map((item, idx) => {
                           const aspectScore = item.valid_score ?? item.B ?? 0;
@@ -589,6 +590,7 @@ export default function VerifiedCompanyDetailPage() {
                   )}
                 </div>
               </div>
+              */}
             </div>
           </div>
         )}
