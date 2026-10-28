@@ -56,6 +56,7 @@ interface VerifiedCompanyDetail {
     subject: string;
     A: number;
     B: number;
+    valid_score?: number;
     fullMark: number;
   }>;
 }

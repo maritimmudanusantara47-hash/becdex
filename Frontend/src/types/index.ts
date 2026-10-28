@@ -49,6 +49,14 @@ export interface SubmissionStatus {
   color: string;
 }
 
+export interface RadarChartItem {
+  subject: string;
+  A: number;
+  B: number;
+  valid_score?: number;
+  fullMark: number;
+}
+
 export interface Submission {
   id: string;
   status: SubmissionStatus;
@@ -65,7 +73,7 @@ export interface Submission {
   updated_at: string;
   revision_count?: number;
   current_upload_phase?: number;
-  radar_data?: { subject: string; A: number; B: number; fullMark: number }[];
+  radar_data?: RadarChartItem[];
   user?: User;
   payment?: PaymentTransaction | null;
   certificate?: CertificateUser | null;
