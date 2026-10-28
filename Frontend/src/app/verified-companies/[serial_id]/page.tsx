@@ -298,11 +298,14 @@ export default function VerifiedCompanyDetailPage() {
                     </div>
 
                     <div className="flex items-center gap-1.5">
+                      {/*
                       <ShieldCheck size={15} className="text-emerald-600 shrink-0" />
+                      
                       <span>
                         <strong className="text-slate-800 font-semibold">{t.cert_signatory || "Penandatangan"}:</strong>{" "}
                         {companyData.director || "Direktur BECdex"}
                       </span>
+                      */}
                     </div>
                   </div>
                 </div>
