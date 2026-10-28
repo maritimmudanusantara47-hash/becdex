@@ -14,6 +14,21 @@ export function formatDate(dateString: string | null | undefined): string {
   });
 }
 
+export function toDateInputValue(dateString: string | null | undefined): string {
+  if (!dateString) return "";
+  const match = dateString.match(/^\d{4}-\d{2}-\d{2}/);
+  if (match) return match[0];
+  try {
+    const d = new Date(dateString);
+    if (!isNaN(d.getTime())) {
+      return d.toISOString().split("T")[0];
+    }
+  } catch {
+    // ignore
+  }
+  return "";
+}
+
 export function formatDateTimeRange(start: string | null | undefined, end?: string | null | undefined): string {
   if (!start) return "-";
   const startDate = new Date(start);

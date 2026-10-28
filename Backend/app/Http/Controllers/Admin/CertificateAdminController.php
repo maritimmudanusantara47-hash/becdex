@@ -7,9 +7,12 @@ use App\Models\CertificateUser;
 use App\Models\CertificateTemplate;
 use App\Notifications\SystemNotification;
 use App\Services\AddressFormatter;
+use App\Models\ActivityLog;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
@@ -99,7 +102,33 @@ class CertificateAdminController extends Controller
             'certificate',
         ])->findOrFail($id);
 
-        return response()->json(['data' => $cert]);
+        return response()->json([
+            'data' => [
+                'id'           => $cert->id,
+                'mmic'         => $cert->mmic,
+                'direktur'     => $cert->direktur,
+                'published_at' => $cert->published_at ? $cert->published_at->format('Y-m-d') : null,
+                'valid_until'  => $cert->valid_until ? $cert->valid_until->format('Y-m-d') : null,
+                'is_approved'  => (bool) $cert->is_approved,
+                'is_detail_public' => (bool) $cert->is_detail_public,
+                'user'         => $cert->user ? [
+                    'id'            => $cert->user->id,
+                    'name'          => $cert->user->name,
+                    'email'         => $cert->user->email,
+                    'companyDetail' => $cert->user->companyDetail,
+                ] : null,
+                'certificate'  => $cert->certificate ? [
+                    'id'       => $cert->certificate->id,
+                    'name'     => $cert->certificate->name,
+                    'category' => $cert->certificate->category,
+                ] : null,
+                'submission'   => $cert->submission ? [
+                    'id'            => $cert->submission->id,
+                    'initial_score' => (float) $cert->submission->initial_score,
+                    'valid_score'   => (float) $cert->submission->valid_score,
+                ] : null,
+            ],
+        ]);
     }
 
     /**
@@ -320,6 +349,47 @@ class CertificateAdminController extends Controller
                 'id'               => $cert->id,
                 'is_detail_public' => (bool) $cert->is_detail_public,
             ],
+        ]);
+    }
+
+    /**
+     * PUT /api/admin/certificates/{id}
+     * Update data sertifikat (BICC, Direktur, Tanggal Terbit, Tanggal Berlaku)
+     */
+    public function update(Request $request, int $id): JsonResponse
+    {
+        $cert = CertificateUser::with(['user.companyDetail.companyField', 'submission', 'certificate'])->findOrFail($id);
+
+        $validated = $request->validate([
+            'direktur'     => ['required', 'string', 'max:200'],
+            'published_at' => ['required', 'date'],
+            'valid_until'  => ['required', 'date'],
+        ]);
+
+        $publishedAt = Carbon::parse($validated['published_at']);
+        $validUntil  = Carbon::parse($validated['valid_until']);
+
+        $cert->update([
+            'direktur'     => trim($validated['direktur']),
+            'published_at' => $publishedAt,
+            'valid_until'  => $validUntil,
+        ]);
+
+        if ($cert->submission_id) {
+            ActivityLog::create([
+                'user_id'       => Auth::id(),
+                'submission_id' => $cert->submission_id,
+                'action'        => 'updated_certificate',
+                'description'   => 'Memperbarui data sertifikat (Nomor BICC: ' . $cert->mmic . ', Direktur: ' . $cert->direktur . ', Berlaku: ' . $cert->valid_until->format('d/m/Y') . ')',
+                'ip_address'    => request()->ip(),
+            ]);
+        }
+
+        \Illuminate\Support\Facades\Cache::forget('verified_companies_p1');
+
+        return response()->json([
+            'message' => 'Data sertifikat berhasil diperbarui.',
+            'data'    => $cert->fresh(['user.companyDetail', 'submission', 'certificate']),
         ]);
     }
 }

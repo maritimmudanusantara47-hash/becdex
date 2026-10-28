@@ -226,6 +226,8 @@ Route::middleware('auth:sanctum')->group(function () {
         // ── CERTIFICATE: Super Admin + Certificate Admin ──────────────────
         Route::middleware('cert_admin')->group(function () {
             Route::post('submissions/{id}/certificate', [SubmissionAdminController::class, 'issueCertificate']);
+            Route::put('submissions/{id}/certificate',  [SubmissionAdminController::class, 'updateCertificate']);
+            Route::put('certificates/{id}',            [CertificateAdminController::class, 'update']);
 
             // Certificate Templates
             Route::get('certificate-templates',                    [CertificateTemplateController::class, 'index']);
