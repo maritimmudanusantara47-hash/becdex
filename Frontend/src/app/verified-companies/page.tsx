@@ -7,7 +7,7 @@ import Link from "next/link";
 import { PublicHeader } from "@/components/layouts/PublicHeader";
 import { PublicFooter } from "@/components/layouts/PublicFooter";
 import { LoadingSpinner } from "@/components/ui/index";
-import { MapPin, FileText, Globe, CheckCircle2, Search, ChevronLeft, ChevronRight, ArrowUpRight, Lock } from "lucide-react";
+import { MapPin, FileText, Globe, CheckCircle2, Search, ChevronLeft, ChevronRight, ArrowUpRight } from "lucide-react";
 import { MdCheckCircle } from "react-icons/md";
 import { useTranslation } from "@/store/lang";
 
@@ -257,16 +257,12 @@ export default function VerifiedCompaniesPage() {
                       {/* Info */}
                       <div className="flex-1 min-w-0 py-1 text-center sm:text-left">
                         <div className="flex items-start justify-between gap-2 mb-2">
-                          <h3 className={`font-bold text-[17px] leading-tight transition-colors ${isClickable ? "text-[#4154f1] group-hover:text-blue-700" : "text-slate-800"}`}>
+                          <h3 className="font-bold text-[17px] leading-tight text-[#4154f1] group-hover:text-blue-700 transition-colors">
                             {companyName}
                           </h3>
-                          {isClickable ? (
+                          {isClickable && (
                             <span className="hidden sm:inline-flex items-center text-xs font-semibold text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity gap-0.5 shrink-0 mt-0.5">
                               Verify <ArrowUpRight size={14} />
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-slate-400 bg-slate-50 px-2 py-0.5 rounded border border-slate-200/80 shrink-0 mt-0.5" title="Detail sertifikasi dikunci oleh pengelola">
-                              <Lock size={11} className="text-slate-400" /> Detail Terkunci
                             </span>
                           )}
                         </div>
