@@ -286,7 +286,9 @@ class SubmissionAdminController extends Controller
 
         // 2. Generate Nomor BICC otomatis
         $publishedAt = Carbon::parse($request->published_at ?? now());
-        $validUntil  = $publishedAt->copy()->addYears(3)->subDay();
+        $validUntil  = $request->filled('valid_until')
+            ? Carbon::parse($request->valid_until)
+            : $publishedAt->copy()->addYears(3)->subDay();
         $country     = $submission->user->companyDetail->company_country ?? 'ID';
         $biccNumber  = CertificateNumberService::generate($publishedAt->toDateString(), $country);
 
@@ -427,6 +429,52 @@ class SubmissionAdminController extends Controller
 
         return response()->json([
             'message' => 'Sertifikat berhasil diterbitkan dan menunggu persetujuan Super Admin. Berlaku hingga ' . $validUntil->format('d M Y') . '.',
+        ]);
+    }
+
+    /**
+     * PUT /api/admin/submissions/{id}/certificate
+     * Update data sertifikat yang sudah diterbitkan (BICC, Direktur, Tanggal Terbit, Tanggal Berlaku)
+     */
+    public function updateCertificate(Request $request, string $id): JsonResponse
+    {
+        $submission = Submission::with(['certificateUser'])->findOrFail($id);
+
+        $certUser = $submission->certificateUser;
+        if (!$certUser) {
+            return response()->json([
+                'message' => 'Sertifikat untuk pengajuan ini belum diterbitkan.',
+            ], 404);
+        }
+
+        $validated = $request->validate([
+            'direktur'     => ['required', 'string', 'max:200'],
+            'published_at' => ['required', 'date'],
+            'valid_until'  => ['required', 'date'],
+        ]);
+
+        $publishedAt = Carbon::parse($validated['published_at']);
+        $validUntil  = Carbon::parse($validated['valid_until']);
+
+        $certUser->update([
+            'direktur'     => trim($validated['direktur']),
+            'published_at' => $publishedAt,
+            'valid_until'  => $validUntil,
+        ]);
+
+        ActivityLog::create([
+            'user_id'       => Auth::id(),
+            'submission_id' => $submission->id,
+            'action'        => 'updated_certificate',
+            'description'   => 'Memperbarui data sertifikat (Nomor BICC: ' . $certUser->mmic . ', Direktur: ' . $certUser->direktur . ', Berlaku: ' . $certUser->valid_until->format('d/m/Y') . ')',
+            'ip_address'    => request()->ip(),
+        ]);
+
+        \Illuminate\Support\Facades\Cache::forget('verified_companies_p1');
+
+        return response()->json([
+            'message' => 'Data sertifikat berhasil diperbarui.',
+            'data'    => \App\Http\Resources\CertificateResource::make($certUser->fresh()),
         ]);
     }
 

@@ -6,14 +6,15 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layouts/AppLayout";
 import { LoadingSpinner } from "@/components/ui/index";
 import api from "@/lib/api";
-import { formatDate, cn } from "@/lib/utils";
+import { formatDate, toDateInputValue, cn } from "@/lib/utils";
 import {
   Award, ArrowLeft, Download, CheckCircle2, Building2,
   Calendar, Hash, BarChart3, ShieldCheck, ShieldAlert,
-  RefreshCw, FileText, ExternalLink,
+  RefreshCw, FileText, ExternalLink, Edit3, X, Loader2,
 } from "lucide-react";
+import { toast } from "sonner";
 import { useAuthStore } from "@/store/auth";
-import { canApproveCertificate } from "@/lib/roles";
+import { canApproveCertificate, canIssueCertificate } from "@/lib/roles";
 import { useTranslation } from "@/store/lang";
 import Link from "next/link";
 
@@ -37,10 +38,19 @@ export default function AdminCertificateDetailPage() {
   const queryClient = useQueryClient();
   const certId = params?.id as string;
   const canApprove = canApproveCertificate(user);
+  const canIssue = canIssueCertificate(user);
 
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
+
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editForm, setEditForm] = useState({
+    mmic: "",
+    direktur: "",
+    published_at: "",
+    valid_until: "",
+  });
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["admin-certificate-detail", certId],
@@ -49,6 +59,50 @@ export default function AdminCertificateDetailPage() {
       return res.data.data as CertDetail;
     },
     enabled: !!certId,
+  });
+
+  const openEditModal = () => {
+    if (!data) return;
+    const pubDate = toDateInputValue(data.published_at) || new Date().toISOString().split("T")[0];
+    let valDate = toDateInputValue(data.valid_until);
+    if (!valDate && pubDate) {
+      const d = new Date(pubDate);
+      d.setFullYear(d.getFullYear() + 3);
+      d.setDate(d.getDate() - 1);
+      valDate = d.toISOString().split("T")[0];
+    }
+    setEditForm({
+      mmic: data.mmic || "",
+      direktur: data.direktur || "Rahmat Ihsan, S.H.",
+      published_at: pubDate,
+      valid_until: valDate,
+    });
+    setShowEditModal(true);
+  };
+
+  const updateMutation = useMutation({
+    mutationFn: async () => {
+      await api.put(`/admin/certificates/${certId}`, {
+        direktur: editForm.direktur.trim(),
+        published_at: editForm.published_at,
+        valid_until: editForm.valid_until,
+      });
+    },
+    onSuccess: () => {
+      toast.success("Data sertifikat berhasil diperbarui!");
+      setShowEditModal(false);
+      queryClient.invalidateQueries({ queryKey: ["admin-certificate-detail", certId] });
+      queryClient.invalidateQueries({ queryKey: ["admin-certificates"] });
+      setTimeout(() => {
+        fetchPdfBlob();
+      }, 400);
+    },
+    onError: (err: any) => {
+      const serverMsg = err.response?.data?.errors
+        ? Object.values(err.response.data.errors).flat()[0]
+        : err.response?.data?.message;
+      toast.error(serverMsg || "Gagal memperbarui data sertifikat.");
+    },
   });
 
   const approveMutation = useMutation({
@@ -202,6 +256,16 @@ export default function AdminCertificateDetailPage() {
                 {t.dash_admin_cert_download_btn || "Download PDF Sertifikat"}
               </button>
 
+              {canIssue && (
+                <button
+                  onClick={openEditModal}
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-bold text-sm transition-all cursor-pointer shadow-2xs"
+                >
+                  <Edit3 size={16} />
+                  <span>Edit Data Sertifikat</span>
+                </button>
+              )}
+
               <button onClick={fetchPdfBlob} disabled={pdfLoading} className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-sm transition-all disabled:opacity-60 cursor-pointer">
                 <RefreshCw size={15} className={pdfLoading ? "animate-spin" : ""} />
                 {pdfLoading ? (t.dash_admin_cert_loading_preview || "Memuat...") : (t.dash_admin_cert_refresh_btn || "Refresh Preview")}
@@ -267,6 +331,156 @@ export default function AdminCertificateDetailPage() {
                 )}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Certificate Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs"
+            onClick={() => setShowEditModal(false)}
+          />
+          <div className="relative bg-white dark:bg-slate-900 rounded-2xl w-full max-w-lg shadow-2xl border border-slate-200/80 dark:border-slate-800 p-6 z-10 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 mb-5">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
+                  <Edit3 size={18} />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-slate-900 dark:text-white text-base">
+                    Edit Data Sertifikat
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Perbarui nomor BICC, nama direktur, atau masa berlaku sertifikat.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowEditModal(false)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                updateMutation.mutate();
+              }}
+              className="space-y-4 text-xs"
+            >
+              {/* Nomor BICC (Terkunci / Read-Only) */}
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">
+                    Nomor Registrasi Sertifikat (BICC)
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-600 dark:text-slate-300 bg-slate-200/80 dark:bg-slate-700/80 px-2 py-0.5 rounded-full">
+                    <ShieldCheck size={11} /> Terkunci Permanen
+                  </span>
+                </div>
+                <p className="font-mono font-extrabold text-blue-700 dark:text-blue-300 text-sm tracking-wide">
+                  {editForm.mmic || "—"}
+                </p>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
+                  Nomor registrasi unik resmi BICC di-generate secara otomatis sesuai standar penomoran nasional dan tidak dapat diubah manual.
+                </p>
+              </div>
+
+              {/* Nama Direktur */}
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                  Nama Direktur / Pejabat Penandatangan
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editForm.direktur}
+                  onChange={(e) => setEditForm((p) => ({ ...p, direktur: e.target.value }))}
+                  placeholder="Contoh: Rahmat Ihsan, S.H."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium text-sm focus:border-blue-500 focus:outline-hidden transition-all shadow-2xs"
+                />
+              </div>
+
+              {/* Tanggal Terbit & Tanggal Berlaku */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                    Tanggal Penerbitan
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={editForm.published_at}
+                    onChange={(e) => {
+                      const newPublished = e.target.value;
+                      setEditForm((p) => {
+                        let newValid = p.valid_until;
+                        if (newPublished) {
+                          const d = new Date(newPublished);
+                          d.setFullYear(d.getFullYear() + 3);
+                          d.setDate(d.getDate() - 1);
+                          newValid = d.toISOString().split("T")[0];
+                        }
+                        return { ...p, published_at: newPublished, valid_until: newValid };
+                      });
+                    }}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium focus:border-blue-500 focus:outline-hidden transition-all shadow-2xs"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                      Berlaku Hingga
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (editForm.published_at) {
+                          const d = new Date(editForm.published_at);
+                          d.setFullYear(d.getFullYear() + 3);
+                          d.setDate(d.getDate() - 1);
+                          setEditForm((p) => ({ ...p, valid_until: d.toISOString().split("T")[0] }));
+                        }
+                      }}
+                      className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline font-semibold cursor-pointer"
+                    >
+                      +3 Thn (Default)
+                    </button>
+                  </div>
+                  <input
+                    type="date"
+                    required
+                    value={editForm.valid_until}
+                    onChange={(e) => setEditForm((p) => ({ ...p, valid_until: e.target.value }))}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white font-medium focus:border-blue-500 focus:outline-hidden transition-all shadow-2xs"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2.5 mt-6 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="px-4 py-2.5 border border-slate-200/80 dark:border-slate-700 rounded-xl font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer text-xs"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={updateMutation.isPending}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-md shadow-blue-600/20 disabled:opacity-60 transition-all cursor-pointer text-xs"
+                >
+                  {updateMutation.isPending && <Loader2 size={14} className="animate-spin" />}
+                  <span>Simpan Perubahan</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

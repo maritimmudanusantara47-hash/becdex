@@ -9,11 +9,11 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ScoreGauge, LoadingSpinner } from "@/components/ui/index";
 import Link from "next/link";
 import api from "@/lib/api";
-import { cn } from "@/lib/utils";
+import { cn, formatDate, toDateInputValue } from "@/lib/utils";
 import {
   ArrowLeft, CheckCircle2, XCircle, ChevronDown, ChevronRight,
   FileText, Loader2, Award, MapPin, Building2, BookOpen, Scale,
-  ShieldCheck, Mail, Briefcase, Calendar, ExternalLink, X, AlertTriangle, Users, FileSearch, Activity, MessageSquare, Info, Printer
+  ShieldCheck, Mail, Briefcase, Calendar, ExternalLink, X, AlertTriangle, Users, FileSearch, Activity, MessageSquare, Info, Printer, Edit3
 } from "lucide-react";
 import { MdFolder } from "react-icons/md";
 import AssessorTab from "@/components/admin-tabs/AssessorTab";
@@ -65,7 +65,7 @@ interface SubmissionData {
   survey?: { scheduled_at: string; scheduled_end_at?: string | null; location_link?: string; notes?: string };
   assessors?: { id: number; name: string; email: string }[];
   preview_bicc_number?: string;
-  certificate?: { mmic?: string; published_at?: string; valid_until?: string };
+  certificate?: { id?: number; mmic?: string; direktur?: string; published_at?: string; valid_until?: string; is_approved?: boolean };
 }
 
 export default function AdminSubmissionDetailPage({ params }: { params: Promise<{ id: string }> | { id: string } }) {
@@ -93,7 +93,31 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
   const [showScoringGuide, setShowScoringGuide] = useState(false);
   const [showPrintChecklist, setShowPrintChecklist] = useState(false);
   const [surveyForm, setSurveyForm] = useState({ scheduled_at: "", scheduled_end_at: "", location_link: "", notes: "" });
-  const [certForm, setCertForm] = useState({ published_at: new Date().toISOString().split("T")[0], direktur: "Rahmat Ihsan, S.H." });
+  const [certForm, setCertForm] = useState({
+    mmic: "",
+    published_at: new Date().toISOString().split("T")[0],
+    valid_until: "",
+    direktur: "Rahmat Ihsan, S.H.",
+  });
+
+  const openCertModal = () => {
+    const existingCert = submission?.certificate;
+    const pubDate = toDateInputValue(existingCert?.published_at) || new Date().toISOString().split("T")[0];
+    let valDate = toDateInputValue(existingCert?.valid_until);
+    if (!valDate && pubDate) {
+      const d = new Date(pubDate);
+      d.setFullYear(d.getFullYear() + 3);
+      d.setDate(d.getDate() - 1);
+      valDate = d.toISOString().split("T")[0];
+    }
+    setCertForm({
+      mmic: existingCert?.mmic || submission?.preview_bicc_number || "",
+      published_at: pubDate,
+      valid_until: valDate,
+      direktur: existingCert?.direktur || "Rahmat Ihsan, S.H.",
+    });
+    setShowCertModal(true);
+  };
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
@@ -178,13 +202,24 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
 
   const certMutation = useMutation({
     mutationFn: async () => {
-      await api.post(`/admin/submissions/${id}/certificate`, {
+      const payload = {
         published_at: certForm.published_at || new Date().toISOString().split("T")[0],
-        direktur: certForm.direktur || undefined,
-      });
+        valid_until: certForm.valid_until || undefined,
+        direktur: certForm.direktur?.trim() || undefined,
+      };
+
+      if (submission?.certificate) {
+        await api.put(`/admin/submissions/${id}/certificate`, payload);
+      } else {
+        await api.post(`/admin/submissions/${id}/certificate`, payload);
+      }
     },
     onSuccess: () => {
-      toast.success(t.dash_admin_sub_id_msg_cert_success || "Sertifikat resmi BECdex berhasil diterbitkan!");
+      toast.success(
+        submission?.certificate
+          ? "Data sertifikat berhasil diperbarui!"
+          : (t.dash_admin_sub_id_msg_cert_success || "Sertifikat resmi BECdex berhasil diterbitkan!")
+      );
       setShowCertModal(false);
       refetch();
     },
@@ -193,7 +228,12 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
       const serverMsg = err.response?.data?.errors
         ? Object.values(err.response.data.errors).flat()[0]
         : err.response?.data?.message;
-      toast.error(serverMsg || t.dash_admin_sub_id_msg_cert_error || "Gagal menerbitkan sertifikat.");
+      toast.error(
+        serverMsg ||
+          (submission?.certificate
+            ? "Gagal memperbarui data sertifikat."
+            : (t.dash_admin_sub_id_msg_cert_error || "Gagal menerbitkan sertifikat."))
+      );
     },
   });
 
@@ -511,7 +551,7 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
                   <div className="flex w-full gap-2">
                     {submission.survey && canIssueCertificate(user) && (
                       <button
-                        onClick={() => setShowCertModal(true)}
+                        onClick={openCertModal}
                         className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] sm:text-xs shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
                         title="Langsung Terbitkan Sertifikat (Revisi Pasca Survei)"
                       >
@@ -563,7 +603,7 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
                   <div className="flex w-full gap-2">
                     {canIssueCertificate(user) && (
                       <button
-                        onClick={() => setShowCertModal(true)}
+                        onClick={openCertModal}
                         className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
                       >
                         <Award size={14} />
@@ -592,9 +632,61 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
                 )}
               </>
             ) : (
-              <div className="w-full text-center text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 py-3 rounded-xl flex items-center justify-center gap-1.5">
-                <Award size={15} />
-                <span>{t.dash_admin_sub_id_certified || "Sudah Tersertifikasi Resmi"}</span>
+              <div className="w-full flex flex-col gap-2.5 p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-800 dark:text-emerald-200">
+                    <Award size={16} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <span>{t.dash_admin_sub_id_certified || "Sudah Tersertifikasi Resmi"}</span>
+                  </div>
+                  {submission.certificate?.id && (
+                    <Link
+                      href={`/admin/certificates/${submission.certificate.id}`}
+                      className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
+                    >
+                      <ExternalLink size={12} />
+                      Detail Sertifikat
+                    </Link>
+                  )}
+                </div>
+
+                {submission.certificate && (
+                  <div className="text-[11px] text-slate-600 dark:text-slate-300 grid grid-cols-2 gap-1.5 pt-1.5 border-t border-emerald-200/60 dark:border-emerald-800/60 font-medium">
+                    <div>
+                      <span className="text-slate-400 block text-[10px]">Nomor BICC:</span>
+                      <span className="font-mono font-bold text-slate-800 dark:text-white">
+                        {submission.certificate.mmic || "—"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[10px]">Direktur:</span>
+                      <span className="font-semibold text-slate-800 dark:text-white">
+                        {submission.certificate.direktur || "—"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[10px]">Tanggal Terbit:</span>
+                      <span className="text-slate-800 dark:text-white">
+                        {submission.certificate.published_at ? formatDate(submission.certificate.published_at) : "—"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[10px]">Berlaku Hingga:</span>
+                      <span className="text-emerald-700 dark:text-emerald-400 font-bold">
+                        {submission.certificate.valid_until ? formatDate(submission.certificate.valid_until) : "—"}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {canIssueCertificate(user) && (
+                  <button
+                    onClick={openCertModal}
+                    className="w-full mt-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
+                  >
+                    <Edit3 size={13} />
+                    <span>Edit Data Sertifikat</span>
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -1225,13 +1317,24 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
       {/* Certificate Modal */}
       {showCertModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md p-6 shadow-2xl border border-slate-200/80 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-lg p-6 shadow-2xl border border-slate-200/80 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 mb-4">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold">
-                  <Award size={18} />
+                  {submission.certificate ? <Edit3 size={18} /> : <Award size={18} />}
                 </div>
-                <h3 className="font-extrabold text-slate-900 dark:text-white text-base">{t.dash_admin_sub_id_cert_title || "Terbitkan Sertifikat Resmi"}</h3>
+                <div>
+                  <h3 className="font-extrabold text-slate-900 dark:text-white text-base">
+                    {submission.certificate
+                      ? "Edit Data Sertifikat BECdex"
+                      : (t.dash_admin_sub_id_cert_title || "Terbitkan Sertifikat Resmi")}
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {submission.certificate
+                      ? "Perbarui nomor registrasi BICC, pejabat penandatangan, atau masa berlaku sertifikat."
+                      : ((t as any).dash_admin_sub_id_modal_cert_desc || "Pastikan kelayakan dan nilai akhir sudah terverifikasi dengan benar sebelum menerbitkan sertifikat.")}
+                  </p>
+                </div>
               </div>
               <button onClick={() => setShowCertModal(false)} className="p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer">
                 <X size={18} />
@@ -1239,7 +1342,7 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
             </div>
 
             <div className="space-y-4 text-xs">
-              {/* Nomor BICC Otomatis */}
+              {/* Nomor BICC (Terkunci Otomatis / Read-Only) */}
               <div className="p-3.5 rounded-xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">
@@ -1250,7 +1353,7 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
                   </span>
                 </div>
                 <p className="font-mono font-extrabold text-blue-700 dark:text-blue-300 text-sm tracking-wide">
-                  {submission.preview_bicc_number || submission.certificate?.mmic || "BICC..."}
+                  {submission.certificate?.mmic || submission.preview_bicc_number || "BICC..."}
                 </p>
                 <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
                   Nomor registrasi unik resmi BICC di-generate secara otomatis sesuai standar penomoran nasional dan tidak dapat diubah manual.
@@ -1258,39 +1361,14 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
               </div>
 
               {/* Kategori Sertifikat */}
-              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Kategori Sertifikat (Otomatis)</span>
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700">
+                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Kategori Sertifikat (Otomatis dari Skor)</span>
                 <p className="font-extrabold text-slate-900 dark:text-white text-sm">
                   {submission.valid_score >= 89 ? "Excellent Blue Economy Company" : "Good Blue Economy Company"} (Skor: {submission.valid_score}%)
                 </p>
               </div>
 
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">{t.dash_admin_sub_id_cert_date || "Tanggal Penerbitan"}</label>
-                <input
-                  type="date"
-                  value={certForm.published_at}
-                  onChange={(e) => setCertForm((p) => ({ ...p, published_at: e.target.value }))}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800 text-slate-800 dark:text-white font-medium focus:bg-white focus:border-blue-500 focus:outline-hidden transition-all shadow-2xs"
-                />
-                {certForm.published_at && (
-                  <p className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 mt-1.5 flex items-center gap-1">
-                    <CheckCircle2 size={13} />
-                    <span>
-                      Masa berlaku 3 tahun (-1 hari): Berlaku hingga{" "}
-                      <span className="font-bold underline">
-                        {(() => {
-                          const d = new Date(certForm.published_at);
-                          d.setFullYear(d.getFullYear() + 3);
-                          d.setDate(d.getDate() - 1);
-                          return d.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
-                        })()}
-                      </span>
-                    </span>
-                  </p>
-                )}
-              </div>
-
+              {/* Nama Direktur */}
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">{t.dash_admin_sub_id_cert_director || "Nama Direktur / Pejabat Penandatangan"}</label>
                 <input
@@ -1298,8 +1376,61 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
                   value={certForm.direktur}
                   onChange={(e) => setCertForm((p) => ({ ...p, direktur: e.target.value }))}
                   placeholder="Contoh: Rahmat Ihsan, S.H."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800 text-slate-800 dark:text-white font-medium focus:bg-white focus:border-blue-500 focus:outline-hidden transition-all shadow-2xs"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white font-medium focus:border-blue-500 focus:outline-hidden transition-all shadow-2xs"
                 />
+              </div>
+
+              {/* Tanggal Penerbitan & Berlaku Hingga */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">{t.dash_admin_sub_id_cert_date || "Tanggal Penerbitan"}</label>
+                  <input
+                    type="date"
+                    value={certForm.published_at}
+                    onChange={(e) => {
+                      const newPublished = e.target.value;
+                      setCertForm((p) => {
+                        let newValid = p.valid_until;
+                        if (newPublished) {
+                          const d = new Date(newPublished);
+                          d.setFullYear(d.getFullYear() + 3);
+                          d.setDate(d.getDate() - 1);
+                          newValid = d.toISOString().split("T")[0];
+                        }
+                        return { ...p, published_at: newPublished, valid_until: newValid };
+                      });
+                    }}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white font-medium focus:border-blue-500 focus:outline-hidden transition-all shadow-2xs"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                      Berlaku Hingga
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (certForm.published_at) {
+                          const d = new Date(certForm.published_at);
+                          d.setFullYear(d.getFullYear() + 3);
+                          d.setDate(d.getDate() - 1);
+                          setCertForm((p) => ({ ...p, valid_until: d.toISOString().split("T")[0] }));
+                        }
+                      }}
+                      className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline font-semibold cursor-pointer"
+                    >
+                      +3 Thn (Default)
+                    </button>
+                  </div>
+                  <input
+                    type="date"
+                    value={certForm.valid_until}
+                    onChange={(e) => setCertForm((p) => ({ ...p, valid_until: e.target.value }))}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white font-medium focus:border-blue-500 focus:outline-hidden transition-all shadow-2xs"
+                  />
+                </div>
               </div>
             </div>
 
@@ -1318,7 +1449,11 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
                 className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-md shadow-emerald-600/20 disabled:opacity-60 transition-all cursor-pointer text-xs"
               >
                 {certMutation.isPending && <Loader2 size={14} className="animate-spin" />}
-                <span>{t.dash_admin_sub_id_btn_save_cert || "Terbitkan Sertifikat Sekarang"}</span>
+                <span>
+                  {submission.certificate
+                    ? "Simpan Perubahan Sertifikat"
+                    : (t.dash_admin_sub_id_btn_save_cert || "Terbitkan Sertifikat Sekarang")}
+                </span>
               </button>
             </div>
           </div>
