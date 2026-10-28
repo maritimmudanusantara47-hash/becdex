@@ -98,9 +98,12 @@ export default function AdminCertificateDetailPage() {
       const blob = new Blob([res.data], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
+      a.href = url;
       const companyName = data?.user?.name ? data.user.name.replace(/[/\\:*?"<>|]/g, "").trim() : `ID_${certId}`;
       a.download = `BECdex Certificate_${companyName}.pdf`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch {
       alert(t.dash_admin_cert_preview_error || "Gagal mengunduh PDF. Coba lagi.");
