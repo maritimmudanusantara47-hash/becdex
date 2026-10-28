@@ -174,7 +174,9 @@ class CertificateAdminController extends Controller
                 $pdf        = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.certificate', $data);
                 $pdf->setPaper('a4', 'portrait');
                 $pdfContent = $pdf->output();
-                $pdfFileName = 'certificate_' . str_replace(' ', '_', $cert->user->name) . '.pdf';
+                $companyName = trim($cert->user->name ?? 'Company');
+                $safeName    = preg_replace('[/\\:*?"<>|]', '', $companyName);
+                $pdfFileName = 'BECdex Certificate_' . $safeName . '.pdf';
 
                 if ($cert->submission) {
                     Mail::to($cert->user->email)->queue(new \App\Mail\CertificateIssuedMail($cert->submission, $pdfContent, $pdfFileName));
@@ -286,7 +288,9 @@ class CertificateAdminController extends Controller
         // 6. Generate PDF
         $pdf      = Pdf::loadView('pdf.certificate', $data);
         $pdf->setPaper('a4', 'portrait');
-        $fileName = 'certificate_' . str_replace(' ', '_', $cert->user->name) . '.pdf';
+        $companyName = trim($cert->user->name ?? 'Company');
+        $safeName    = preg_replace('[/\\:*?"<>|]', '', $companyName);
+        $fileName    = 'BECdex Certificate_' . $safeName . '.pdf';
 
         // Mode inline = preview di iframe; mode download = force download file
         if ($request->query('mode') === 'download') {

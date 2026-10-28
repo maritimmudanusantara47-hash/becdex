@@ -98,8 +98,8 @@ export default function AdminCertificateDetailPage() {
       const blob = new Blob([res.data], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = url;
-      a.download = `sertifikat_${data?.user?.name?.replace(/\\s+/g, "_") ?? certId}.pdf`;
+      const companyName = data?.user?.name ? data.user.name.replace(/[/\\:*?"<>|]/g, "").trim() : `ID_${certId}`;
+      a.download = `BECdex Certificate_${companyName}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
     } catch {

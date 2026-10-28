@@ -332,10 +332,17 @@ class SubmissionController extends Controller
 
         // 6. Generate PDF using Barryvdh\DomPDF\Facade\Pdf
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.certificate', $data);
-        $pdf->setPaper('a4', 'portrait'); // Changed to portrait to match image
+        $pdf->setPaper('a4', 'portrait');
 
-        // Return PDF inline stream so it can be viewed in an iframe
-        return $pdf->stream('certificate_' . str_replace(' ', '_', $submission->user->name) . '.pdf');
+        $companyName = trim($submission->user->name ?? 'Company');
+        $safeName    = preg_replace('[/\\:*?"<>|]', '', $companyName);
+        $fileName    = 'BECdex Certificate_' . $safeName . '.pdf';
+
+        if (request()->query('mode') === 'download') {
+            return $pdf->download($fileName);
+        }
+
+        return $pdf->stream($fileName);
     }
 
     /**

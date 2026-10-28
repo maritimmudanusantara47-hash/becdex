@@ -219,9 +219,10 @@ export function CertificateTab({ submission }: Props) {
       {isValid && (
         <div className="flex flex-col sm:flex-row gap-3 print:hidden">
           <a
-            href={certPdfUrl}
+            href={`${certPdfUrl}?mode=download`}
             target="_blank"
             rel="noopener noreferrer"
+            download={`BECdex Certificate_${submission.user?.name ? submission.user.name.replace(/[/\\:*?"<>|]/g, "").trim() : "Company"}.pdf`}
             className="flex-1 inline-flex items-center justify-center gap-2.5 bg-[#0c2340] hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 text-white py-3.5 rounded-xl font-extrabold text-xs transition-all shadow-md shadow-[#0c2340]/20"
           >
             <Download size={16} />

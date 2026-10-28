@@ -415,7 +415,9 @@ class SubmissionAdminController extends Controller
                 $pdf->setPaper('a4', 'portrait');
                 $pdfContent = $pdf->output();
 
-                $pdfFileName = 'certificate_' . str_replace(' ', '_', $submission->user->name) . '.pdf';
+                $companyName = trim($submission->user->name ?? 'Company');
+                $safeName    = preg_replace('[/\\:*?"<>|]', '', $companyName);
+                $pdfFileName = 'BECdex Certificate_' . $safeName . '.pdf';
                 
                 Mail::to($submission->user->email)->queue(new CertificateIssuedMail($submission, $pdfContent, $pdfFileName));
             } catch (\Exception $e) {
