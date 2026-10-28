@@ -186,8 +186,8 @@ class Submission extends Model
         $sql = "
             SELECT 
                 a.name as aspect,
-                SUM(ans.value) as score,
-                SUM(ans.valid_value) as valid_score,
+                SUM(COALESCE(ans.value, 0)) as score,
+                SUM(COALESCE(ans.valid_value, 0)) as valid_score,
                 COUNT(ans.id) * 2 as max_score
             FROM answers ans
             JOIN questions q ON ans.question_id = q.id
@@ -203,12 +203,16 @@ class Submission extends Model
         $results = \Illuminate\Support\Facades\DB::select($sql, [$this->id]);
         
         return array_map(function($row) {
-            $maxScore = $row->max_score > 0 ? $row->max_score : 1;
+            $maxScore = $row->max_score > 0 ? (float)$row->max_score : 1.0;
+            $initialScore = round(((float)($row->score ?? 0) / $maxScore) * 100, 2);
+            $validScore = round(((float)($row->valid_score ?? 0) / $maxScore) * 100, 2);
+
             return [
-                'subject' => $row->aspect,
-                'A' => round((($row->score ?? 0) / $maxScore) * 100, 2),
-                'B' => round((($row->valid_score ?? 0) / $maxScore) * 100, 2),
-                'fullMark' => 100
+                'subject'     => $row->aspect,
+                'A'           => $initialScore,
+                'B'           => $validScore,
+                'valid_score' => $validScore,
+                'fullMark'    => 100
             ];
         }, $results);
     }
