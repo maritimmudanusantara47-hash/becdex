@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
@@ -26,9 +26,39 @@ import {
   ChevronRight,
   ShieldAlert,
   Lock,
+  TrendingUp,
 } from "lucide-react";
 import { MdCheckCircle } from "react-icons/md";
+import {
+  Radar,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  ResponsiveContainer,
+  Tooltip as RechartsTooltip,
+  Legend,
+} from "recharts";
 import { useTranslation } from "@/store/lang";
+
+// Custom Tooltip for Radar Chart
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const CustomRadarTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    const item = payload[0];
+    const data = item.payload;
+    const score = data.valid_score ?? data.B ?? item.value ?? 0;
+    return (
+      <div className="bg-white/95 backdrop-blur-xs px-3.5 py-2.5 rounded-xl border border-slate-200 shadow-md text-xs">
+        <p className="font-bold text-slate-800 mb-0.5">{data.subject}</p>
+        <p className="text-blue-600 font-medium">
+          Verified Score (%) : <span className="font-bold">{score}</span>
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
 
 interface VerifiedCompanyDetail {
   id: number;
@@ -66,6 +96,11 @@ export default function VerifiedCompanyDetailPage() {
   const serialId = (params?.serial_id as string) || "";
   const { t, locale } = useTranslation();
   const [copied, setCopied] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Fetch Lookups for country name mapping
   const { data: lookupsData } = useQuery({
@@ -481,6 +516,77 @@ export default function VerifiedCompanyDetailPage() {
                       <span className="font-semibold text-slate-800">{companyData.director || "Rahmat Ihsan, S.H."}</span>
                     </div>
                   </div>
+                </div>
+
+                {/* Analisis Skor per Aspek (Radar Chart) */}
+                <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs">
+                  <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
+                    <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                      <TrendingUp size={18} className="text-blue-600" />
+                      <span>{t.cert_spider_chart || "Analisis Skor per Aspek (Radar Chart)"}</span>
+                    </h2>
+                    <span className="text-[11px] text-slate-400 font-medium tracking-wide">Spider Chart</span>
+                  </div>
+
+                  {companyData.radar_data && companyData.radar_data.length > 0 ? (
+                    <div className="space-y-4">
+                      <div className="h-64 sm:h-72 w-full flex items-center justify-center">
+                        {isMounted ? (
+                          <ResponsiveContainer width="100%" height="100%">
+                            <RadarChart cx="50%" cy="50%" outerRadius="68%" data={companyData.radar_data}>
+                              <PolarGrid stroke="#e2e8f0" />
+                              <PolarAngleAxis
+                                dataKey="subject"
+                                tick={{ fill: "#475569", fontSize: 11, fontWeight: 600 }}
+                              />
+                              <PolarRadiusAxis
+                                angle={30}
+                                domain={[0, 100]}
+                                tick={{ fill: "#94a3b8", fontSize: 9 }}
+                              />
+                              <Radar
+                                name="Verified Score (%)"
+                                dataKey="valid_score"
+                                stroke="#2563eb"
+                                fill="#3b82f6"
+                                fillOpacity={0.35}
+                                dot={{ r: 3, fill: "#2563eb", stroke: "#ffffff", strokeWidth: 1.5 }}
+                              />
+                              <RechartsTooltip content={<CustomRadarTooltip />} />
+                              <Legend
+                                wrapperStyle={{ fontSize: "11px", paddingTop: "8px" }}
+                                iconType="square"
+                              />
+                            </RadarChart>
+                          </ResponsiveContainer>
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <LoadingSpinner className="py-2" />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Rincian Skor per Aspek */}
+                      <div className="space-y-1.5 pt-3 border-t border-slate-100">
+                        {companyData.radar_data.map((item, idx) => {
+                          const aspectScore = item.valid_score ?? item.B ?? 0;
+                          return (
+                            <div
+                              key={idx}
+                              className="flex items-center justify-between text-xs py-1.5 px-3 rounded-lg bg-slate-50/80 border border-slate-100/90"
+                            >
+                              <span className="text-slate-600 font-medium">{item.subject}</span>
+                              <span className="font-bold text-blue-700">{aspectScore}%</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-xs text-slate-400">
+                      Informasi radar chart penilaian belum tersedia untuk sertifikasi ini.
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
