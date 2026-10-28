@@ -283,7 +283,7 @@ export default function VerifiedCompaniesPage() {
                           <div className="flex items-center justify-between w-full pt-1">
                             <div className="flex items-start gap-1.5 text-[13px] text-emerald-700 font-medium">
                               <MdCheckCircle size={16} className="text-emerald-600 shrink-0 mt-0.5" />
-                              <span className="leading-snug">Certified {catName} Blue Economy</span>
+                              <span className="leading-snug">Certified {catName} Blue Economy Company</span>
                             </div>
                           </div>
                         </div>
