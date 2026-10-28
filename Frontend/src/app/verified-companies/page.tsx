@@ -260,11 +260,9 @@ export default function VerifiedCompaniesPage() {
                           <h3 className="font-bold text-[17px] leading-tight text-[#4154f1] group-hover:text-blue-700 transition-colors">
                             {companyName}
                           </h3>
-                          {isClickable && (
-                            <span className="hidden sm:inline-flex items-center text-xs font-semibold text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity gap-0.5 shrink-0 mt-0.5">
-                              Verify <ArrowUpRight size={14} />
-                            </span>
-                          )}
+                          <span className="hidden sm:inline-flex items-center text-xs font-semibold text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity gap-0.5 shrink-0 mt-0.5">
+                            Verify <ArrowUpRight size={14} />
+                          </span>
                         </div>
 
                         <div className="space-y-2 inline-flex flex-col items-start mx-auto sm:mx-0 w-full">
@@ -306,7 +304,7 @@ export default function VerifiedCompaniesPage() {
                   return (
                     <div
                       key={cert.id}
-                      className="bg-white border border-gray-200 rounded-xl p-5 flex flex-col sm:flex-row items-center sm:items-start gap-5 cursor-default relative group"
+                      className="bg-white border border-gray-200 rounded-xl p-5 flex flex-col sm:flex-row items-center sm:items-start gap-5 hover:shadow-lg hover:border-blue-400 hover:-translate-y-0.5 transition-all cursor-default relative group"
                     >
                       {cardInner}
                     </div>
