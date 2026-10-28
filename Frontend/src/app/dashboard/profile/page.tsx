@@ -15,8 +15,32 @@ import api from "@/lib/api";
 import { User } from "@/types";
 
 import { Save, Loader2, Building, User as UserIcon, Mail, Phone, Briefcase, Camera, Globe, MapPin, AlignLeft, FileText, Download, Info, Key, Eye, EyeOff, Compass } from "lucide-react";
-import { useRef, useState } from "react";
+import { useRef, useState, useMemo } from "react";
 import { useTranslation } from "@/store/lang";
+import { getSectorLabel, SectorLookupItem, DEFAULT_COUNTRIES, DEFAULT_SECTORS } from "@/constants/sectors";
+
+interface ProfileFormData {
+  name: string;
+  brand_name: string;
+  company_phone: string;
+  company_country: string;
+  company_field_id: string;
+  description: string;
+  address: string;
+  street_address: string;
+  province: string;
+  city: string;
+  district: string;
+  postal_code: string;
+  latitude: number | null;
+  longitude: number | null;
+  website: string;
+  pic_name: string;
+  pic_position: string;
+  pic_email: string;
+  pic_phone: string;
+  [key: string]: unknown;
+}
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -28,7 +52,7 @@ export default function ProfilePage() {
 
   const [showLegalInfo, setShowLegalInfo] = useState(false);
   const [showOrgInfo, setShowOrgInfo] = useState(false);
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -64,15 +88,48 @@ export default function ProfilePage() {
     updatePasswordMutation.mutate(passwordForm);
   };
 
-  const { data: lookupsData, isLoading: isLoadingLookups } = useQuery({
+  const { data: lookupsData } = useQuery({
     queryKey: ["lookups"],
     queryFn: async () => {
-      const res = await api.get("/public/lookups");
-      return res.data;
+      try {
+        const res = await api.get("/public/lookups");
+        return res.data?.data || res.data;
+      } catch {
+        return { countries: DEFAULT_COUNTRIES, company_fields: DEFAULT_SECTORS };
+      }
     },
+    initialData: { countries: DEFAULT_COUNTRIES, company_fields: DEFAULT_SECTORS },
+    staleTime: Infinity,
+    gcTime: 1000 * 60 * 60 * 24,
   });
+  const countries =
+    (lookupsData?.countries?.length
+      ? lookupsData.countries
+      : lookupsData?.data?.countries?.length
+      ? lookupsData.data.countries
+      : null) || DEFAULT_COUNTRIES;
 
-  const lookups = lookupsData?.data || { countries: [], company_fields: [] };
+  const companyFields =
+    (lookupsData?.company_fields?.length
+      ? lookupsData.company_fields
+      : lookupsData?.data?.company_fields?.length
+      ? lookupsData.data.company_fields
+      : null) || DEFAULT_SECTORS;
+
+  const countryOptions = useMemo(() => {
+    return countries.map((c: { id?: number; iso: string; name: string }) => (
+      <option key={c.iso} value={c.iso}>{c.name}</option>
+    ));
+  }, [countries]);
+
+  const sectorOptions = useMemo(() => {
+    return companyFields.map((f: SectorLookupItem) => {
+      const label = getSectorLabel(f, locale);
+      return (
+        <option key={f.id} value={f.id}>{label}</option>
+      );
+    });
+  }, [companyFields, locale]);
 
   const { data, isLoading } = useQuery<{ data: User }>({
     queryKey: ["me"],
@@ -90,7 +147,7 @@ export default function ProfilePage() {
     setValue,
     watch,
     formState: { isSubmitting },
-  } = useForm<Record<string, any>>({
+  } = useForm<ProfileFormData>({
     values: {
       name: profile?.name ?? "",
       brand_name: profile?.company?.brand_name ?? "",
@@ -121,7 +178,7 @@ export default function ProfilePage() {
   const watchedPostalCode = watch("postal_code");
 
   const mutation = useMutation({
-    mutationFn: async (formData: Record<string, any>) => {
+    mutationFn: async (formData: ProfileFormData) => {
       if (formData.street_address) formData.street_address = formatSmartAddress(String(formData.street_address));
       if (formData.city) formData.city = formatSmartAddress(String(formData.city));
       if (formData.province) formData.province = formatSmartAddress(String(formData.province));
@@ -204,7 +261,7 @@ export default function ProfilePage() {
     }
   };
 
-  if (isLoading || isLoadingLookups) {
+  if (isLoading) {
     return (
       <AppLayout title={t.dash_profile_title || "Profil Perusahaan"}>
         <LoadingSpinner />
@@ -231,7 +288,6 @@ export default function ProfilePage() {
   const completedCount = fields.filter((f) => f && String(f).trim() !== "").length;
   // Prioritaskan persentase dan status resmi dari backend API
   const completeness = profile?.profile_completion_percentage ?? (Math.round((completedCount / fields.length) * 100) || 0);
-  const isComplete = profile?.is_profile_complete ?? (completeness === 100);
   const missingFields = profile?.missing_fields ?? [];
 
   return (
@@ -414,9 +470,7 @@ export default function ProfilePage() {
                 </label>
                 <select required {...register("company_country")} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 text-slate-800 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
                   <option value="">{t.dash_profile_sel_country || "Pilih Negara"}</option>
-                  {lookups.countries.map((c: { id: number; iso: string; name: string }) => (
-                    <option key={c.id} value={c.iso}>{c.name}</option>
-                  ))}
+                  {countryOptions}
                 </select>
               </div>
 
@@ -435,9 +489,7 @@ export default function ProfilePage() {
                 </label>
                 <select required {...register("company_field_id")} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 text-slate-800 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
                   <option value="">{t.dash_profile_sel_sector || "Pilih Sektor Usaha"}</option>
-                  {lookups.company_fields.map((f: { id: number; name: string }) => (
-                    <option key={f.id} value={f.id}>{f.name}</option>
-                  ))}
+                  {sectorOptions}
                 </select>
               </div>
 
