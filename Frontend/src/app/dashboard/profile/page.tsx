@@ -549,7 +549,7 @@ export default function ProfilePage() {
                   />
                 </div>
 
-                {/* Grid Rincian Wilayah */}
+                {/* Grid Rincian Wilayah (Disembunyikan sementara sesuai arahan)
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 pt-1">
                   <div>
                     <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">
@@ -557,9 +557,8 @@ export default function ProfilePage() {
                     </label>
                     <input
                       type="text"
-                      required
                       placeholder="Contoh: Jawa Barat"
-                      {...register("province", { required: true })}
+                      {...register("province")}
                       className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 text-slate-800 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                     />
                   </div>
@@ -569,9 +568,8 @@ export default function ProfilePage() {
                     </label>
                     <input
                       type="text"
-                      required
                       placeholder="Contoh: Kab. Bekasi"
-                      {...register("city", { required: true })}
+                      {...register("city")}
                       className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 text-slate-800 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                     />
                   </div>
@@ -599,6 +597,7 @@ export default function ProfilePage() {
                     />
                   </div>
                 </div>
+                */}
 
                 {/* Live Preview Alamat Sertifikat */}
                 <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/80 space-y-1">
