@@ -44,6 +44,8 @@ interface UserRow {
     pic_name?: string;
     pic_position?: string;
     company_field?: string;
+    description?: string | null;
+    description_en?: string | null;
   };
 }
 

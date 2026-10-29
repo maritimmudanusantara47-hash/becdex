@@ -33,6 +33,7 @@ class UserResource extends JsonResource
                 'pic_phone'        => $this->companyDetail->pic_phone,
                 'becdex_category'  => $this->companyDetail->becdexCategory?->name,
                 'description'      => $this->companyDetail->description,
+                'description_en'   => $this->companyDetail->description_en,
                 'address'          => $this->companyDetail->address,
                 'street_address'   => $this->companyDetail->street_address,
                 'province'         => $this->companyDetail->province,

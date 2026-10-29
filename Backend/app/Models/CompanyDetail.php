@@ -21,6 +21,7 @@ class CompanyDetail extends Model
         'pic_phone',
         'becdex_category_id',
         'description',
+        'description_en',
         'address',
         'street_address',
         'province',

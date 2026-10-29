@@ -11,6 +11,10 @@ interface UserEditData {
   email?: string;
   role?: { id: number; name?: string };
   is_active?: number;
+  company?: {
+    description?: string | null;
+    description_en?: string | null;
+  };
 }
 
 export function UserModal({
@@ -31,6 +35,8 @@ export function UserModal({
     password: "",
     role_id: 2, // default Company
     is_active: 1, // default Active
+    description: "",
+    description_en: "",
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -56,9 +62,11 @@ export function UserModal({
         password: "",
         role_id: editData.role?.id || 2,
         is_active: editData.is_active ?? 1,
+        description: editData.company?.description || "",
+        description_en: editData.company?.description_en || "",
       });
     } else {
-      setForm({ name: "", email: "", password: "", role_id: 2, is_active: 1 });
+      setForm({ name: "", email: "", password: "", role_id: 2, is_active: 1, description: "", description_en: "" });
     }
   }, [editData, isOpen]);
 
@@ -70,6 +78,11 @@ export function UserModal({
         role_id: form.role_id,
         is_active: form.is_active,
       };
+
+      if (form.role_id === 2 || form.description || form.description_en) {
+        payload.description = form.description;
+        payload.description_en = form.description_en;
+      }
 
       // Hanya kirim field password jika tambah baru atau admin secara eksplisit mengaktifkan ubah password
       if (!isEditing) {
@@ -99,7 +112,7 @@ export function UserModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xl w-full max-w-md overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-2xl w-full max-w-lg max-h-[92vh] flex flex-col overflow-hidden">
         <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-800/20">
           <h2 className="font-extrabold text-slate-800 dark:text-white">
             {isEditing ? "Edit Pengguna" : "Tambah Pengguna Baru"}
@@ -115,7 +128,7 @@ export function UserModal({
             e.preventDefault();
             mutation.mutate();
           }}
-          className="p-6 space-y-4"
+          className="p-6 space-y-4 overflow-y-auto"
         >
           {/* Hidden dummy fields to prevent aggressive browser autofill */}
           <input
@@ -294,6 +307,51 @@ export function UserModal({
               </select>
             </div>
           </div>
+
+          {/* Company Description (Bilingual) */}
+          {form.role_id === 2 && (
+            <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800/80">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                  Deskripsi Perusahaan (Bilingual)
+                </span>
+                <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                  Profil Publik & Sertifikat
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Deskripsi (Bahasa Indonesia)
+                </label>
+                <textarea
+                  rows={3}
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-blue-500 focus:outline-none"
+                  placeholder="Deskripsi profil perusahaan dalam Bahasa Indonesia..."
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                    Deskripsi (English)
+                  </label>
+                  <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                    (Opsional)
+                  </span>
+                </div>
+                <textarea
+                  rows={3}
+                  value={form.description_en}
+                  onChange={(e) => setForm({ ...form, description_en: e.target.value })}
+                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-blue-500 focus:outline-none"
+                  placeholder="Company profile description in English..."
+                />
+              </div>
+            </div>
+          )}
 
           <div className="pt-4 flex justify-end gap-2 border-t border-slate-100 dark:border-slate-800/80">
             <button
