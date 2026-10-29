@@ -24,6 +24,7 @@ export interface User {
     pic_phone: string;
     becdex_category: string | null;
     description: string | null;
+    description_en?: string | null;
     address: string | null;
     street_address?: string | null;
     province?: string | null;
