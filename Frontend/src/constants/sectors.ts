@@ -3,6 +3,7 @@ export const SECTOR_ID_MAP: Record<string, string> = {
   "Maritime Transport, Shipping, and Ports": "Transportasi Maritim, Pelayaran, dan Pelabuhan",
   "Marine Tourism and Cruise Ships": "Pariwisata Bahari dan Kapal Pesiar",
   "Biotechnology and Marine Bioproducts Processing": "Bioteknologi dan Pengolahan Bioproduk Laut",
+  "Marine Biotechnology and Bioproducts Processing": "Bioteknologi dan Pengolahan Bioproduk Laut",
   "Seawater Desalination": "Desalinasi Air Laut",
   "Deep Sea Mining, Oil, and Gas": "Pertambangan, Minyak, dan Gas Laut Dalam",
   "Marine Renewable Energy": "Energi Terbarukan Laut",
@@ -11,6 +12,7 @@ export const SECTOR_ID_MAP: Record<string, string> = {
   "Marine Defense and Security": "Pertahanan dan Keamanan Laut",
   "Maritime Research and Education": "Riset dan Edukasi Maritim",
   "Marine Communication, Equipment and Instrumentation": "Komunikasi, Peralatan, dan Instrumentasi Kelautan",
+  "Marine Finance, Investment, and Banking": "Keuangan, Investasi, dan Perbankan Maritim",
   // Fallbacks for seeder variants
   "Capture Fisheries & Aquaculture": "Perikanan Tangkap & Budidaya",
   "Marine Biotechnology & Processing": "Bioteknologi & Pengolahan Hasil Laut",
@@ -55,6 +57,7 @@ export const DEFAULT_SECTORS: SectorLookupItem[] = [
   { id: 10, name: "Marine Defense and Security", name_id: "Pertahanan dan Keamanan Laut" },
   { id: 11, name: "Maritime Research and Education", name_id: "Riset dan Edukasi Maritim" },
   { id: 12, name: "Marine Communication, Equipment and Instrumentation", name_id: "Komunikasi, Peralatan, dan Instrumentasi Kelautan" },
+  { id: 13, name: "Marine Finance, Investment, and Banking", name_id: "Keuangan, Investasi, dan Perbankan Maritim" },
 ];
 
 export const DEFAULT_COUNTRIES: CountryLookupItem[] = [

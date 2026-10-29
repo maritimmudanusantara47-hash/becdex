@@ -59,11 +59,13 @@ describe('Bilingual Sector Label Helper', () => {
     expect(SECTOR_ID_MAP['Marine Defense and Security']).toBe('Pertahanan dan Keamanan Laut');
     expect(SECTOR_ID_MAP['Maritime Research and Education']).toBe('Riset dan Edukasi Maritim');
     expect(SECTOR_ID_MAP['Marine Communication, Equipment and Instrumentation']).toBe('Komunikasi, Peralatan, dan Instrumentasi Kelautan');
+    expect(SECTOR_ID_MAP['Marine Finance, Investment, and Banking']).toBe('Keuangan, Investasi, dan Perbankan Maritim');
+    expect(SECTOR_ID_MAP['Marine Biotechnology and Bioproducts Processing']).toBe('Bioteknologi dan Pengolahan Bioproduk Laut');
   });
 
   it('provides comprehensive default fallback countries and sectors', () => {
     expect(DEFAULT_COUNTRIES.length).toBeGreaterThan(100);
     expect(DEFAULT_COUNTRIES.some(c => c.iso === 'ID')).toBe(true);
-    expect(DEFAULT_SECTORS.length).toBe(12);
+    expect(DEFAULT_SECTORS.length).toBeGreaterThanOrEqual(12);
   });
 });

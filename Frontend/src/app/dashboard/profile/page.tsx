@@ -89,7 +89,7 @@ export default function ProfilePage() {
   };
 
   const { data: lookupsData } = useQuery({
-    queryKey: ["lookups"],
+    queryKey: ["public-lookups"],
     queryFn: async () => {
       try {
         const res = await api.get("/public/lookups");
@@ -98,8 +98,8 @@ export default function ProfilePage() {
         return { countries: DEFAULT_COUNTRIES, company_fields: DEFAULT_SECTORS };
       }
     },
-    initialData: { countries: DEFAULT_COUNTRIES, company_fields: DEFAULT_SECTORS },
-    staleTime: Infinity,
+    placeholderData: { countries: DEFAULT_COUNTRIES, company_fields: DEFAULT_SECTORS },
+    staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 60 * 24,
   });
   const countries =
