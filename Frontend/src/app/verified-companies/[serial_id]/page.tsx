@@ -78,6 +78,7 @@ interface VerifiedCompanyDetail {
     sector: string | null;
     sector_id: string | null;
     description: string | null;
+    description_en?: string | null;
     website: string | null;
     address: string | null;
   };
@@ -153,6 +154,11 @@ export default function VerifiedCompanyDetailPage() {
       return dateStr;
     }
   };
+
+  const companyDescription =
+    locale === "en"
+      ? (companyData?.company.description_en || companyData?.company.description)
+      : (companyData?.company.description || companyData?.company.description_en);
 
   return (
     <div className="flex flex-col min-h-screen bg-[#f8fafc] text-slate-800 antialiased">
@@ -450,13 +456,13 @@ export default function VerifiedCompanyDetailPage() {
                       </div>
                     )}
 
-                    {companyData.company.description && (
+                    {companyDescription && (
                       <div className="sm:col-span-2 bg-slate-50/70 rounded-xl p-3.5 border border-slate-200/80">
                         <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
                           {t.cert_profile_desc || "Profile Description"}
                         </span>
                         <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
-                          {companyData.company.description}
+                          {companyDescription}
                         </p>
                       </div>
                     )}
