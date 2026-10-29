@@ -543,90 +543,94 @@ export default function AdminSubmissionDetailPage({ params }: { params: Promise<
             </div>
           </div>
 
-          <div className="flex gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+          <div className="w-full pt-3 border-t border-slate-100 dark:border-slate-800">
             {!isCertified ? (
               <>
                 {/* cert button: hanya tampil untuk Super Admin & Certificate Admin */}
                 {[2, 3, 4, 6].includes(Number(submission.status.id)) && (
-                  <div className="flex w-full gap-2">
-                    {submission.survey && canIssueCertificate(user) && (
+                  <div className="flex flex-col w-full gap-2">
+                    <div className="flex w-full gap-2">
+                      {submission.survey && canIssueCertificate(user) && (
+                        <button
+                          onClick={openCertModal}
+                          className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] sm:text-xs shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
+                          title="Langsung Terbitkan Sertifikat (Revisi Pasca Survei)"
+                        >
+                          <Award size={14} className="shrink-0" />
+                          <span className="truncate">{t.dash_admin_sub_id_btn_cert || "Terbitkan Sertifikat"}</span>
+                        </button>
+                      )}
+                      {!submission.survey && canVerifySubmissions(user) && (
+                        <button
+                          onClick={() => approveMutation.mutate()}
+                          disabled={approveMutation.isPending || unverifiedCount > 0}
+                          className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-emerald-600/80 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 hover:bg-emerald-600 hover:text-white font-bold text-[11px] sm:text-xs transition-all cursor-pointer disabled:opacity-50"
+                          title={unverifiedCount > 0 ? "Selesaikan penilaian semua indikator terlebih dahulu" : "Selesaikan & Luluskan"}
+                        >
+                          <CheckCircle2 size={14} className="shrink-0" />
+                          <span>Luluskan</span>
+                        </button>
+                      )}
                       <button
-                        onClick={openCertModal}
-                        className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] sm:text-xs shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
-                        title="Langsung Terbitkan Sertifikat (Revisi Pasca Survei)"
+                        onClick={() => setShowReturnModal(true)}
+                        disabled={returnMutation.isPending || unverifiedCount > 0}
+                        className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-[#f79205] bg-[#f79205] hover:bg-[#e08304] hover:border-[#e08304] text-slate-950 dark:bg-[#f79205] dark:text-slate-950 dark:hover:bg-[#e08304] font-black text-[11px] sm:text-xs shadow-xs transition-all cursor-pointer disabled:opacity-50"
+                        title={unverifiedCount > 0 ? "Selesaikan penilaian semua indikator terlebih dahulu" : "Kembalikan untuk Revisi"}
                       >
-                        <Award size={14} />
-                        <span className="hidden sm:inline">{t.dash_admin_sub_id_btn_cert || "Terbitkan Sertifikat"}</span>
+                        <AlertTriangle size={14} className="stroke-[2.5] shrink-0" />
+                        <span>{t.admin_sub_badge_revision || "Revisi"}</span>
                       </button>
-                    )}
-                    {!submission.survey && canVerifySubmissions(user) && (
-                      <button
-                        onClick={() => approveMutation.mutate()}
-                        disabled={approveMutation.isPending || unverifiedCount > 0}
-                        className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-emerald-600/80 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 hover:bg-emerald-600 hover:text-white font-bold text-[10px] sm:text-xs transition-all cursor-pointer disabled:opacity-50"
-                        title={unverifiedCount > 0 ? "Selesaikan penilaian semua indikator terlebih dahulu" : "Selesaikan & Luluskan"}
-                      >
-                        <CheckCircle2 size={14} />
-                        <span className="hidden sm:inline">Luluskan</span>
-                      </button>
-                    )}
-                    <button
-                      onClick={() => setShowReturnModal(true)}
-                      disabled={returnMutation.isPending || unverifiedCount > 0}
-                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-[#f79205] bg-[#f79205] hover:bg-[#e08304] hover:border-[#e08304] text-slate-950 dark:bg-[#f79205] dark:text-slate-950 dark:hover:bg-[#e08304] font-black text-[10px] sm:text-xs shadow-xs transition-all cursor-pointer disabled:opacity-50"
-                      title={unverifiedCount > 0 ? "Selesaikan penilaian semua indikator terlebih dahulu" : "Kembalikan untuk Revisi"}
-                    >
-                      <AlertTriangle size={14} className="stroke-[2.5]" />
-                      <span className="hidden sm:inline">{t.admin_sub_badge_revision || "Revisi"}</span>
-                    </button>
+                    </div>
                     <button
                       onClick={() => setShowRejectModal(true)}
                       disabled={unverifiedCount > 0}
-                      className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-rose-600/80 bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 hover:bg-rose-600 hover:text-white font-bold text-[10px] sm:text-xs transition-all cursor-pointer disabled:opacity-50"
+                      className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-rose-600/80 bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 hover:bg-rose-600 hover:text-white font-bold text-[11px] sm:text-xs transition-all cursor-pointer disabled:opacity-50"
                       title={unverifiedCount > 0 ? "Selesaikan penilaian semua indikator terlebih dahulu" : "Tolak Permanen"}
                     >
-                      <XCircle size={14} />
-                      <span className="hidden sm:inline">Tolak Permanen</span>
+                      <XCircle size={14} className="shrink-0" />
+                      <span>{t.admin_sub_btn_reject_perm || "Tolak Permanen"}</span>
                     </button>
                   </div>
                 )}
                 {Number(submission.status.id) === 8 && (
                   <button
                     onClick={() => setShowSurveyModal(true)}
-                    className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-blue-600/80 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 font-bold text-xs transition-all cursor-pointer"
+                    className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-blue-600/80 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 font-bold text-xs transition-all cursor-pointer"
                   >
-                    <MapPin size={14} />
+                    <MapPin size={14} className="shrink-0" />
                     <span>{t.dash_admin_sub_id_btn_survey || "Jadwal Survei"}</span>
                   </button>
                 )}
                 {Number(submission.status.id) === 7 && (
-                  <div className="flex w-full gap-2">
-                    {canIssueCertificate(user) && (
+                  <div className="flex flex-col w-full gap-2">
+                    <div className="flex w-full gap-2">
+                      {canIssueCertificate(user) && (
+                        <button
+                          onClick={openCertModal}
+                          className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] sm:text-xs shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
+                        >
+                          <Award size={14} className="shrink-0" />
+                          <span className="truncate">{t.dash_admin_sub_id_btn_cert || "Terbitkan Sertifikat"}</span>
+                        </button>
+                      )}
                       <button
-                        onClick={openCertModal}
-                        className="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
+                        onClick={() => setShowReturnModal(true)}
+                        disabled={returnMutation.isPending || unverifiedCount > 0}
+                        className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-[#f79205] bg-[#f79205] hover:bg-[#e08304] hover:border-[#e08304] text-slate-950 dark:bg-[#f79205] dark:text-slate-950 dark:hover:bg-[#e08304] font-black text-[11px] sm:text-xs shadow-xs transition-all cursor-pointer disabled:opacity-50"
+                        title={unverifiedCount > 0 ? "Selesaikan penilaian semua indikator terlebih dahulu" : "Kembalikan untuk Revisi Pasca Survei"}
                       >
-                        <Award size={14} />
-                        <span>{t.dash_admin_sub_id_btn_cert || "Terbitkan Sertifikat"}</span>
+                        <AlertTriangle size={14} className="stroke-[2.5] shrink-0" />
+                        <span>{t.admin_sub_badge_revision || "Revisi"}</span>
                       </button>
-                    )}
-                    <button
-                      onClick={() => setShowReturnModal(true)}
-                      disabled={returnMutation.isPending || unverifiedCount > 0}
-                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-[#f79205] bg-[#f79205] hover:bg-[#e08304] hover:border-[#e08304] text-slate-950 dark:bg-[#f79205] dark:text-slate-950 dark:hover:bg-[#e08304] font-black text-[10px] sm:text-xs shadow-xs transition-all cursor-pointer disabled:opacity-50"
-                      title={unverifiedCount > 0 ? "Selesaikan penilaian semua indikator terlebih dahulu" : "Kembalikan untuk Revisi Pasca Survei"}
-                    >
-                      <AlertTriangle size={14} className="stroke-[2.5]" />
-                      <span className="hidden sm:inline">{t.admin_sub_badge_revision || "Revisi"}</span>
-                    </button>
+                    </div>
                     <button
                       onClick={() => setShowRejectModal(true)}
                       disabled={unverifiedCount > 0}
-                      className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-rose-600/80 bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 hover:bg-rose-600 hover:text-white font-bold text-[10px] sm:text-xs transition-all cursor-pointer disabled:opacity-50"
+                      className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-rose-600/80 bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 hover:bg-rose-600 hover:text-white font-bold text-[11px] sm:text-xs transition-all cursor-pointer disabled:opacity-50"
                       title={unverifiedCount > 0 ? "Selesaikan penilaian semua indikator terlebih dahulu" : "Tolak Permanen"}
                     >
-                      <XCircle size={14} />
-                      <span className="hidden sm:inline">Tolak Permanen</span>
+                      <XCircle size={14} className="shrink-0" />
+                      <span>{t.admin_sub_btn_reject_perm || "Tolak Permanen"}</span>
                     </button>
                   </div>
                 )}
