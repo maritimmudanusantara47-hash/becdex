@@ -29,6 +29,7 @@ import {
   FileCheck,
   BookOpen,
   ClipboardList,
+  X,
 } from "lucide-react";
 
 type NavItem = {
@@ -45,7 +46,7 @@ import { useTranslation } from "@/store/lang";
 export function Sidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
-  const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
+  const { isExpanded, isMobileOpen, isHovered, setIsHovered, toggleMobileSidebar } = useSidebar();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const { t } = useTranslation();
@@ -164,6 +165,9 @@ export function Sidebar() {
               <Link
                 href={item.href}
                 data-tour={tourAttr}
+                onClick={() => {
+                  if (isMobileOpen) toggleMobileSidebar();
+                }}
                 className={cn(
                   "group relative flex items-center gap-3.5 rounded-xl px-3.5 py-3 text-sm font-medium transition-all duration-200 cursor-pointer",
                   !showFullText ? "justify-center px-3" : "justify-start",
@@ -215,7 +219,7 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "fixed mt-16 flex flex-col lg:mt-0 top-0 left-0 bg-white dark:bg-slate-900 border-r border-slate-200/80 dark:border-slate-800/80 text-slate-900 dark:text-slate-100 h-screen transition-all duration-300 ease-in-out z-50 shadow-xs",
+        "fixed top-0 left-0 flex flex-col bg-white dark:bg-slate-900 border-r border-slate-200/80 dark:border-slate-800/80 text-slate-900 dark:text-slate-100 h-[100dvh] lg:h-screen transition-all duration-300 ease-in-out z-50 shadow-2xl lg:shadow-xs",
         showFullText ? "w-72.5 px-5" : "w-22.5 px-3",
         isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
       )}
@@ -225,7 +229,7 @@ export function Sidebar() {
       {/* Brand Header */}
       <div
         className={cn(
-          "py-6 flex items-center border-b border-slate-100 dark:border-slate-800/60 mb-4 transition-all duration-300",
+          "py-4 sm:py-6 flex items-center border-b border-slate-100 dark:border-slate-800/60 mb-2 sm:mb-4 transition-all duration-300 shrink-0",
           !showFullText ? "justify-center" : "justify-between px-1"
         )}
       >
@@ -250,6 +254,17 @@ export function Sidebar() {
             </div>
           )}
         </Link>
+
+        {/* Close Button on Mobile Drawer */}
+        {isMobileOpen && (
+          <button
+            onClick={toggleMobileSidebar}
+            className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white transition-colors cursor-pointer"
+            aria-label="Tutup Menu"
+          >
+            <X size={20} />
+          </button>
+        )}
       </div>
 
       <div className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden no-scrollbar pr-1">
@@ -284,7 +299,7 @@ export function Sidebar() {
       {/* User Profile & Logout Footer */}
       <div
         className={cn(
-          "border-t border-slate-100 dark:border-slate-800/80 py-4 mt-auto transition-all duration-300",
+          "border-t border-slate-100 dark:border-slate-800/80 py-3.5 mt-auto shrink-0 transition-all duration-300 bg-white dark:bg-slate-900",
           !showFullText ? "px-1 text-center" : "px-2"
         )}
       >
@@ -336,13 +351,13 @@ export function Sidebar() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setShowLogoutModal(false)}
-                className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-sm"
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-sm cursor-pointer"
               >
                 {t.sidebar_logout_cancel || "Batal"}
               </button>
               <button
                 onClick={handleLogout}
-                className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold transition-colors text-sm shadow-md shadow-red-600/20"
+                className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold transition-colors text-sm shadow-md shadow-red-600/20 cursor-pointer"
               >
                 {t.sidebar_logout_confirm || "Ya, Keluar"}
               </button>
