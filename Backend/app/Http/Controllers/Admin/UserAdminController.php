@@ -50,6 +50,8 @@ class UserAdminController extends Controller
             'password' => 'required|string|min:8',
             'role_id' => 'required|integer|exists:roles,id',
             'is_active' => 'required|integer|in:0,1,2',
+            'description' => 'nullable|string',
+            'description_en' => 'nullable|string',
         ]);
 
         $dataToCreate = [
@@ -66,9 +68,16 @@ class UserAdminController extends Controller
 
         $user = User::create($dataToCreate);
 
+        if ($request->filled('description') || $request->filled('description_en')) {
+            $user->companyDetail()->create([
+                'description' => $request->description,
+                'description_en' => $request->description_en,
+            ]);
+        }
+
         return response()->json([
             'message' => 'Pengguna berhasil dibuat.',
-            'data' => new UserResource($user->load('role')),
+            'data' => new UserResource($user->load('role', 'companyDetail.companyField')),
         ], 201);
     }
 
@@ -86,6 +95,8 @@ class UserAdminController extends Controller
             'password' => 'nullable|string|min:8',
             'role_id' => 'required|integer|exists:roles,id',
             'is_active' => 'required|integer|in:0,1,2',
+            'description' => 'nullable|string',
+            'description_en' => 'nullable|string',
         ]);
 
         $dataToUpdate = [
@@ -105,9 +116,19 @@ class UserAdminController extends Controller
 
         $user->update($dataToUpdate);
 
+        if ($request->has('description') || $request->has('description_en')) {
+            $user->companyDetail()->updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'description' => $request->description,
+                    'description_en' => $request->description_en,
+                ]
+            );
+        }
+
         return response()->json([
             'message' => 'Data pengguna berhasil diperbarui.',
-            'data' => new UserResource($user->fresh()->load('role')),
+            'data' => new UserResource($user->fresh()->load('role', 'companyDetail.companyField')),
         ]);
     }
 
