@@ -26,6 +26,7 @@ interface ProfileFormData {
   company_country: string;
   company_field_id: string;
   description: string;
+  description_en?: string;
   address: string;
   street_address: string;
   province: string;
@@ -155,6 +156,7 @@ export default function ProfilePage() {
       company_country: profile?.company?.country ?? "",
       company_field_id: profile?.company?.company_field_id ? String(profile.company.company_field_id) : "",
       description: profile?.company?.description ?? "",
+      description_en: profile?.company?.description_en ?? "",
       address: profile?.company?.address ?? "",
       street_address: profile?.company?.street_address || profile?.company?.address || "",
       province: profile?.company?.province ?? "",
@@ -493,12 +495,42 @@ export default function ProfilePage() {
                 </select>
               </div>
 
-              <div className="md:col-span-2">
-                <label className="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
-                  <AlignLeft size={13} className="text-blue-500" />
-                  <span>{t.dash_profile_desc_label || "Deskripsi Perusahaan"} <span className="text-red-500">*</span></span>
-                </label>
-                <textarea required {...register("description")} rows={4} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 text-slate-800 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"></textarea>
+              <div className="md:col-span-2 space-y-4">
+                <div>
+                  <label className="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+                    <AlignLeft size={13} className="text-blue-500" />
+                    <span>{t.dash_profile_desc_label || "Deskripsi Perusahaan (Bahasa Indonesia)"} <span className="text-red-500">*</span></span>
+                  </label>
+                  <textarea
+                    required
+                    {...register("description")}
+                    rows={4}
+                    placeholder={t.dash_profile_desc_placeholder || "Jelaskan profil singkat, kegiatan operasional, dan visi keberlanjutan perusahaan Anda dalam Bahasa Indonesia..."}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 text-slate-800 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                      <AlignLeft size={13} className="text-indigo-500" />
+                      <span>{t.dash_profile_desc_en_label || "Deskripsi Perusahaan (English)"}</span>
+                      <span className="text-slate-400 font-normal lowercase">(optional)</span>
+                    </label>
+                    <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 hidden sm:inline">
+                      {t.dash_profile_desc_en_hint || "Disarankan untuk profil publik dwibahasa dan sertifikat internasional"}
+                    </span>
+                  </div>
+                  <textarea
+                    {...register("description_en")}
+                    rows={4}
+                    placeholder={t.dash_profile_desc_en_placeholder || "Describe your company profile, business activities, and sustainability vision in English..."}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 text-slate-800 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                  />
+                  <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1 sm:hidden">
+                    {t.dash_profile_desc_en_hint || "Disarankan untuk profil publik dwibahasa dan sertifikat internasional"}
+                  </p>
+                </div>
               </div>
 
               {/* Structured Address Section */}
