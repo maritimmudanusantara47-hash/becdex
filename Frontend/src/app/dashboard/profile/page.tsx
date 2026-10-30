@@ -582,7 +582,8 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Grid Rincian Wilayah */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 pt-1">
+                {/*
+<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 pt-1">
                   <div>
                     <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">
                       Provinsi <span className="text-red-500">*</span>
@@ -631,6 +632,7 @@ export default function ProfilePage() {
                     />
                   </div>
                 </div>
+                */}
 
                 {/* Live Preview Alamat Sertifikat */}
                 <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/80 space-y-1">
