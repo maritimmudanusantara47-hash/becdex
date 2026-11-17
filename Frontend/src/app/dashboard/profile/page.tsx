@@ -19,6 +19,7 @@ import { useRef, useState, useMemo } from "react";
 import { useTranslation } from "@/store/lang";
 import { getSectorLabel, SectorLookupItem, DEFAULT_COUNTRIES, DEFAULT_SECTORS } from "@/constants/sectors";
 import { SectorSelect } from "@/components/ui/SectorSelect";
+import { CountrySelect } from "@/components/ui/CountrySelect";
 
 interface ProfileFormData {
   name: string;
@@ -118,11 +119,6 @@ export default function ProfilePage() {
       ? lookupsData.data.company_fields
       : null) || DEFAULT_SECTORS;
 
-  const countryOptions = useMemo(() => {
-    return countries.map((c: { id?: number; iso: string; name: string }) => (
-      <option key={c.iso} value={c.iso}>{c.name}</option>
-    ));
-  }, [countries]);
 
 
   const { data, isLoading } = useQuery<{ data: User }>({
@@ -463,10 +459,14 @@ export default function ProfilePage() {
                   <Globe size={13} className="text-blue-500" />
                   <span>{t.dash_profile_country || "Asal Negara"} <span className="text-red-500">*</span></span>
                 </label>
-                <select required {...register("company_country")} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 text-slate-800 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
-                  <option value="">{t.dash_profile_sel_country || "Pilih Negara"}</option>
-                  {countryOptions}
-                </select>
+                <CountrySelect
+                  countries={countries}
+                  value={watch("company_country") ?? ""}
+                  onChange={(val) => setValue("company_country", val, { shouldDirty: true })}
+                  locale={locale}
+                  placeholder={t.dash_profile_sel_country || "Pilih Negara"}
+                  triggerClassName="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 text-slate-800 dark:text-white text-sm font-semibold focus:outline-none transition-all"
+                />
               </div>
 
               <div>

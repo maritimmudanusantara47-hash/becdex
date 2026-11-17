@@ -13,6 +13,7 @@ import api from "@/lib/api";
 import { useTranslation } from "@/store/lang";
 import { getSectorLabel, SectorLookupItem, DEFAULT_COUNTRIES, DEFAULT_SECTORS } from "@/constants/sectors";
 import { SectorSelect } from "@/components/ui/SectorSelect";
+import { CountrySelect } from "@/components/ui/CountrySelect";
 
 type RegisterFormData = {
   name: string;
@@ -60,13 +61,6 @@ export default function RegisterPage() {
       ? lookupsData.data.company_fields
       : null) || DEFAULT_SECTORS;
 
-  const countryOptions = useMemo(() => {
-    return countries.map((c: { id?: number; iso: string; name: string }) => (
-      <option key={c.id} value={c.iso}>
-        {c.name}
-      </option>
-    ));
-  }, [countries]);
 
 
   const [showPassword, setShowPassword] = useState(false);
@@ -196,13 +190,14 @@ export default function RegisterPage() {
 
               {/* Country Select */}
               <div>
-                <select
-                  {...register("company_country")}
-                  className="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 bg-white outline-none focus:ring-2 focus:ring-[#0d6efd]/20 focus:border-[#0d6efd] text-gray-700"
-                >
-                  <option value="">{t.auth_country_select || "Country"}</option>
-                  {countryOptions}
-                </select>
+                <CountrySelect
+                  countries={countries}
+                  value={watch("company_country") ?? ""}
+                  onChange={(val) => setValue("company_country", val, { shouldValidate: true })}
+                  locale={locale}
+                  placeholder={t.auth_country_select || "Country"}
+                  error={!!errors.company_country}
+                />
                 {errors.company_country && (
                   <p className="text-red-500 text-[10px] mt-0.5">{errors.company_country.message}</p>
                 )}
