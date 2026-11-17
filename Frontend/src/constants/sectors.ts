@@ -48,7 +48,7 @@ export const DEFAULT_SECTORS: SectorLookupItem[] = [
   { id: 1, name: "Marine Fisheries and Aquaculture", name_id: "Perikanan dan Akuakultur Laut" },
   { id: 2, name: "Maritime Transport, Shipping, and Ports", name_id: "Transportasi Maritim, Pelayaran, dan Pelabuhan" },
   { id: 3, name: "Marine Tourism and Cruise Ships", name_id: "Pariwisata Bahari dan Kapal Pesiar" },
-  { id: 4, name: "Biotechnology and Marine Bioproducts Processing", name_id: "Bioteknologi dan Pengolahan Bioproduk Laut" },
+  { id: 4, name: "Marine Biotechnology and Bioproducts Processing", name_id: "Bioteknologi dan Pengolahan Bioproduk Laut" },
   { id: 5, name: "Seawater Desalination", name_id: "Desalinasi Air Laut" },
   { id: 6, name: "Deep Sea Mining, Oil, and Gas", name_id: "Pertambangan, Minyak, dan Gas Laut Dalam" },
   { id: 7, name: "Marine Renewable Energy", name_id: "Energi Terbarukan Laut" },

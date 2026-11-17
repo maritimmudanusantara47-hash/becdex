@@ -116,7 +116,7 @@ export default function AboutPage() {
           <div className="space-y-4">
             <h3 className="text-[#012970] text-3xl font-extrabold">{t.about_sectors}</h3>
             <ol className="list-decimal list-inside space-y-1.5 text-sm md:text-base text-gray-600 font-medium">
-              {DEFAULT_SECTORS.map((sector) => (
+              {[...DEFAULT_SECTORS].sort((a, b) => a.name.localeCompare(b.name)).map((sector) => (
                 <li key={sector.id}>{getSectorLabel(sector, locale)}</li>
               ))}
             </ol>

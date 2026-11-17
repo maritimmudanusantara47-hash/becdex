@@ -124,12 +124,14 @@ export default function ProfilePage() {
   }, [countries]);
 
   const sectorOptions = useMemo(() => {
-    return companyFields.map((f: SectorLookupItem) => {
-      const label = getSectorLabel(f, locale);
-      return (
-        <option key={f.id} value={f.id}>{label}</option>
-      );
-    });
+    return [...companyFields]
+      .sort((a: SectorLookupItem, b: SectorLookupItem) => a.name.localeCompare(b.name))
+      .map((f: SectorLookupItem) => {
+        const label = getSectorLabel(f, locale);
+        return (
+          <option key={f.id} value={f.id}>{label}</option>
+        );
+      });
   }, [companyFields, locale]);
 
   const { data, isLoading } = useQuery<{ data: User }>({

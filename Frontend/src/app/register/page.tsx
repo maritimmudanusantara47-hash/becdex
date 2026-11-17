@@ -68,14 +68,16 @@ export default function RegisterPage() {
   }, [countries]);
 
   const sectorOptions = useMemo(() => {
-    return companyFields.map((s: SectorLookupItem) => {
-      const label = getSectorLabel(s, locale);
-      return (
-        <option key={s.id} value={s.id}>
-          {label}
-        </option>
-      );
-    });
+    return [...companyFields]
+      .sort((a: SectorLookupItem, b: SectorLookupItem) => a.name.localeCompare(b.name))
+      .map((s: SectorLookupItem) => {
+        const label = getSectorLabel(s, locale);
+        return (
+          <option key={s.id} value={s.id}>
+            {label}
+          </option>
+        );
+      });
   }, [companyFields, locale]);
 
   const [showPassword, setShowPassword] = useState(false);
