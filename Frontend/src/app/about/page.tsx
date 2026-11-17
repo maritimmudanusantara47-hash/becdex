@@ -5,9 +5,10 @@ import { PublicHeader } from "@/components/layouts/PublicHeader";
 import { PublicFooter } from "@/components/layouts/PublicFooter";
 import Image from "next/image";
 import Link from "next/link";
+import { DEFAULT_SECTORS, getSectorLabel } from "@/constants/sectors";
 
 export default function AboutPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   return (
     <div className="min-h-screen bg-white">
@@ -115,8 +116,8 @@ export default function AboutPage() {
           <div className="space-y-4">
             <h3 className="text-[#012970] text-3xl font-extrabold">{t.about_sectors}</h3>
             <ol className="list-decimal list-inside space-y-1.5 text-sm md:text-base text-gray-600 font-medium">
-              {t.about_sector_list.map((item, index) => (
-                <li key={index}>{item}</li>
+              {DEFAULT_SECTORS.map((sector) => (
+                <li key={sector.id}>{getSectorLabel(sector, locale)}</li>
               ))}
             </ol>
           </div>
