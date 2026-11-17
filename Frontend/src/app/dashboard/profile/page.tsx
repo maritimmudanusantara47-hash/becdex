@@ -18,6 +18,7 @@ import { Save, Loader2, Building, User as UserIcon, Mail, Phone, Briefcase, Came
 import { useRef, useState, useMemo } from "react";
 import { useTranslation } from "@/store/lang";
 import { getSectorLabel, SectorLookupItem, DEFAULT_COUNTRIES, DEFAULT_SECTORS } from "@/constants/sectors";
+import { SectorSelect } from "@/components/ui/SectorSelect";
 
 interface ProfileFormData {
   name: string;
@@ -123,16 +124,6 @@ export default function ProfilePage() {
     ));
   }, [countries]);
 
-  const sectorOptions = useMemo(() => {
-    return [...companyFields]
-      .sort((a: SectorLookupItem, b: SectorLookupItem) => a.name.localeCompare(b.name))
-      .map((f: SectorLookupItem) => {
-        const label = getSectorLabel(f, locale);
-        return (
-          <option key={f.id} value={f.id}>{label}</option>
-        );
-      });
-  }, [companyFields, locale]);
 
   const { data, isLoading } = useQuery<{ data: User }>({
     queryKey: ["me"],
@@ -491,10 +482,14 @@ export default function ProfilePage() {
                   <Briefcase size={13} className="text-blue-500" />
                   <span>{t.dash_profile_field || "Bidang Perusahaan"} <span className="text-red-500">*</span></span>
                 </label>
-                <select required {...register("company_field_id")} className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 text-slate-800 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
-                  <option value="">{t.dash_profile_sel_sector || "Pilih Sektor Usaha"}</option>
-                  {sectorOptions}
-                </select>
+                <SectorSelect
+                  sectors={companyFields}
+                  value={watch("company_field_id") ?? ""}
+                  onChange={(val) => setValue("company_field_id", val, { shouldDirty: true })}
+                  locale={locale}
+                  placeholder={t.dash_profile_sel_sector || "Pilih Sektor Usaha"}
+                  triggerClassName="w-full flex items-center justify-between gap-2 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 text-slate-800 dark:text-white text-sm font-semibold focus:outline-none transition-all"
+                />
               </div>
 
               <div className="md:col-span-2 space-y-4">

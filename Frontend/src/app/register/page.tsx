@@ -12,6 +12,7 @@ import { Loader2, ArrowLeft, Eye, EyeOff } from "lucide-react";import Image from
 import api from "@/lib/api";
 import { useTranslation } from "@/store/lang";
 import { getSectorLabel, SectorLookupItem, DEFAULT_COUNTRIES, DEFAULT_SECTORS } from "@/constants/sectors";
+import { SectorSelect } from "@/components/ui/SectorSelect";
 
 type RegisterFormData = {
   name: string;
@@ -67,18 +68,6 @@ export default function RegisterPage() {
     ));
   }, [countries]);
 
-  const sectorOptions = useMemo(() => {
-    return [...companyFields]
-      .sort((a: SectorLookupItem, b: SectorLookupItem) => a.name.localeCompare(b.name))
-      .map((s: SectorLookupItem) => {
-        const label = getSectorLabel(s, locale);
-        return (
-          <option key={s.id} value={s.id}>
-            {label}
-          </option>
-        );
-      });
-  }, [companyFields, locale]);
 
   const [showPassword, setShowPassword] = useState(false);
   const [showRepeatPassword, setShowRepeatPassword] = useState(false);
@@ -118,6 +107,8 @@ export default function RegisterPage() {
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -232,13 +223,14 @@ export default function RegisterPage() {
 
               {/* Sectors Select */}
               <div>
-                <select
-                  {...register("company_field_id")}
-                  className="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 bg-white outline-none focus:ring-2 focus:ring-[#0d6efd]/20 focus:border-[#0d6efd] text-gray-700"
-                >
-                  <option value="">{t.auth_sector_select || "Blue Economic Sector"}</option>
-                  {sectorOptions}
-                </select>
+                <SectorSelect
+                  sectors={companyFields}
+                  value={watch("company_field_id") ?? ""}
+                  onChange={(val) => setValue("company_field_id", val, { shouldValidate: true })}
+                  locale={locale}
+                  placeholder={t.auth_sector_select || "Blue Economic Sector"}
+                  error={!!errors.company_field_id}
+                />
                 {errors.company_field_id && (
                   <p className="text-red-500 text-[10px] mt-0.5">{errors.company_field_id.message}</p>
                 )}
