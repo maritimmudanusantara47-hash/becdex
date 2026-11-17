@@ -10,6 +10,7 @@ import { LoadingSpinner } from "@/components/ui/index";
 import { MapPin, FileText, Globe, CheckCircle2, Search, ChevronLeft, ChevronRight, ArrowUpRight } from "lucide-react";
 import { MdCheckCircle } from "react-icons/md";
 import { useTranslation } from "@/store/lang";
+import { getSectorLabel } from "@/constants/sectors";
 
 
 interface Company {
@@ -33,7 +34,7 @@ interface Company {
 }
 
 export default function VerifiedCompaniesPage() {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const [selectedState, setSelectedState] = useState("All");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedSectors, setSelectedSectors] = useState<string[]>([]);
@@ -169,10 +170,10 @@ export default function VerifiedCompaniesPage() {
                   <div className="w-3.5 h-3.5 bg-gray-700 text-white rounded-xs flex items-center justify-center shrink-0">
                     <span className="text-[9px] font-bold">!!</span>
                   </div>
-                  Sectors
+                  {locale === "id" ? "Sektor" : "Sectors"}
                 </label>
                 <div className="space-y-2.5 max-h-100 overflow-y-auto pr-1">
-                  {sectors.map((sector: { id: number; name: string }) => (
+                  {sectors.map((sector: { id: number; name: string; name_id?: string }) => (
                     <label key={sector.id} className="flex items-start gap-2 cursor-pointer group">
                       <input
                         type="checkbox"
@@ -181,7 +182,7 @@ export default function VerifiedCompaniesPage() {
                         className="mt-0.5 w-3.5 h-3.5 rounded-sm border-gray-300 text-[#0d6efd] focus:ring-[#0d6efd] cursor-pointer"
                       />
                       <span className="text-[13px] text-gray-600 group-hover:text-gray-900 leading-tight">
-                        {sector.name}
+                        {getSectorLabel(sector, locale)}
                       </span>
                     </label>
                   ))}
