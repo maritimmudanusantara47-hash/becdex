@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppLayout } from "@/components/layouts/AppLayout";
@@ -22,7 +23,8 @@ import {
   UserPlus,
   Trash2,
   Edit,
-  ShieldAlert
+  ShieldAlert,
+  Globe
 } from "lucide-react";
 import { UserModal } from "@/components/admin-tabs/UserModal";
 import { DeleteUserModal } from "@/components/admin-tabs/DeleteUserModal";
@@ -342,6 +344,17 @@ export default function AdminUsersPage() {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
+                          {u.role?.id === 2 && (
+                            <Link
+                              href={`/admin/certificates?direct_user_id=${u.id}`}
+                              title="Terbitkan ke Katalog Terverifikasi"
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/40 dark:hover:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800 transition-colors shadow-2xs cursor-pointer"
+                            >
+                              <Globe size={13} />
+                              <span className="hidden sm:inline">Katalog</span>
+                            </Link>
+                          )}
+
                           <button
                             onClick={() => {
                               setEditUser(u);
