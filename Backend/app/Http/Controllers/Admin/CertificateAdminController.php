@@ -5,6 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\CertificateUser;
 use App\Models\CertificateTemplate;
+use App\Models\Certificate;
+use App\Models\User;
+use App\Models\Submission;
+use App\Services\CertificateNumberService;
 use App\Notifications\SystemNotification;
 use App\Services\AddressFormatter;
 use App\Models\ActivityLog;
@@ -303,7 +307,7 @@ class CertificateAdminController extends Controller
             'company_address'    => AddressFormatter::format($cert->user->companyDetail->address ?? ''),
             'company_sector'     => $sectorId,
             'company_sector_en'  => $sectorEn,
-            'becdex_score'       => $cert->submission->valid_score ?? $cert->submission->initial_score ?? 0,
+            'becdex_score'       => $cert->submission?->valid_score ?? $cert->submission?->initial_score ?? 0,
             'becdex_category_id' => $cert->certificate->id ?? 10,
             'qr_base64'          => $qrBase64,
             'published_date'     => $publishedDate,
@@ -353,6 +357,56 @@ class CertificateAdminController extends Controller
     }
 
     /**
+     * PATCH /api/admin/certificates/{id}/toggle-catalog
+     * Munculkan atau sembunyikan sertifikat dari katalog publik (toggle is_approved)
+     * secara langsung di masing-masing sertifikat tanpa harus melalui alur asesmen.
+     */
+    public function toggleCatalog(int $id): JsonResponse
+    {
+        $cert = CertificateUser::with(['user.companyDetail', 'submission', 'certificate'])->findOrFail($id);
+        $cert->is_approved = !$cert->is_approved;
+        $cert->save();
+
+        // Jika dimunculkan ke katalog dan submission belum status 5 (Certified), perbarui statusnya
+        if ($cert->is_approved && $cert->submission && $cert->submission->submission_status_id !== 5) {
+            $cert->submission->update(['submission_status_id' => 5]);
+        }
+
+        // Sinkronkan kategori ke companyDetail jika diperlukan
+        if ($cert->is_approved && $cert->user && $cert->user->companyDetail && $cert->certificate) {
+            $catMap = [
+                'standard'  => 2,
+                'good'      => 3,
+                'excellent' => 4,
+            ];
+            $catId = $catMap[strtolower($cert->certificate->category ?? '')] ?? 3;
+            $cert->user->companyDetail->update(['becdex_category_id' => $catId]);
+        }
+
+        if ($cert->submission_id) {
+            ActivityLog::create([
+                'user_id'       => Auth::id(),
+                'submission_id' => $cert->submission_id,
+                'action'        => $cert->is_approved ? 'published_to_catalog' : 'hidden_from_catalog',
+                'description'   => ($cert->is_approved ? 'Memunculkan di katalog' : 'Menyembunyikan dari katalog') . ' untuk ' . ($cert->user->name ?? 'Perusahaan') . ' (Nomor BICC: ' . $cert->mmic . ')',
+                'ip_address'    => request()->ip(),
+            ]);
+        }
+
+        \Illuminate\Support\Facades\Cache::forget('verified_companies_p1');
+
+        return response()->json([
+            'message' => $cert->is_approved
+                ? 'Sertifikat berhasil dimunculkan di katalog publik!'
+                : 'Sertifikat berhasil disembunyikan dari katalog publik.',
+            'data' => [
+                'id'          => $cert->id,
+                'is_approved' => (bool) $cert->is_approved,
+            ],
+        ]);
+    }
+
+    /**
      * PUT /api/admin/certificates/{id}
      * Update data sertifikat (BICC, Direktur, Tanggal Terbit, Tanggal Berlaku)
      */
@@ -390,6 +444,189 @@ class CertificateAdminController extends Controller
         return response()->json([
             'message' => 'Data sertifikat berhasil diperbarui.',
             'data'    => $cert->fresh(['user.companyDetail', 'submission', 'certificate']),
+        ]);
+    }
+
+    /**
+     * GET /api/admin/certificates/eligible-companies
+     * Ambil daftar perusahaan (user role 2) beserta info status penerbitan sertifikat.
+     */
+    public function eligibleCompanies(): JsonResponse
+    {
+        $companies = User::where('role_id', 2)
+            ->with(['companyDetail.companyField', 'companyDetail.becdexCategory'])
+            ->orderBy('name')
+            ->get()
+            ->map(function ($u) {
+                $latestCert = CertificateUser::where('user_id', $u->id)->latest('published_at')->first();
+                $hasSubmission = $u->submissions()->exists();
+                return [
+                    'id'               => $u->id,
+                    'name'             => $u->name,
+                    'email'            => $u->email,
+                    'brand_name'       => $u->companyDetail?->brand_name,
+                    'pic_name'         => $u->companyDetail?->pic_name,
+                    'company_country'  => $u->companyDetail?->company_country ?? 'ID',
+                    'sector'           => $u->companyDetail?->companyField?->name,
+                    'has_submission'   => $hasSubmission,
+                    'is_certified'     => (bool) ($latestCert && $latestCert->is_approved),
+                    'existing_cert'    => $latestCert ? [
+                        'id'          => $latestCert->id,
+                        'mmic'        => $latestCert->mmic,
+                        'is_approved' => (bool) $latestCert->is_approved,
+                        'valid_until' => $latestCert->valid_until?->format('Y-m-d'),
+                    ] : null,
+                ];
+            });
+
+        $certificates = Certificate::select('id', 'category', 'description')->get();
+        $nextBicc = CertificateNumberService::generate(now()->toDateString(), 'ID');
+
+        return response()->json([
+            'companies'        => $companies,
+            'certificates'     => $certificates,
+            'next_bicc'        => $nextBicc,
+            'default_director' => 'Rahmat Ihsan, S.H.',
+        ]);
+    }
+
+    /**
+     * POST /api/admin/certificates/direct-issue
+     * Terbitkan sertifikat & munculkan ke katalog langsung tanpa mengharuskan perusahaan mengisi asesmen
+     */
+    public function directIssue(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'user_id'          => ['required', 'integer', 'exists:users,id'],
+            'certificate_id'   => ['required', 'integer', 'exists:certificates,id'],
+            'mmic'             => ['nullable', 'string', 'max:50'],
+            'direktur'         => ['nullable', 'string', 'max:200'],
+            'published_at'     => ['nullable', 'date'],
+            'valid_until'      => ['nullable', 'date'],
+            'is_approved'      => ['boolean'],
+            'is_detail_public' => ['boolean'],
+            'score'            => ['nullable', 'numeric', 'min:0', 'max:100'],
+        ]);
+
+        $user = User::with('companyDetail')->findOrFail($validated['user_id']);
+
+        // 1. Tentukan submission: jika sudah ada gunakan yang ada, jika belum buatkan submission stub (status: 5 Certified)
+        $submission = $user->submissions()->latest()->first();
+        $score = isset($validated['score']) && is_numeric($validated['score']) ? number_format((float)$validated['score'], 2, '.', '') : '85.00';
+
+        if (!$submission) {
+            $submission = Submission::create([
+                'user_id'              => $user->id,
+                'submission_status_id' => 5, // Certified
+                'initial_score'        => $score,
+                'valid_score'          => $score,
+                'survey_score'         => $score,
+                'revision_count'       => 0,
+                'current_upload_phase' => 1,
+                'reason'               => 'Diterbitkan langsung ke katalog oleh Admin (Direct Issue)',
+            ]);
+        } else {
+            // Update status submission jika belum certified
+            if ($submission->submission_status_id !== 5) {
+                $submission->update([
+                    'submission_status_id' => 5,
+                    'valid_score'          => $submission->valid_score > 0 ? $submission->valid_score : $score,
+                ]);
+            }
+        }
+
+        // 2. Generate nomor BICC jika tidak diisi manual
+        $publishedAt = Carbon::parse($validated['published_at'] ?? now());
+        $validUntil  = !empty($validated['valid_until'])
+            ? Carbon::parse($validated['valid_until'])
+            : $publishedAt->copy()->addYears(3)->subDay();
+
+        $country = $user->companyDetail->company_country ?? 'ID';
+        $mmic = !empty($validated['mmic'])
+            ? trim($validated['mmic'])
+            : CertificateNumberService::generate($publishedAt->toDateString(), $country);
+
+        $directorName = !empty($validated['direktur'])
+            ? trim($validated['direktur'])
+            : 'Rahmat Ihsan, S.H.';
+
+        $isApproved     = $request->boolean('is_approved', true);
+        $isDetailPublic = $request->boolean('is_detail_public', true);
+
+        // 3. Simpan / update sertifikat di certificate_users
+        $certUser = CertificateUser::updateOrCreate(
+            ['submission_id' => $submission->id],
+            [
+                'certificate_id'   => $validated['certificate_id'],
+                'user_id'          => $user->id,
+                'mmic'             => $mmic,
+                'direktur'         => $directorName,
+                'published_at'     => $publishedAt,
+                'valid_until'      => $validUntil,
+                'is_approved'      => $isApproved,
+                'is_detail_public' => $isDetailPublic,
+            ]
+        );
+
+        // 4. Sinkronkan kategori BECdex di companyDetail
+        $certTemplate = Certificate::find($validated['certificate_id']);
+        $catMap = [
+            'standard'  => 2,
+            'good'      => 3,
+            'excellent' => 4,
+        ];
+        $catId = $catMap[strtolower($certTemplate->category ?? '')] ?? 3;
+
+        if ($user->companyDetail) {
+            $user->companyDetail->update([
+                'becdex_category_id' => $catId,
+            ]);
+        }
+
+        // 5. Catat log aktivitas
+        ActivityLog::create([
+            'user_id'       => Auth::id(),
+            'submission_id' => $submission->id,
+            'action'        => 'direct_issue_certificate',
+            'description'   => 'Menerbitkan langsung ke katalog untuk ' . $user->name . ' (Nomor BICC: ' . $mmic . ')',
+            'ip_address'    => request()->ip(),
+        ]);
+
+        // 6. Reset cache katalog publik
+        \Illuminate\Support\Facades\Cache::forget('verified_companies_p1');
+
+        return response()->json([
+            'message' => 'Perusahaan berhasil diterbitkan ke katalog!',
+            'data'    => $certUser->load(['user.companyDetail.companyField', 'certificate', 'submission']),
+        ], 201);
+    }
+
+    /**
+     * DELETE /api/admin/certificates/{id}
+     * Hapus / cabut sertifikat dari katalog
+     */
+    public function destroy(int $id): JsonResponse
+    {
+        $cert = CertificateUser::with('user')->findOrFail($id);
+        $companyName = $cert->user?->name ?? 'Perusahaan';
+        $bicc = $cert->mmic;
+
+        if ($cert->submission_id) {
+            ActivityLog::create([
+                'user_id'       => Auth::id(),
+                'submission_id' => $cert->submission_id,
+                'action'        => 'revoked_certificate',
+                'description'   => 'Mencabut sertifikat BICC ' . $bicc . ' dari ' . $companyName,
+                'ip_address'    => request()->ip(),
+            ]);
+        }
+
+        $cert->delete();
+
+        \Illuminate\Support\Facades\Cache::forget('verified_companies_p1');
+
+        return response()->json([
+            'message' => 'Sertifikat untuk ' . $companyName . ' berhasil dihapus dari katalog.',
         ]);
     }
 }
