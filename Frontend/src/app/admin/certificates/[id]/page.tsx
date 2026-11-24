@@ -10,7 +10,7 @@ import { formatDate, toDateInputValue, cn } from "@/lib/utils";
 import {
   Award, ArrowLeft, Download, CheckCircle2, Building2,
   Calendar, Hash, BarChart3, ShieldCheck, ShieldAlert,
-  RefreshCw, FileText, ExternalLink, Edit3, X, Loader2,
+  RefreshCw, FileText, ExternalLink, Edit3, X, Loader2, Globe, Plus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuthStore } from "@/store/auth";
@@ -110,6 +110,19 @@ export default function AdminCertificateDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-certificate-detail", certId] });
       queryClient.invalidateQueries({ queryKey: ["admin-certificates"] });
+    },
+  });
+
+  const toggleCatalogMutation = useMutation({
+    mutationFn: () => api.patch(`/admin/certificates/${certId}/toggle-catalog`),
+    onSuccess: (res) => {
+      toast.success(res?.data?.message || "Status publikasi katalog berhasil diperbarui!");
+      queryClient.invalidateQueries({ queryKey: ["admin-certificate-detail", certId] });
+      queryClient.invalidateQueries({ queryKey: ["admin-certificates"] });
+      queryClient.invalidateQueries({ queryKey: ["verified-companies"] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Gagal mengubah status katalog.");
     },
   });
 
@@ -219,13 +232,13 @@ export default function AdminCertificateDetailPage() {
               <div className="flex flex-wrap gap-2 mb-5">
                 {cert.is_approved ? (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border bg-emerald-50 text-emerald-700 border-emerald-200/80 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                    {t.dash_admin_cert_approved_badge || "Approved"}
+                    <Globe size={12} className="text-emerald-600 shrink-0" />
+                    <span>Muncul di Katalog</span>
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border bg-amber-50 text-amber-700 border-amber-200/80 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0" />
-                    {t.dash_admin_cert_pending_badge || "Pending Approval"}
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0 animate-pulse" />
+                    <span>Belum di Katalog</span>
                   </span>
                 )}
                 <span className={cn("inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border", isActive ? "bg-teal-50 text-teal-700 border-teal-200/80 dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-800" : "bg-red-50 text-red-700 border-red-200/80 dark:bg-red-950/60 dark:text-red-300 dark:border-red-800")}>
@@ -278,17 +291,26 @@ export default function AdminCertificateDetailPage() {
                 </Link>
               )}
 
-              {canApprove && !cert.is_approved && (
-                <button onClick={() => approveMutation.mutate()} disabled={approveMutation.isPending} className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-bold text-sm shadow-md shadow-emerald-600/20 transition-all disabled:opacity-60 cursor-pointer">
-                  <CheckCircle2 size={16} />
-                  {approveMutation.isPending ? (t.dash_admin_cert_approving || "Memproses...") : (t.dash_admin_cert_approve_btn || "Setujui Sertifikat Ini")}
+              {(canApprove || canIssue) && (
+                <button
+                  onClick={() => toggleCatalogMutation.mutate()}
+                  disabled={toggleCatalogMutation.isPending}
+                  className={cn(
+                    "w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold text-sm shadow-md transition-all cursor-pointer disabled:opacity-60",
+                    cert.is_approved
+                      ? "bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700"
+                      : "bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white shadow-emerald-600/20"
+                  )}
+                >
+                  <Globe size={16} />
+                  <span>
+                    {toggleCatalogMutation.isPending
+                      ? "Memproses..."
+                      : cert.is_approved
+                      ? "Sembunyikan dari Katalog"
+                      : "Munculkan di Katalog Publik"}
+                  </span>
                 </button>
-              )}
-              {canApprove && cert.is_approved && (
-                <div className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 font-semibold text-sm">
-                  <ShieldCheck size={15} />
-                  {t.dash_admin_cert_already_approved || "Sertifikat Sudah Diapprove"}
-                </div>
               )}
             </div>
           </div>

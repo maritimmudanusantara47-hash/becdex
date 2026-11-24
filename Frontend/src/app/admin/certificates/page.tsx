@@ -1,16 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { AppLayout } from "@/components/layouts/AppLayout";
 import { LoadingSpinner, EmptyState } from "@/components/ui/index";
 import api from "@/lib/api";
 import { formatDate, cn } from "@/lib/utils";
-import { Award, Search, ChevronLeft, ChevronRight, ShieldCheck, Building2, CheckCircle2, Eye, Lock, Globe } from "lucide-react";
+import { Award, Search, ChevronLeft, ChevronRight, ShieldCheck, Building2, CheckCircle2, Eye, Lock, Globe, Plus, Trash2 } from "lucide-react";
 import { useTranslation } from "@/store/lang";
 import Link from "next/link";
 import { useAuthStore } from "@/store/auth";
-import { canApproveCertificate } from "@/lib/roles";
+import { canApproveCertificate, canIssueCertificate } from "@/lib/roles";
+import { DirectIssueCertificateModal } from "@/components/admin-tabs/DirectIssueCertificateModal";
 
 interface CertRow {
   id: number;
@@ -29,14 +32,28 @@ export default function AdminCertificatesPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [valid, setValid] = useState("");
+  const [isDirectModalOpen, setIsDirectModalOpen] = useState(false);
+  const [directUserId, setDirectUserId] = useState<number | null>(null);
+
+  const searchParams = useSearchParams();
   const { t } = useTranslation();
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const canApprove = canApproveCertificate(user);
+  const canIssue = canIssueCertificate(user);
+
+  useEffect(() => {
+    const paramUserId = searchParams.get("direct_user_id");
+    if (paramUserId) {
+      setDirectUserId(Number(paramUserId));
+      setIsDirectModalOpen(true);
+    }
+  }, [searchParams]);
 
   const approveMutation = useMutation({
     mutationFn: (certId: number) => api.post(`/admin/certificates/${certId}/approve`),
     onSuccess: () => {
+      toast.success("Sertifikat berhasil disetujui!");
       queryClient.invalidateQueries({ queryKey: ["admin-certificates"] });
     },
   });
@@ -47,6 +64,36 @@ export default function AdminCertificatesPage() {
       queryClient.invalidateQueries({ queryKey: ["admin-certificates"] });
     },
   });
+
+  const toggleCatalogMutation = useMutation({
+    mutationFn: (certId: number) => api.patch(`/admin/certificates/${certId}/toggle-catalog`),
+    onSuccess: (res) => {
+      toast.success(res?.data?.message || "Status publikasi katalog berhasil diperbarui!");
+      queryClient.invalidateQueries({ queryKey: ["admin-certificates"] });
+      queryClient.invalidateQueries({ queryKey: ["verified-companies"] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Gagal memperbarui status katalog.");
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (certId: number) => api.delete(`/admin/certificates/${certId}`),
+    onSuccess: () => {
+      toast.success("Sertifikat berhasil dihapus dari katalog.");
+      queryClient.invalidateQueries({ queryKey: ["admin-certificates"] });
+      queryClient.invalidateQueries({ queryKey: ["verified-companies"] });
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || "Gagal menghapus sertifikat.");
+    },
+  });
+
+  const handleDeleteCert = (certId: number, companyName: string) => {
+    if (window.confirm(`Apakah Anda yakin ingin menghapus/mencabut sertifikat ${companyName} dari katalog?`)) {
+      deleteMutation.mutate(certId);
+    }
+  };
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin-certificates", page, search, valid],
@@ -83,6 +130,19 @@ export default function AdminCertificatesPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            {canIssue && (
+              <button
+                type="button"
+                onClick={() => {
+                  setDirectUserId(null);
+                  setIsDirectModalOpen(true);
+                }}
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-600/20 transition-all cursor-pointer whitespace-nowrap"
+              >
+                <Plus size={14} />
+                <span>Terbitkan ke Katalog</span>
+              </button>
+            )}
             <Link
               href="/admin/certificates/designer"
               className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-600/20 transition-all cursor-pointer whitespace-nowrap"
@@ -150,7 +210,7 @@ export default function AdminCertificatesPage() {
                     <th className="px-6 py-4">{t.dash_admin_cert_col_score || "Skor Valid"}</th>
                     <th className="px-6 py-4">{t.dash_admin_cert_col_published || "Tanggal Diterbitkan"}</th>
                     <th className="px-6 py-4">{t.dash_admin_cert_col_valid_until || "Berlaku Hingga"}</th>
-                    <th className="px-6 py-4">{t.dash_admin_cert_col_approval_status || "Status Approval"}</th>
+                    <th className="px-6 py-4 text-center">Tampil di Katalog</th>
                     <th className="px-6 py-4 text-center">Detail Publik</th>
                     <th className="px-6 py-4 text-right">{t.dash_admin_cert_col_status || "Status Masa Berlaku"}</th>
                     <th className="px-6 py-4 text-right">{t.dash_admin_cert_col_action || "Aksi"}</th>
@@ -198,19 +258,32 @@ export default function AdminCertificatesPage() {
                         <td className="px-6 py-4 text-xs font-semibold text-slate-700 dark:text-slate-300">
                           {formatDate(c.valid_until)}
                         </td>
-                        <td className="px-6 py-4">
-                          {/* Status Approval */}
-                          {c.is_approved ? (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800">
-                              <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-emerald-500" />
-                              {t.dash_admin_cert_approved || "Disetujui"}
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200/80 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800">
-                              <span className="w-1.5 h-1.5 rounded-full shrink-0 bg-amber-500 animate-pulse" />
-                              {t.dash_admin_cert_pending_approval || "Menunggu Persetujuan"}
-                            </span>
-                          )}
+                        <td className="px-6 py-4 text-center">
+                          {/* Toggle Tampil di Katalog per Sertifikat */}
+                          <button
+                            type="button"
+                            onClick={() => toggleCatalogMutation.mutate(c.id)}
+                            disabled={toggleCatalogMutation.isPending}
+                            className={cn(
+                              "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all cursor-pointer shadow-2xs whitespace-nowrap",
+                              c.is_approved
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800"
+                                : "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800"
+                            )}
+                            title={c.is_approved ? "Klik untuk sembunyikan dari katalog publik" : "Klik untuk langsung munculkan di katalog publik"}
+                          >
+                            {c.is_approved ? (
+                              <>
+                                <Globe size={13} className="text-emerald-600 shrink-0" />
+                                <span>Muncul di Katalog</span>
+                              </>
+                            ) : (
+                              <>
+                                <Plus size={13} className="text-amber-600 shrink-0" />
+                                <span>Munculkan ke Katalog</span>
+                              </>
+                            )}
+                          </button>
                         </td>
                         <td className="px-6 py-4 text-center">
                           {/* Toggle Detail Publik */}
@@ -252,13 +325,27 @@ export default function AdminCertificatesPage() {
                           </span>
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <Link
-                            href={`/admin/certificates/${c.id}`}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200/80 dark:bg-blue-950/50 dark:hover:bg-blue-950 dark:text-blue-300 dark:border-blue-800 transition-colors shadow-2xs cursor-pointer"
-                          >
-                            <Eye size={13} />
-                            {t.dash_admin_cert_btn_view || "Lihat"}
-                          </Link>
+                          <div className="flex items-center justify-end gap-2">
+                            <Link
+                              href={`/admin/certificates/${c.id}`}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200/80 dark:bg-blue-950/50 dark:hover:bg-blue-950 dark:text-blue-300 dark:border-blue-800 transition-colors shadow-2xs cursor-pointer"
+                            >
+                              <Eye size={13} />
+                              {t.dash_admin_cert_btn_view || "Lihat"}
+                            </Link>
+
+                            {(canApprove || canIssue) && (
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteCert(c.id, c.user?.name || "Perusahaan")}
+                                disabled={deleteMutation.isPending}
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200/80 dark:bg-rose-950/40 dark:hover:bg-rose-950 dark:text-rose-400 dark:border-rose-800 transition-colors shadow-2xs cursor-pointer"
+                                title="Hapus / cabut sertifikat dari katalog"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );
@@ -295,6 +382,15 @@ export default function AdminCertificatesPage() {
           </>
         )}
       </div>
+
+      <DirectIssueCertificateModal
+        isOpen={isDirectModalOpen}
+        onClose={() => {
+          setIsDirectModalOpen(false);
+          setDirectUserId(null);
+        }}
+        preselectedUserId={directUserId}
+      />
     </AppLayout>
   );
 }
