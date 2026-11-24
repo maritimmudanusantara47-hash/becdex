@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -28,7 +28,7 @@ interface CertRow {
   submission?: { initial_score?: number; valid_score?: number };
 }
 
-export default function AdminCertificatesPage() {
+function AdminCertificatesContent() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [valid, setValid] = useState("");
@@ -392,5 +392,19 @@ export default function AdminCertificatesPage() {
         preselectedUserId={directUserId}
       />
     </AppLayout>
+  );
+}
+
+export default function AdminCertificatesPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="py-20 flex justify-center">
+          <LoadingSpinner />
+        </div>
+      }
+    >
+      <AdminCertificatesContent />
+    </Suspense>
   );
 }
